@@ -1,0 +1,60 @@
+html, body, #main, .el-container {
+    /*设置内部填充为0，几个布局元素之间没有间距*/
+    padding: 0;
+    /*外部间距也是如此设置*/
+    margin: 0;
+    /*统一设置高度为100%*/
+    height: 100%;
+}
+
+.el-header {
+    padding: 0;
+}
+
+.el-divider--horizontal {
+    margin: 0;
+}
+
+.el-divider--vertical {
+    margin: 0;
+    height: 100%;
+}
+
+.el-divider {
+    background-color: #dcdfe6;
+}
+.el-row {
+    height: 35px;
+    line-height: 35px;
+    margin: 0;
+}
+
+.el-middle {
+    display:flex;
+    justify-content:center;/*主轴上居中*/
+    align-items:center;/*侧轴上居中*/
+}
+.tools .el-middle {
+    height: 35px;
+}
+.tools i {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.el-select .el-input .el-input__inner {
+    width: 320px;
+}
+.el-table__row .el-table_1_column_1   {
+    text-align: right !important;
+}
+.el-tree-node {
+    height: 30px;
+    line-height: 30px;
+}
+.el-main {
+    padding-bottom: 0;
+    padding-top: 0;
+}
+.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
+    background-color: #f5d29f;
+}

@@ -1,0 +1,247 @@
+<html lang="zh-CN">
+<head>
+    <title>mitmproxy4J</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="css/element-ui.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/vue@2.6.11.js"></script>
+    <script src="js/element-ui@2.13.2.js"></script>
+    <script src="js/axios.min.js"></script>
+    <style>
+        #menu {
+            border: 1px solid #ccc;
+            background: #eee;
+            position: absolute;
+            width: 100px;
+            height: 120px;
+            display: none;
+            z-index: 999999999;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+            let menu = document.getElementById('menu');
+            document.onclick = function(){
+                menu.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+<div id="menu">
+    <ul>
+        <li><a href="#">分享</a></li>
+        <li><a href="#">收藏</a></li>
+        <li><a href="#">举报</a></li>
+    </ul>
+</div>
+<div id="main">
+    <el-container>
+        <!--header-->
+        <el-header height="70px">
+            <el-row align="middle">
+                <el-col :span="24" align="middle">
+                    <div class="tools-buttons">
+                        <el-button type="warning" size="mini" icon="el-icon-delete"></el-button>
+                        <el-button type="warning" size="mini" icon="el-icon-delete" circle></el-button>
+                    </div>
+                </el-col>
+            </el-row>
+            <el-divider></el-divider>
+            <el-row align="middle" class="tools" :gutter="10" style="margin: 0 !important;">
+                <el-col :span="1">
+                    <div class="el-middle">
+                        <i class="el-icon-delete" style="color: #dcc103; font-size: 22px"></i>
+                    </div>
+                </el-col>
+                <el-col :span="1">
+                    <div class="el-middle" style="color: #303133;">Filter:</div>
+                </el-col>
+                <el-col :span="4">
+                    <div class="el-middle">
+                        <el-input placeholder="请输入host" size="mini" clearable="true" v-model="search.host">
+                            <template slot="prepend">host:</template>
+                        </el-input>
+                    </div>
+                </el-col>
+                <el-col :span="3">
+                    <div class="el-middle">
+                        <el-input placeholder="请输入port" size="mini" clearable="true" maxlength="6"
+                                  v-model="search.port">
+                            <template slot="prepend">port:</template>
+                        </el-input>
+                    </div>
+                </el-col>
+                <el-col :span="4">
+                    <div class="el-middle">
+                        <el-select v-model="search.contentType" size="mini" filterable allow-create clearable
+                                   placeholder="响应类型">
+                            <el-option
+                                    v-for="item in contentTypeList"
+                                    :key="item"
+                                    :label="item"
+                                    :value="item">
+                            </el-option>
+                        </el-select>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--header-->
+        <el-divider></el-divider>
+        <el-container>
+            <!--aside-->
+            <el-aside width="300px">
+                <el-tree :data="flows"
+                         :props="treeProps"
+                         highlight-current="true"
+                         @node-click="flowNodeClicked"
+                         :render-content="renderContent"></el-tree>
+            </el-aside>
+            <!--aside-->
+            <el-divider direction="vertical"></el-divider>
+            <el-container>
+                <!--main-->
+                <el-main>
+                    <el-tabs v-model="activeName">
+                        <el-tab-pane label="Overview" name="Overview">
+                            <el-table :data="currentFlow"
+                                      border="true"
+                                      stripe
+                                      fit="true"
+                                      :show-header="false">
+                                <el-table-column
+                                        prop="name"
+                                        label="Name"
+                                        width="200">
+                                </el-table-column>
+                                <el-table-column
+                                        prop="value"
+                                        label="Value">
+                                </el-table-column>
+                            </el-table>
+                        </el-tab-pane>
+                        <el-tab-pane label="Request" name="Request">
+                            <el-tabs :tab-position="contentsTabPosition">
+                                <el-tab-pane label="Headers">
+                                    <el-table :data="currentRequestHeaders"
+                                              border="true"
+                                              stripe
+                                              fit="true">
+                                        <el-table-column
+                                                prop="name"
+                                                label="Name"
+                                                width="200">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="value"
+                                                label="Value">
+                                        </el-table-column>
+                                    </el-table>
+                                </el-tab-pane>
+                                <el-tab-pane label="Query String">
+                                    <el-table :data="currentRequestQueryString"
+                                              border="true"
+                                              stripe
+                                              fit="true">
+                                        <el-table-column
+                                                prop="name"
+                                                label="Name"
+                                                width="200">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="value"
+                                                label="Value">
+                                        </el-table-column>
+                                    </el-table>
+                                </el-tab-pane>
+                                <el-tab-pane label="Cookies">
+                                    <el-table :data="currentRequestCookies"
+                                              border="true"
+                                              stripe
+                                              fit="true">
+                                        <el-table-column
+                                                prop="name"
+                                                label="Name"
+                                                width="200">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="value"
+                                                label="Value">
+                                        </el-table-column>
+                                    </el-table>
+                                </el-tab-pane>
+                                <el-tab-pane label="Raw">Raw</el-tab-pane>
+                            </el-tabs>
+                        </el-tab-pane>
+                        <div v-if="hasResponse">
+                            <el-tab-pane label="Response" name="Response">
+                                <el-tabs :tab-position="contentsTabPosition">
+                                    <el-tab-pane label="Headers">
+                                        <el-table :data="currentResponseHeaders"
+                                                  border="true"
+                                                  stripe
+                                                  fit="true">
+                                            <el-table-column
+                                                    prop="name"
+                                                    label="Name"
+                                                    width="200">
+                                            </el-table-column>
+                                            <el-table-column
+                                                    prop="value"
+                                                    label="Value">
+                                            </el-table-column>
+                                        </el-table>
+                                    </el-tab-pane>
+                                    <el-tab-pane label="Cookies">
+                                        <el-table :data="currentResponseCookies"
+                                                  border="true"
+                                                  stripe
+                                                  fit="true">
+                                            <el-table-column
+                                                    prop="name"
+                                                    label="Name"
+                                                    width="200">
+                                            </el-table-column>
+                                            <el-table-column
+                                                    prop="value"
+                                                    label="Value">
+                                            </el-table-column>
+                                            <el-table-column
+                                                    prop="path"
+                                                    label="Path">
+                                            </el-table-column>
+                                            <el-table-column
+                                                    prop="Max-Age"
+                                                    label="Max-Age">
+                                            </el-table-column>
+                                            <el-table-column
+                                                    prop="HTTPOnly"
+                                                    label="HttpOnly">
+                                            </el-table-column>
+                                            <el-table-column
+                                                    prop="secure"
+                                                    label="Secure">
+                                            </el-table-column>
+                                        </el-table>
+                                    </el-tab-pane>
+                                    <el-tab-pane label="Raw">Raw</el-tab-pane>
+                                </el-tabs>
+                            </el-tab-pane>
+                        </div>
+
+                    </el-tabs>
+                    </template>
+                </el-main>
+                <!--main-->
+            </el-container>
+        </el-container>
+        <el-divider></el-divider>
+        <!--footer-->
+<!--        <el-footer>Footer</el-footer>-->
+        <!--footer-->
+    </el-container>
+</div>
+</body>
+<script type="application/javascript" src="js/main.js"></script>
+</html>
