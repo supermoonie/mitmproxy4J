@@ -17,6 +17,9 @@
             display: none;
             z-index: 999999999;
         }
+        [v-cloak] {
+            display: none;
+        }
     </style>
     <script>
         window.onload = function () {
@@ -37,8 +40,8 @@
 </div>
 <div id="main">
     <div class="p-header">
-        <div class="p-menus">
-            <el-menu :default-active="activeIndex" class="p-menu" menu-trigger="hover" mode="horizontal" @select="handleSelect">
+        <div class="p-menus p-border-bottom">
+            <el-menu v-cloak :default-active="activeIndex" class="p-menu" menu-trigger="hover" mode="horizontal" @select="handleSelect">
                 <el-submenu index="1">
                     <template slot="title">File</template>
                     <el-menu-item index="1-1">Open...</el-menu-item>
@@ -66,172 +69,173 @@
                 </el-submenu>
             </el-menu>
         </div>
-        <div class="p-tools">
-
+        <div class="p-tools p-border-bottom">
+            <div class="p-tool">
+                <i class="el-icon-delete p-icon"></i>
+            </div>
         </div>
     </div>
-
-    <el-container>
-        <!--header-->
-        <el-header height="70px">
-            <el-row align="middle">
-                <el-col :span="24" align="middle">
-                    <div class="tools-buttons">
-                        <el-button type="warning" size="mini" icon="el-icon-delete"></el-button>
-                        <el-button type="warning" size="mini" icon="el-icon-delete" circle></el-button>
+    <div class="p-container">
+        <div class="p-container-inner">
+            <div class="p-aside">
+                <div class="p-aside-inner p-border-right">
+                    <div class="p-search p-border-bottom">
+                        <span class="p-filter">Filter:</span>
+                        <el-input class="p-url-filter" v-model="urlFilter"></el-input>
                     </div>
-                </el-col>
-            </el-row>
-            <el-divider></el-divider>
-            <div class="p-tools">
-                <div class="p-tools-ele">
-                    <i class="el-icon-delete p-tools-icon"></i>
+                    <div class="p-list-container">
+                        <ul class="p-list">
+                            <li v-cloak v-for="flow in flows" :key="flow.request.id">
+                                <el-link :underline="false" :title="flow.request.uri"
+                                         :class="{'p-url-active': currentFlowId == flow.request.id}"
+                                         v-on:click="handleUrlClicked(flow.request.id, flow, $event)">
+                                    {{ flow.request.uri }}
+                                </el-link>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
+
             </div>
-        </el-header>
-        <!--header-->
-        <el-divider></el-divider>
+            <div class="p-main">
+                <el-tabs v-model="activeName" class="p-tabs">
+                    <el-tab-pane label="Overview" name="Overview">
+                        <el-table :data="currentFlow"
+                                  border="true"
+                                  stripe
+                                  fit="true"
+                                  :show-header="false">
+                            <el-table-column
+                                    prop="name"
+                                    label="Name"
+                                    width="200">
+                            </el-table-column>
+                            <el-table-column
+                                    prop="value"
+                                    label="Value">
+                            </el-table-column>
+                        </el-table>
+                    </el-tab-pane>
+                    <el-tab-pane label="Request" name="Request">
+                        <el-tabs :tab-position="contentsTabPosition">
+                            <el-tab-pane label="Headers">
+                                <el-table :data="currentRequestHeaders"
+                                          border="true"
+                                          stripe
+                                          fit="true">
+                                    <el-table-column
+                                            prop="name"
+                                            label="Name"
+                                            width="200">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="value"
+                                            label="Value">
+                                    </el-table-column>
+                                </el-table>
+                            </el-tab-pane>
+                            <el-tab-pane label="Query String">
+                                <el-table :data="currentRequestQueryString"
+                                          border="true"
+                                          stripe
+                                          fit="true">
+                                    <el-table-column
+                                            prop="name"
+                                            label="Name"
+                                            width="200">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="value"
+                                            label="Value">
+                                    </el-table-column>
+                                </el-table>
+                            </el-tab-pane>
+                            <el-tab-pane label="Cookies">
+                                <el-table :data="currentRequestCookies"
+                                          border="true"
+                                          stripe
+                                          fit="true">
+                                    <el-table-column
+                                            prop="name"
+                                            label="Name"
+                                            width="200">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="value"
+                                            label="Value">
+                                    </el-table-column>
+                                </el-table>
+                            </el-tab-pane>
+                            <el-tab-pane label="Raw">Raw</el-tab-pane>
+                        </el-tabs>
+                    </el-tab-pane>
+                    <el-tab-pane label="Response" name="Response">
+                        <el-tabs :tab-position="contentsTabPosition">
+                            <el-tab-pane label="Headers">
+                                <el-table :data="currentResponseHeaders"
+                                          border="true"
+                                          stripe
+                                          fit="true">
+                                    <el-table-column
+                                            prop="name"
+                                            label="Name"
+                                            width="200">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="value"
+                                            label="Value">
+                                    </el-table-column>
+                                </el-table>
+                            </el-tab-pane>
+                            <el-tab-pane label="Cookies">
+                                <el-table :data="currentResponseCookies"
+                                          border="true"
+                                          stripe
+                                          fit="true">
+                                    <el-table-column
+                                            prop="name"
+                                            label="Name"
+                                            width="200">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="value"
+                                            label="Value">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="path"
+                                            label="Path">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="Max-Age"
+                                            label="Max-Age">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="HTTPOnly"
+                                            label="HttpOnly">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="secure"
+                                            label="Secure">
+                                    </el-table-column>
+                                </el-table>
+                            </el-tab-pane>
+                            <el-tab-pane label="Raw">Raw</el-tab-pane>
+                        </el-tabs>
+                    </el-tab-pane>
+                </el-tabs>
+            </div>
+        </div>
+
+    </div>
+
+
+    <el-container style="display: none;">
         <el-container style="padding-top: 1px">
-            <!--aside-->
-            <el-aside width="300px">
-                <el-tree :data="flows"
-                         :props="treeProps"
-                         highlight-current="true"
-                         @node-click="flowNodeClicked"
-                         :render-content="renderContent"></el-tree>
-            </el-aside>
-            <!--aside-->
-            <el-divider direction="vertical"></el-divider>
+
             <el-container>
                 <!--main-->
                 <el-main>
-                    <el-tabs v-model="activeName">
-                        <el-tab-pane label="Overview" name="Overview">
-                            <el-table :data="currentFlow"
-                                      border="true"
-                                      stripe
-                                      fit="true"
-                                      :show-header="false">
-                                <el-table-column
-                                        prop="name"
-                                        label="Name"
-                                        width="200">
-                                </el-table-column>
-                                <el-table-column
-                                        prop="value"
-                                        label="Value">
-                                </el-table-column>
-                            </el-table>
-                        </el-tab-pane>
-                        <el-tab-pane label="Request" name="Request">
-                            <el-tabs :tab-position="contentsTabPosition">
-                                <el-tab-pane label="Headers">
-                                    <el-table :data="currentRequestHeaders"
-                                              border="true"
-                                              stripe
-                                              fit="true">
-                                        <el-table-column
-                                                prop="name"
-                                                label="Name"
-                                                width="200">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="value"
-                                                label="Value">
-                                        </el-table-column>
-                                    </el-table>
-                                </el-tab-pane>
-                                <el-tab-pane label="Query String">
-                                    <el-table :data="currentRequestQueryString"
-                                              border="true"
-                                              stripe
-                                              fit="true">
-                                        <el-table-column
-                                                prop="name"
-                                                label="Name"
-                                                width="200">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="value"
-                                                label="Value">
-                                        </el-table-column>
-                                    </el-table>
-                                </el-tab-pane>
-                                <el-tab-pane label="Cookies">
-                                    <el-table :data="currentRequestCookies"
-                                              border="true"
-                                              stripe
-                                              fit="true">
-                                        <el-table-column
-                                                prop="name"
-                                                label="Name"
-                                                width="200">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="value"
-                                                label="Value">
-                                        </el-table-column>
-                                    </el-table>
-                                </el-tab-pane>
-                                <el-tab-pane label="Raw">Raw</el-tab-pane>
-                            </el-tabs>
-                        </el-tab-pane>
-                        <el-tab-pane label="Response" name="Response">
-                            <el-tabs :tab-position="contentsTabPosition">
-                                <el-tab-pane label="Headers">
-                                    <el-table :data="currentResponseHeaders"
-                                              border="true"
-                                              stripe
-                                              fit="true">
-                                        <el-table-column
-                                                prop="name"
-                                                label="Name"
-                                                width="200">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="value"
-                                                label="Value">
-                                        </el-table-column>
-                                    </el-table>
-                                </el-tab-pane>
-                                <el-tab-pane label="Cookies">
-                                    <el-table :data="currentResponseCookies"
-                                              border="true"
-                                              stripe
-                                              fit="true">
-                                        <el-table-column
-                                                prop="name"
-                                                label="Name"
-                                                width="200">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="value"
-                                                label="Value">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="path"
-                                                label="Path">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="Max-Age"
-                                                label="Max-Age">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="HTTPOnly"
-                                                label="HttpOnly">
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="secure"
-                                                label="Secure">
-                                        </el-table-column>
-                                    </el-table>
-                                </el-tab-pane>
-                                <el-tab-pane label="Raw">Raw</el-tab-pane>
-                            </el-tabs>
-                        </el-tab-pane>
 
-                    </el-tabs>
-                    </template>
                 </el-main>
                 <!--main-->
             </el-container>

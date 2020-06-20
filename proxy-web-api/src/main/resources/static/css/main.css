@@ -1,95 +1,69 @@
-html, body, #main, .el-container {
-    /*设置内部填充为0，几个布局元素之间没有间距*/
+html, body, #main{
     padding: 0;
-    /*外部间距也是如此设置*/
-    margin: 0;
-    /*统一设置高度为100%*/
-    height: 100%;
-}
-
-.el-header {
-    padding: 0;
-}
-
-.el-divider--horizontal {
-    margin: 0;
-}
-
-.el-divider--vertical {
     margin: 0;
     height: 100%;
 }
-
-.el-divider {
-    background-color: #dcdfe6;
+.p-header {
+    height: 72px;
+    width: 100%;
+    overflow: hidden;
 }
-.el-row {
+.p-container {
+    width: 100%;
+    position: absolute;
+    top: 72px;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+}
+.p-container-inner {
+    padding-left: 300px;
+    width: 100%;
+    height: 100%;
+}
+.p-border-right {
+    border-right: solid 1px #909399;
+}
+.p-border-left {
+    border-left: solid 1px #909399;
+}
+.p-border-bottom {
+    border-bottom: solid 1px #909399;
+}
+/*header组件*/
+.p-menus {
     height: 35px;
     line-height: 35px;
-    margin: 0;
-}
-
-.el-middle {
-    display:flex;
-    justify-content:center;/*主轴上居中*/
-    align-items:center;/*侧轴上居中*/
-}
-.tools .el-middle {
-    height: 35px;
+    width: 100%;
+    overflow: hidden;
 }
 .p-tools {
     padding: 0 10px;
+    height: 35px;
+    line-height: 35px;
+    width: 100%;
+    overflow: hidden;
 }
-.p-tools-ele {
-    float: left;
+.p-menus .p-menu {
+    height: 35px;
+}
+.p-tools .p-tool {
+    height: 35px;
+    line-height: 35px;
+}
+.p-tools .p-tool .p-icon {
+    height: 35px;
+    line-height: 35px;
+    width: 35px;
+    text-align: center;
     padding: 0 5px;
 }
-.p-tools-ele {
-    width: 100px;
+.p-icon {
+    font-size: 20px;
+    color: #909399;
 }
-.p-tools-ele i {
-    height: 35px;
-    line-height: 35px;
-}
-.p-tools-icon {
+.p-icon:hover {
     color: black;
-}
-.p-tools-icon:hover {
-    color: #cccccc;
-}
-.tools i {
-    margin-left: 10px;
-    margin-right: 10px;
-}
-.el-select .el-input .el-input__inner {
-    width: 320px;
-}
-.el-table__row .el-table_1_column_1   {
-    text-align: right !important;
-}
-.el-tree-node {
-    height: 30px;
-    line-height: 30px;
-}
-.el-main {
-    padding-bottom: 0;
-    padding-top: 0;
-}
-.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
-    background-color: #f5d29f;
-}
-
-.p-header {
-    height: 72px;
-    overflow: hidden;
-}
-.p-header .p-menus {
-    height: 35px;
-    line-height: 35px;
-    overflow: hidden;
-}
-.p-header .p-menus .p-menu {
-    height: 35px;
 }
 .el-menu--horizontal>.el-menu-item {
     height: 35px;
@@ -103,3 +77,108 @@ html, body, #main, .el-container {
     height: 35px;
     line-height: 35px;
 }
+/*header组件*/
+
+/*aside组件*/
+.p-aside {
+    height: 100%;
+    width: 300px;
+    float: left;
+    overflow: hidden;
+    margin-left: -300px;
+}
+.p-aside-inner {
+    height: 100%;
+    width: 299px;
+}
+.p-search {
+    height: 25px;
+    line-height: 25px;
+    width: 100%;
+    padding: 5px 0;
+}
+.p-search .p-filter {
+    font-style: normal;
+    font-size: 14px;
+    color: #909399;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    padding: 0 5px;
+}
+.p-aside .p-border-bottom {
+    border-color: #e4e4e4;
+}
+.p-search .p-url-filter {
+    width: 240px;
+    height: 20px;
+    line-height: 20px;
+}
+.p-search .el-input__inner {
+    height: 20px;
+    line-height: 20px;
+    padding: 0 2px;
+}
+.p-list-container {
+    width: 100%;
+    height: 100%;
+    overflow-x: scroll;
+}
+.p-list {
+    list-style: none;
+    margin: 5px 0 0 0;
+    padding-left: 5px;
+    width: 600px;
+}
+.p-list li a span {
+    width: 600px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.p-url-active {
+    color: #409EFF !important;
+    background-color: #e0e2cc;
+}
+/*aside组件*/
+
+/*main组件*/
+.p-main {
+    width: 100%;
+    height: 100%;
+    float: right;
+}
+.p-tabs {
+    width: 100%;
+    height: 100%;
+}
+.p-main>.el-tabs>.el-tabs__header {
+    position: absolute;
+    top: 0;
+    left: 300px;
+    right: 0;
+    bottom: 0;
+    padding-left: 10px;
+    margin: 0;
+    height: 50px;
+}
+.p-main>.el-tabs>.el-tabs__content {
+    position: absolute;
+    top: 50px;
+    left: 300px;
+    right: 0;
+    bottom: 0;
+    padding-left: 10px;
+    margin: 0;
+    overflow-x: scroll;
+}
+.el-tabs__content {
+    overflow: scroll;
+}
+.el-table td {
+    padding: 2px 0;
+}
+.cell {
+    font-size: 14px;
+}
+/*main组件*/

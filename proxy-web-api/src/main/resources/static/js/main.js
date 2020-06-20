@@ -2,6 +2,8 @@ new Vue({
     el: '#main',
     data: function () {
         return {
+            currentFlowId: '',
+            urlFilter: '',
             activeIndex: '1',
             hasResponse: false,
             contentsTabPosition: 'left',
@@ -49,7 +51,8 @@ new Vue({
         handleSelect(key, keyPath) {
             console.log(key, keyPath);
         },
-        flowNodeClicked(data, node, ele) {
+        handleUrlClicked(id, data, event) {
+            this.currentFlowId = data.request.id;
             this.currentFlow = [];
             this.currentFlow.push({
                 'name': 'Time',
@@ -62,6 +65,7 @@ new Vue({
             this.currentFlow.push({'name': 'HttpVersion', 'value': data.request.httpVersion});
             this.currentFlow.push({'name': 'Response Code', 'value': !data.response ? '-' : data.response.status});
             this.currentFlow.push({'name': 'Content-Type', 'value': !data.response ? '-' : data.response.contentType});
+
             this.currentRequestHeaders = data.requestHeaders;
             this.currentRequestQueryString = this.getQueryString(data.request.uri);
             let requestCookies = data.requestHeaders.filter(header => header.name === 'Cookie');
@@ -106,7 +110,6 @@ new Vue({
                     }
                 }
             }
-
         },
         getQueryString(uri) {
             let queryList = [];
@@ -118,25 +121,6 @@ new Vue({
                 }
             }
             return queryList;
-        },
-        renderContent(createElement, {node, data, store}) {
-            return createElement('span', {
-                style: {
-                    color: "black"
-                },
-                on: {
-                    contextmenu: function (e) {
-                        e = e || window.event;
-                        e.preventDefault();
-                        let menu = document.getElementById('menu');
-                        // 显示自定义的菜单 调整位置
-                        menu.style.display = 'block';
-                        menu.style.left = e.clientX + 'px';
-                        menu.style.top = e.clientY + 'px';
-                    }
-                },
-                domProps: {title: data.request.uri}
-            }, data.request.uri);
         },
         dateFormat(fmt, date) {
             let ret;
