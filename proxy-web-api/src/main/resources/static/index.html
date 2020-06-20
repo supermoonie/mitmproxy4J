@@ -36,6 +36,41 @@
     </ul>
 </div>
 <div id="main">
+    <div class="p-header">
+        <div class="p-menus">
+            <el-menu :default-active="activeIndex" class="p-menu" menu-trigger="hover" mode="horizontal" @select="handleSelect">
+                <el-submenu index="1">
+                    <template slot="title">File</template>
+                    <el-menu-item index="1-1">Open...</el-menu-item>
+                    <el-menu-item index="1-2">Save...</el-menu-item>
+                </el-submenu>
+                <el-submenu index="2">
+                    <template slot="title">Proxy</template>
+                    <el-menu-item index="2-1">Start Record...</el-menu-item>
+                    <el-menu-item index="2-2">Start Throttling...</el-menu-item>
+                    <el-menu-item index="2-3">Open Windows Proxy</el-menu-item>
+                    <el-menu-item index="2-4">Proxy Settings...</el-menu-item>
+                </el-submenu>
+                <el-submenu index="3">
+                    <template slot="title">Tools</template>
+                    <el-menu-item index="3-1">Map Remote...</el-menu-item>
+                    <el-menu-item index="3-2">Map Local...</el-menu-item>
+                    <el-menu-item index="3-3">Black List...</el-menu-item>
+                    <el-menu-item index="3-4">White List...</el-menu-item>
+                </el-submenu>
+                <el-submenu index="4">
+                    <template slot="title">Help</template>
+                    <el-menu-item index="4-1">Download Root Certificate</el-menu-item>
+                    <el-menu-item index="4-2">Check For Update</el-menu-item>
+                    <el-menu-item index="4-3">About mitmproxy4J</el-menu-item>
+                </el-submenu>
+            </el-menu>
+        </div>
+        <div class="p-tools">
+
+        </div>
+    </div>
+
     <el-container>
         <!--header-->
         <el-header height="70px">
@@ -48,48 +83,15 @@
                 </el-col>
             </el-row>
             <el-divider></el-divider>
-            <el-row align="middle" class="tools" :gutter="10" style="margin: 0 !important;">
-                <el-col :span="1">
-                    <div class="el-middle">
-                        <i class="el-icon-delete" style="color: #dcc103; font-size: 22px"></i>
-                    </div>
-                </el-col>
-                <el-col :span="1">
-                    <div class="el-middle" style="color: #303133;">Filter:</div>
-                </el-col>
-                <el-col :span="4">
-                    <div class="el-middle">
-                        <el-input placeholder="请输入host" size="mini" clearable="true" v-model="search.host">
-                            <template slot="prepend">host:</template>
-                        </el-input>
-                    </div>
-                </el-col>
-                <el-col :span="3">
-                    <div class="el-middle">
-                        <el-input placeholder="请输入port" size="mini" clearable="true" maxlength="6"
-                                  v-model="search.port">
-                            <template slot="prepend">port:</template>
-                        </el-input>
-                    </div>
-                </el-col>
-                <el-col :span="4">
-                    <div class="el-middle">
-                        <el-select v-model="search.contentType" size="mini" filterable allow-create clearable
-                                   placeholder="响应类型">
-                            <el-option
-                                    v-for="item in contentTypeList"
-                                    :key="item"
-                                    :label="item"
-                                    :value="item">
-                            </el-option>
-                        </el-select>
-                    </div>
-                </el-col>
-            </el-row>
+            <div class="p-tools">
+                <div class="p-tools-ele">
+                    <i class="el-icon-delete p-tools-icon"></i>
+                </div>
+            </div>
         </el-header>
         <!--header-->
         <el-divider></el-divider>
-        <el-container>
+        <el-container style="padding-top: 1px">
             <!--aside-->
             <el-aside width="300px">
                 <el-tree :data="flows"
@@ -174,61 +176,59 @@
                                 <el-tab-pane label="Raw">Raw</el-tab-pane>
                             </el-tabs>
                         </el-tab-pane>
-                        <div v-if="hasResponse">
-                            <el-tab-pane label="Response" name="Response">
-                                <el-tabs :tab-position="contentsTabPosition">
-                                    <el-tab-pane label="Headers">
-                                        <el-table :data="currentResponseHeaders"
-                                                  border="true"
-                                                  stripe
-                                                  fit="true">
-                                            <el-table-column
-                                                    prop="name"
-                                                    label="Name"
-                                                    width="200">
-                                            </el-table-column>
-                                            <el-table-column
-                                                    prop="value"
-                                                    label="Value">
-                                            </el-table-column>
-                                        </el-table>
-                                    </el-tab-pane>
-                                    <el-tab-pane label="Cookies">
-                                        <el-table :data="currentResponseCookies"
-                                                  border="true"
-                                                  stripe
-                                                  fit="true">
-                                            <el-table-column
-                                                    prop="name"
-                                                    label="Name"
-                                                    width="200">
-                                            </el-table-column>
-                                            <el-table-column
-                                                    prop="value"
-                                                    label="Value">
-                                            </el-table-column>
-                                            <el-table-column
-                                                    prop="path"
-                                                    label="Path">
-                                            </el-table-column>
-                                            <el-table-column
-                                                    prop="Max-Age"
-                                                    label="Max-Age">
-                                            </el-table-column>
-                                            <el-table-column
-                                                    prop="HTTPOnly"
-                                                    label="HttpOnly">
-                                            </el-table-column>
-                                            <el-table-column
-                                                    prop="secure"
-                                                    label="Secure">
-                                            </el-table-column>
-                                        </el-table>
-                                    </el-tab-pane>
-                                    <el-tab-pane label="Raw">Raw</el-tab-pane>
-                                </el-tabs>
-                            </el-tab-pane>
-                        </div>
+                        <el-tab-pane label="Response" name="Response">
+                            <el-tabs :tab-position="contentsTabPosition">
+                                <el-tab-pane label="Headers">
+                                    <el-table :data="currentResponseHeaders"
+                                              border="true"
+                                              stripe
+                                              fit="true">
+                                        <el-table-column
+                                                prop="name"
+                                                label="Name"
+                                                width="200">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="value"
+                                                label="Value">
+                                        </el-table-column>
+                                    </el-table>
+                                </el-tab-pane>
+                                <el-tab-pane label="Cookies">
+                                    <el-table :data="currentResponseCookies"
+                                              border="true"
+                                              stripe
+                                              fit="true">
+                                        <el-table-column
+                                                prop="name"
+                                                label="Name"
+                                                width="200">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="value"
+                                                label="Value">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="path"
+                                                label="Path">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="Max-Age"
+                                                label="Max-Age">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="HTTPOnly"
+                                                label="HttpOnly">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="secure"
+                                                label="Secure">
+                                        </el-table-column>
+                                    </el-table>
+                                </el-tab-pane>
+                                <el-tab-pane label="Raw">Raw</el-tab-pane>
+                            </el-tabs>
+                        </el-tab-pane>
 
                     </el-tabs>
                     </template>

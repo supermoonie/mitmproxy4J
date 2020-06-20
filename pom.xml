@@ -62,7 +62,7 @@
             </dependency>
             <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
             <dependency>
-                <groupId>org.xerial</groupId>
+                <groupId>com.github.supermoonie</groupId>
                 <artifactId>sqlite-jdbc</artifactId>
                 <version>${sqlite.version}</version>
             </dependency>

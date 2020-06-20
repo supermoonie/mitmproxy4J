@@ -67,7 +67,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
             HttpRequest request = (HttpRequest) msg;
             // 第一次建立连接取host和端口号和处理代理握手
             if (status == 0) {
-                log.info("---------- CONNECT uri: {} ----------", request.uri());
+                log.debug("---------- CONNECT uri: {} ----------", request.uri());
                 RequestProto requestProto = ProtoUtil.getRequestProto(request);
                 // bad request
                 if (requestProto == null) {
@@ -87,7 +87,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                     ctx.channel().pipeline().remove("httpCodec");
                     // fix issue #42
                     ReferenceCountUtil.release(msg);
-                    log.info("---------- CONNECTED uri: {} ----------", request.uri());
+                    log.debug("---------- CONNECTED uri: {} ----------", request.uri());
                     return;
                 }
             }
@@ -99,10 +99,10 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                 request.setUri(baseUri + request.uri());
             }
             if (msg instanceof DefaultHttpRequest) {
-                log.info("---------- BUILD INTERCEPT PIPELINE, uri: {} ----------", request.uri());
+                log.debug("---------- BUILD INTERCEPT PIPELINE, uri: {} ----------", request.uri());
                 interceptPipeline = buildPipeline();
                 interceptPipeline.setRequestProto(new RequestProto(this.host, this.port, this.isSsl));
-                log.info("---------- HAS BUILD INTERCEPT PIPELINE, uri: {} ----------", request.uri());
+                log.debug("---------- HAS BUILD INTERCEPT PIPELINE, uri: {} ----------", request.uri());
             }
             interceptPipeline.beforeRequest(ctx.channel(), request);
         } else if (msg instanceof HttpContent) {

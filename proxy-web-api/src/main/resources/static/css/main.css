@@ -37,6 +37,26 @@ html, body, #main, .el-container {
 .tools .el-middle {
     height: 35px;
 }
+.p-tools {
+    padding: 0 10px;
+}
+.p-tools-ele {
+    float: left;
+    padding: 0 5px;
+}
+.p-tools-ele {
+    width: 100px;
+}
+.p-tools-ele i {
+    height: 35px;
+    line-height: 35px;
+}
+.p-tools-icon {
+    color: black;
+}
+.p-tools-icon:hover {
+    color: #cccccc;
+}
 .tools i {
     margin-left: 10px;
     margin-right: 10px;
@@ -57,4 +77,29 @@ html, body, #main, .el-container {
 }
 .el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
     background-color: #f5d29f;
+}
+
+.p-header {
+    height: 72px;
+    overflow: hidden;
+}
+.p-header .p-menus {
+    height: 35px;
+    line-height: 35px;
+    overflow: hidden;
+}
+.p-header .p-menus .p-menu {
+    height: 35px;
+}
+.el-menu--horizontal>.el-menu-item {
+    height: 35px;
+    line-height: 35px;
+}
+.el-menu--horizontal>.el-submenu .el-submenu__title {
+    height: 35px;
+    line-height: 35px;
+}
+.el-menu-item {
+    height: 35px;
+    line-height: 35px;
 }

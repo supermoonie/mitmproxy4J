@@ -2,6 +2,7 @@ new Vue({
     el: '#main',
     data: function () {
         return {
+            activeIndex: '1',
             hasResponse: false,
             contentsTabPosition: 'left',
             activeName: 'Overview',
@@ -45,6 +46,9 @@ new Vue({
                     console.log(error);
                 });
         },
+        handleSelect(key, keyPath) {
+            console.log(key, keyPath);
+        },
         flowNodeClicked(data, node, ele) {
             this.currentFlow = [];
             this.currentFlow.push({
@@ -71,10 +75,6 @@ new Vue({
                         'value': cookieFieldList[i].split("=")[1].trim()
                     })
                 }
-            }
-            if (!data.response) {
-                this.hasResponse = false;
-                return;
             }
             this.hasResponse = true;
             this.currentResponseCookies = [];

@@ -20,9 +20,6 @@ public class ProxyApplication
     public static void main(String[] args) {
         System.out.println("start proxy server");
         int port = 10801;
-        if (args.length > 0) {
-            port = Integer.valueOf(args[0]);
-        }
         HttpProxyServerConfig serverConfig = new HttpProxyServerConfig();
         serverConfig.setHandleSsl(true);
         new HttpProxyServer()

@@ -14,7 +14,7 @@ import java.util.WeakHashMap;
  */
 public class CertPool {
 
-    private static Map<Integer, Map<String, X509Certificate>> certCache = new WeakHashMap<>();
+    private static final Map<Integer, Map<String, X509Certificate>> certCache = new WeakHashMap<>();
 
     public static X509Certificate getCert(Integer port, String host, HttpProxyServerConfig serverConfig)
             throws Exception {
