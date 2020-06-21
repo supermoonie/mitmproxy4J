@@ -3,6 +3,12 @@ html, body, #main{
     margin: 0;
     height: 100%;
 }
+.p-select-none {
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+}
 .p-header {
     height: 72px;
     width: 100%;
@@ -91,6 +97,17 @@ html, body, #main{
     height: 100%;
     width: 299px;
 }
+.p-divider {
+    cursor: ew-resize;
+    position: absolute;
+    left: 300px;
+    top: 0;
+    height: 100%;
+    width: 0;
+    border-left: solid 1px #909399;
+    margin: 0;
+    z-index: 99999;
+}
 .p-search {
     height: 25px;
     line-height: 25px;
@@ -155,7 +172,7 @@ html, body, #main{
 .p-main>.el-tabs>.el-tabs__header {
     position: absolute;
     top: 0;
-    left: 300px;
+    left: 301px;
     right: 0;
     bottom: 0;
     padding-left: 10px;
@@ -165,7 +182,7 @@ html, body, #main{
 .p-main>.el-tabs>.el-tabs__content {
     position: absolute;
     top: 50px;
-    left: 300px;
+    left: 301px;
     right: 0;
     bottom: 0;
     padding-left: 10px;
@@ -175,7 +192,7 @@ html, body, #main{
 .el-tabs__content {
     overflow: scroll;
 }
-.el-table td {
+.el-table td, .el-table th {
     padding: 2px 0;
 }
 .cell {

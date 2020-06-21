@@ -39,7 +39,7 @@ new Vue({
     methods: {
         fetch() {
             const that = this;
-            axios.get('/flow/fetch?host=' + this.search.host + '&port' + this.search.port + '&contentType=' + this.search.contentType + '&start=2020-06-11 07:54:00')
+            axios.get('http://127.0.0.1:8866/flow/fetch?host=' + this.search.host + '&port' + this.search.port + '&contentType=' + this.search.contentType + '&start=2020-06-11 07:54:00')
                 .then(function (response) {
                     that.flows = response.data;
                     console.log(that.flows);
@@ -139,9 +139,44 @@ new Vue({
                 }
             }
             return fmt;
+        },
+        dragDivider : function () {
+            window.onload = function() {
+                let controller = document.querySelector('#p-resize-controller');
+                controller.onmousedown = function(e) {
+                    let main = document.querySelector("#main");
+                    main.className = 'p-select-none';
+                    let urlList = document.querySelectorAll('#p-url-list li a span');
+                    let startX = e.clientX;
+                    let aside = document.querySelector('#p-aside');
+                    let header = document.querySelector('#p-main>.el-tabs>.el-tabs__header');
+                    let content = document.querySelector('#p-main>.el-tabs>.el-tabs__content');
+                    document.onmousemove = function(event) {
+                        let endX = event.clientX;
+                        if (endX <= 300) {
+                            return;
+                        }
+                        let moveLen = startX + (endX - startX);
+                        controller.style.left = moveLen + 'px';
+                        aside.style.width = moveLen + 'px';
+                        header.style.left = moveLen + 'px';
+                        content.style.left = moveLen + 'px';
+                        if (!!urlList && moveLen > 580) {
+                            for(let i = 0; i < urlList.length; i ++)
+                            urlList[i].style.width = moveLen + 'px';
+                        }
+                    }
+                    document.onmouseup = function(event) {
+                        document.onmousemove = null;
+                        document.onmouseup = null;
+                        main.className = null;
+                    }
+                }
+            }
         }
     },
     mounted() {
+        this.dragDivider();
         this.timer = setTimeout(this.fetch, 200);
     },
     beforeDestroy() {

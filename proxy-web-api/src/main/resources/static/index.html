@@ -77,27 +77,25 @@
     </div>
     <div class="p-container">
         <div class="p-container-inner">
-            <div class="p-aside">
-                <div class="p-aside-inner p-border-right">
-                    <div class="p-search p-border-bottom">
-                        <span class="p-filter">Filter:</span>
-                        <el-input class="p-url-filter" v-model="urlFilter"></el-input>
-                    </div>
-                    <div class="p-list-container">
-                        <ul class="p-list">
-                            <li v-cloak v-for="flow in flows" :key="flow.request.id">
-                                <el-link :underline="false" :title="flow.request.uri"
-                                         :class="{'p-url-active': currentFlowId == flow.request.id}"
-                                         v-on:click="handleUrlClicked(flow.request.id, flow, $event)">
-                                    {{ flow.request.uri }}
-                                </el-link>
-                            </li>
-                        </ul>
-                    </div>
+            <div class="p-aside" id="p-aside">
+                <div class="p-search p-border-bottom">
+                    <span class="p-filter">Filter:</span>
+                    <el-input class="p-url-filter" v-model="urlFilter"></el-input>
                 </div>
-
+                <div class="p-list-container">
+                    <ul class="p-list" id="p-url-list">
+                        <li v-cloak v-for="flow in flows" :key="flow.request.id">
+                            <el-link :underline="false" :title="flow.request.uri"
+                                     :class="{'p-url-active': currentFlowId == flow.request.id}"
+                                     v-on:click="handleUrlClicked(flow.request.id, flow, $event)">
+                                {{ flow.request.uri }}
+                            </el-link>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="p-main">
+            <el-divider id="p-resize-controller" class="p-divider" direction="vertical"></el-divider>
+            <div class="p-main" id="p-main">
                 <el-tabs v-model="activeName" class="p-tabs">
                     <el-tab-pane label="Overview" name="Overview">
                         <el-table :data="currentFlow"
@@ -225,7 +223,6 @@
                 </el-tabs>
             </div>
         </div>
-
     </div>
 
 

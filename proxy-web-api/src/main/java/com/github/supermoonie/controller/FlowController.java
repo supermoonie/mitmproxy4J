@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +37,7 @@ public class FlowController {
             @ApiImplicitParam(name = "start", value = "start", dataTypeClass = Date.class, paramType = "query")
     })
     @GetMapping(value = "/fetch")
+    @CrossOrigin
     public ResponseEntity<List<Flow>> fetch(String host, Integer port, String contentType,
                                              @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start) {
         List<Flow> flows = flowService.fetch(host, port, contentType, start);
