@@ -39,6 +39,7 @@
     </ul>
 </div>
 <div id="main">
+    <!--header开始-->
     <div class="p-header">
         <div class="p-menus p-border-bottom">
             <el-menu v-cloak :default-active="activeIndex" class="p-menu" menu-trigger="hover" mode="horizontal" @select="handleSelect">
@@ -75,8 +76,12 @@
             </div>
         </div>
     </div>
+    <!--header结束-->
+
+    <!--aside & main 开始-->
     <div class="p-container">
         <div class="p-container-inner">
+            <!--aside 开始-->
             <div class="p-aside" id="p-aside">
                 <div class="p-search p-border-bottom">
                     <span class="p-filter">Filter:</span>
@@ -94,15 +99,18 @@
                     </ul>
                 </div>
             </div>
+            <!--aside 结束-->
             <el-divider id="p-resize-controller" class="p-divider" direction="vertical"></el-divider>
+            <!--main 开始-->
             <div class="p-main" id="p-main">
                 <el-tabs v-model="activeName" class="p-tabs">
+                    <!--overview 开始-->
                     <el-tab-pane label="Overview" name="Overview">
-                        <el-table :data="currentFlow"
+                        <el-table :data="currentOverview"
                                   border="true"
                                   stripe
                                   fit="true"
-                                  :show-header="false">
+                                  :show-header="false" :row-class-name="overviewRowClassName">
                             <el-table-column
                                     prop="name"
                                     label="Name"
@@ -114,6 +122,9 @@
                             </el-table-column>
                         </el-table>
                     </el-tab-pane>
+                    <!--overview 结束-->
+
+                    <!--request 开始-->
                     <el-tab-pane label="Request" name="Request">
                         <el-tabs :tab-position="contentsTabPosition">
                             <el-tab-pane label="Headers">
@@ -167,6 +178,9 @@
                             <el-tab-pane label="Raw">Raw</el-tab-pane>
                         </el-tabs>
                     </el-tab-pane>
+                    <!--request 结束-->
+
+                    <!--response 开始-->
                     <el-tab-pane label="Response" name="Response">
                         <el-tabs :tab-position="contentsTabPosition">
                             <el-tab-pane label="Headers">
@@ -220,28 +234,14 @@
                             <el-tab-pane label="Raw">Raw</el-tab-pane>
                         </el-tabs>
                     </el-tab-pane>
+                    <!--response 结束-->
                 </el-tabs>
             </div>
+            <!--main 结束-->
         </div>
     </div>
+    <!--aside & main 结束-->
 
-
-    <el-container style="display: none;">
-        <el-container style="padding-top: 1px">
-
-            <el-container>
-                <!--main-->
-                <el-main>
-
-                </el-main>
-                <!--main-->
-            </el-container>
-        </el-container>
-        <el-divider></el-divider>
-        <!--footer-->
-<!--        <el-footer>Footer</el-footer>-->
-        <!--footer-->
-    </el-container>
 </div>
 </body>
 <script type="application/javascript" src="js/main.js"></script>

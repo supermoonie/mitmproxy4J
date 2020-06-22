@@ -6,6 +6,9 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.AsciiString;
 
+/**
+ * @author supermoonie
+ */
 public class HttpUtil {
 
     /**

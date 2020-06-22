@@ -11,6 +11,7 @@ import com.github.supermoonie.proxy.SecondProxyConfig;
 import com.github.supermoonie.server.HttpProxyServerConfig;
 import com.github.supermoonie.util.ProtoUtil;
 import com.github.supermoonie.util.ProtoUtil.RequestProto;
+import com.github.supermoonie.util.ResponseUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -212,8 +213,13 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                 } else {
                     requestList.forEach(ReferenceCountUtil::release);
                     requestList.clear();
+                    Throwable cause = future.cause();
+                    String body = "<h1>mitmproxy4J Error Report:</h1><h3>" + cause.getMessage() + "</h3>";
+                    HttpResponse httpResponse = ResponseUtils.htmlResponse(body, HttpResponseStatus.SERVICE_UNAVAILABLE);
+                    interceptPipeline.afterResponse(channel, future.channel(), httpResponse);
                     future.channel().close();
                     channel.close();
+                    log.error(cause.getMessage(), cause);
                 }
             });
         } else {

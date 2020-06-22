@@ -13,8 +13,8 @@ import io.netty.handler.proxy.ProxyHandler;
  */
 public class TunnelProxyInitializer extends ChannelInitializer {
 
-    private Channel clientChannel;
-    private ProxyHandler proxyHandler;
+    private final Channel clientChannel;
+    private final ProxyHandler proxyHandler;
 
     public TunnelProxyInitializer(Channel clientChannel,
                                   ProxyHandler proxyHandler) {

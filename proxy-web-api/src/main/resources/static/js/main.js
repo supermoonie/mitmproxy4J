@@ -5,10 +5,9 @@ new Vue({
             currentFlowId: '',
             urlFilter: '',
             activeIndex: '1',
-            hasResponse: false,
             contentsTabPosition: 'left',
             activeName: 'Overview',
-            currentFlow: [],
+            currentOverview: [],
             currentRequestHeaders: [],
             currentRequestQueryString: [],
             currentRequestCookies: [],
@@ -28,11 +27,6 @@ new Vue({
                 host: "",
                 port: "",
                 contentType: ""
-            },
-            treeProps: {
-                label: function (data, node) {
-                    return data.request.uri
-                }
             }
         }
     },
@@ -53,18 +47,18 @@ new Vue({
         },
         handleUrlClicked(id, data, event) {
             this.currentFlowId = data.request.id;
-            this.currentFlow = [];
-            this.currentFlow.push({
+            this.currentOverview = [];
+            this.currentOverview.push({
                 'name': 'Time',
                 'value': this.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(data.request.timeCreated))
             });
-            this.currentFlow.push({'name': 'Uri', 'value': data.request.uri});
-            this.currentFlow.push({'name': 'Method', 'value': data.request.method});
-            this.currentFlow.push({'name': 'Host', 'value': data.request.host});
-            this.currentFlow.push({'name': 'Port', 'value': data.request.port});
-            this.currentFlow.push({'name': 'HttpVersion', 'value': data.request.httpVersion});
-            this.currentFlow.push({'name': 'Response Code', 'value': !data.response ? '-' : data.response.status});
-            this.currentFlow.push({'name': 'Content-Type', 'value': !data.response ? '-' : data.response.contentType});
+            this.currentOverview.push({'name': 'Uri', 'value': data.request.uri});
+            this.currentOverview.push({'name': 'Method', 'value': data.request.method});
+            this.currentOverview.push({'name': 'Host', 'value': data.request.host});
+            this.currentOverview.push({'name': 'Port', 'value': data.request.port});
+            this.currentOverview.push({'name': 'HttpVersion', 'value': data.request.httpVersion});
+            this.currentOverview.push({'name': 'Response Code', 'value': !data.response ? '-' : data.response.status});
+            this.currentOverview.push({'name': 'Content-Type', 'value': !data.response ? '-' : data.response.contentType});
 
             this.currentRequestHeaders = data.requestHeaders;
             this.currentRequestQueryString = this.getQueryString(data.request.uri);
@@ -80,7 +74,7 @@ new Vue({
                     })
                 }
             }
-            this.hasResponse = true;
+            this.currentResponseHeaders = [];
             this.currentResponseCookies = [];
             if (!!data.responseHeaders) {
                 this.currentResponseHeaders = data.responseHeaders;
@@ -140,6 +134,20 @@ new Vue({
             }
             return fmt;
         },
+        // Overview 根据 response code 加载不同的ClassName
+        overviewRowClassName: function ({row, rowIndex}) {
+            if (row.name === 'Response Code') {
+                if (row.value >= 200 && row.value < 300) {
+                    return 'success-row';
+                } else if (row.value >= 300 && row.value < 400) {
+                    return 'warning-row';
+                } else if (row.value >= 400) {
+                    return 'danger-row';
+                }
+            }
+            return '';
+        },
+        // 分割线拖动
         dragDivider : function () {
             window.onload = function() {
                 let controller = document.querySelector('#p-resize-controller');
@@ -151,9 +159,13 @@ new Vue({
                     let aside = document.querySelector('#p-aside');
                     let header = document.querySelector('#p-main>.el-tabs>.el-tabs__header');
                     let content = document.querySelector('#p-main>.el-tabs>.el-tabs__content');
+                    let clientWidth = document.body.clientWidth;
                     document.onmousemove = function(event) {
                         let endX = event.clientX;
                         if (endX <= 300) {
+                            return;
+                        }
+                        if (clientWidth - 20 < endX) {
                             return;
                         }
                         let moveLen = startX + (endX - startX);
@@ -166,7 +178,7 @@ new Vue({
                             urlList[i].style.width = moveLen + 'px';
                         }
                     }
-                    document.onmouseup = function(event) {
+                    document.onmouseup = function() {
                         document.onmousemove = null;
                         document.onmouseup = null;
                         main.className = null;

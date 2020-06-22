@@ -36,6 +36,15 @@ html, body, #main{
 .p-border-bottom {
     border-bottom: solid 1px #909399;
 }
+.el-table .warning-row {
+    background: #fdf5e6;
+}
+.el-table .success-row {
+    background: #f0f9eb;
+}
+.el-table .danger-row {
+    background: #f9ebeb;
+}
 /*header组件*/
 .p-menus {
     height: 35px;
@@ -154,8 +163,8 @@ html, body, #main{
     white-space: nowrap;
 }
 .p-url-active {
-    color: #409EFF !important;
-    background-color: #e0e2cc;
+    color: white !important;
+    background-color: #409EFF;
 }
 /*aside组件*/
 
@@ -197,5 +206,8 @@ html, body, #main{
 }
 .cell {
     font-size: 14px;
+}
+.el-table__empty-block {
+    height: auto !important;
 }
 /*main组件*/

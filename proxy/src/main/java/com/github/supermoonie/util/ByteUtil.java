@@ -4,6 +4,9 @@ import io.netty.buffer.ByteBuf;
 
 import java.nio.charset.Charset;
 
+/**
+ * @author supermoonie
+ */
 public class ByteUtil {
 
 

@@ -16,7 +16,7 @@ public abstract class BaseFullResIntercept extends HttpProxyIntercept {
      */
     private static final int DEFAULT_MAX_CONTENT_LENGTH = 1024 * 1024 * 8;
 
-    private int maxContentLength;
+    private final int maxContentLength;
 
     public BaseFullResIntercept() {
         this(DEFAULT_MAX_CONTENT_LENGTH);
@@ -36,8 +36,12 @@ public abstract class BaseFullResIntercept extends HttpProxyIntercept {
             if (fullHttpResponse.headers().contains(HttpHeaderNames.CONTENT_LENGTH)) {
                 httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, fullHttpResponse.content().readableBytes());
             }
-            proxyChannel.pipeline().remove("decompress");
-            proxyChannel.pipeline().remove("aggregator");
+            if (null != proxyChannel.pipeline().get(HttpContentDecompressor.class)) {
+                proxyChannel.pipeline().remove(HttpContentDecompressor.class);
+            }
+            if (null != proxyChannel.pipeline().get(HttpObjectAggregator.class)) {
+                proxyChannel.pipeline().remove(HttpObjectAggregator.class);
+            }
         } else if (matchHandle(pipeline.getHttpRequest(), pipeline.getHttpResponse(), pipeline)) {
             pipeline.resetAfterHead();
             proxyChannel.pipeline().addAfter("httpCodec", "decompress", new HttpContentDecompressor());
