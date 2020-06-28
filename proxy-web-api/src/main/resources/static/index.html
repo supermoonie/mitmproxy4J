@@ -2,11 +2,19 @@
 <head>
     <title>mitmproxy4J</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <link rel="stylesheet" href="css/element-ui.css">
+    <link rel="stylesheet" href="third/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="third/highlight/css/default.css">
+    <link rel="stylesheet" href="third/highlight/css/github.css">
     <link rel="stylesheet" href="css/main.css">
-    <script src="js/vue@2.6.11.js"></script>
-    <script src="js/element-ui@2.13.2.js"></script>
-    <script src="js/axios.min.js"></script>
+    <script src="third/vue/vue@2.6.11.js"></script>
+    <script src="third/element-ui/element-ui@2.13.2.js"></script>
+    <script src="third/axios/axios.min.js"></script>
+    <script src="third/highlight/highlight.pack.js"></script>
+    <script src="third/crypto-js/crypto-js.js"></script>
+    <script src="third/crypto-js/cipher-core.js"></script>
+    <script src="third/crypto-js/format-hex.js"></script>
+    <script src="third/dplayer/hls.js"></script>
+    <script src="third/dplayer/DPlayer.min.js"></script>
     <style>
         #menu {
             border: 1px solid #ccc;
@@ -15,8 +23,9 @@
             width: 100px;
             height: 120px;
             display: none;
-            z-index: 999999999;
+            z-index: 99;
         }
+
         [v-cloak] {
             display: none;
         }
@@ -24,7 +33,7 @@
     <script>
         window.onload = function () {
             let menu = document.getElementById('menu');
-            document.onclick = function(){
+            document.onclick = function () {
                 menu.style.display = 'none';
             }
         }
@@ -42,7 +51,8 @@
     <!--header开始-->
     <div class="p-header">
         <div class="p-menus p-border-bottom">
-            <el-menu v-cloak :default-active="activeIndex" class="p-menu" menu-trigger="hover" mode="horizontal" @select="handleSelect">
+            <el-menu v-cloak :default-active="'1'" class="p-menu" menu-trigger="hover" mode="horizontal"
+                     @select="handleSelect">
                 <el-submenu index="1">
                     <template slot="title">File</template>
                     <el-menu-item index="1-1">Open...</el-menu-item>
@@ -72,7 +82,9 @@
         </div>
         <div class="p-tools p-border-bottom">
             <div class="p-tool">
-                <i class="el-icon-delete p-icon"></i>
+                <i class="el-icon-delete p-icon" @click="clear()"></i>
+                <i class="el-icon-edit p-icon"></i>
+                <i class="el-icon-search p-icon"></i>
             </div>
         </div>
     </div>
@@ -85,11 +97,13 @@
             <div class="p-aside" id="p-aside">
                 <div class="p-search p-border-bottom">
                     <span class="p-filter">Filter:</span>
-                    <el-input class="p-url-filter" v-model="urlFilter"></el-input>
+                    <el-input class="p-url-filter" @input="filter()"
+                              size="mini"
+                              clearable="true" v-model="urlFilter"></el-input>
                 </div>
-                <div class="p-list-container">
+                <div class="p-list-container" id="p-list-container">
                     <ul class="p-list" id="p-url-list">
-                        <li v-cloak v-for="flow in flows" :key="flow.request.id">
+                        <li v-cloak v-for="flow in showFlows" :key="flow.request.id">
                             <el-link :underline="false" :title="flow.request.uri"
                                      :class="{'p-url-active': currentFlowId == flow.request.id}"
                                      v-on:click="handleUrlClicked(flow.request.id, flow, $event)">
@@ -106,132 +120,99 @@
                 <el-tabs v-model="activeName" class="p-tabs">
                     <!--overview 开始-->
                     <el-tab-pane label="Overview" name="Overview">
-                        <el-table :data="currentOverview"
-                                  border="true"
-                                  stripe
-                                  fit="true"
-                                  :show-header="false" :row-class-name="overviewRowClassName">
-                            <el-table-column
-                                    prop="name"
-                                    label="Name"
-                                    width="200">
-                            </el-table-column>
-                            <el-table-column
-                                    prop="value"
-                                    label="Value">
-                            </el-table-column>
+                        <el-table :data="current.overview" border="true" stripe fit="true" :show-header="false" :row-class-name="overviewRowClassName">
+                            <el-table-column prop="name" label="Name" width="200"></el-table-column>
+                            <el-table-column prop="value" label="Value"></el-table-column>
                         </el-table>
                     </el-tab-pane>
                     <!--overview 结束-->
 
                     <!--request 开始-->
                     <el-tab-pane label="Request" name="Request">
-                        <el-tabs :tab-position="contentsTabPosition">
+                        <el-tabs :tab-position="'left'">
                             <el-tab-pane label="Headers">
-                                <el-table :data="currentRequestHeaders"
-                                          border="true"
-                                          stripe
-                                          fit="true">
-                                    <el-table-column
-                                            prop="name"
-                                            label="Name"
-                                            width="200">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="value"
-                                            label="Value">
-                                    </el-table-column>
+                                <el-table :data="current.request.headers" border="true" stripe fit="true">
+                                    <el-table-column prop="name" label="Name" width="200"></el-table-column>
+                                    <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
-                            <el-tab-pane label="Query String">
-                                <el-table :data="currentRequestQueryString"
-                                          border="true"
-                                          stripe
-                                          fit="true">
-                                    <el-table-column
-                                            prop="name"
-                                            label="Name"
-                                            width="200">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="value"
-                                            label="Value">
-                                    </el-table-column>
+                            <el-tab-pane label="Query">
+                                <el-table :data="current.request.queryString" border="true" stripe fit="true">
+                                    <el-table-column prop="name" label="Name" width="200"></el-table-column>
+                                    <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
                             <el-tab-pane label="Cookies">
-                                <el-table :data="currentRequestCookies"
-                                          border="true"
-                                          stripe
-                                          fit="true">
-                                    <el-table-column
-                                            prop="name"
-                                            label="Name"
-                                            width="200">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="value"
-                                            label="Value">
-                                    </el-table-column>
+                                <el-table :data="current.request.cookies" border="true" stripe fit="true">
+                                    <el-table-column prop="name" label="Name" width="200"></el-table-column>
+                                    <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
-                            <el-tab-pane label="Raw">Raw</el-tab-pane>
+                            <el-tab-pane label="Raw">
+                                <div v-html="current.request.raw" class="p-raw"></div>
+                            </el-tab-pane>
                         </el-tabs>
                     </el-tab-pane>
                     <!--request 结束-->
 
                     <!--response 开始-->
                     <el-tab-pane label="Response" name="Response">
-                        <el-tabs :tab-position="contentsTabPosition">
-                            <el-tab-pane label="Headers">
-                                <el-table :data="currentResponseHeaders"
-                                          border="true"
-                                          stripe
-                                          fit="true">
-                                    <el-table-column
-                                            prop="name"
-                                            label="Name"
-                                            width="200">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="value"
-                                            label="Value">
-                                    </el-table-column>
+                        <el-tabs :tab-position="'left'" @tab-click="responseTabClicked">
+                            <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item" :label="item">
+                                <!-- response.headers 开始-->
+                                <el-table :data="current.response.headers" border="true" stripe fit="true" v-if="item === 'Headers'">
+                                    <el-table-column prop="name" label="Name" width="200"></el-table-column>
+                                    <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
-                            </el-tab-pane>
-                            <el-tab-pane label="Cookies">
-                                <el-table :data="currentResponseCookies"
-                                          border="true"
-                                          stripe
-                                          fit="true">
-                                    <el-table-column
-                                            prop="name"
-                                            label="Name"
-                                            width="200">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="value"
-                                            label="Value">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="path"
-                                            label="Path">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="Max-Age"
-                                            label="Max-Age">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="HTTPOnly"
-                                            label="HttpOnly">
-                                    </el-table-column>
-                                    <el-table-column
-                                            prop="secure"
-                                            label="Secure">
-                                    </el-table-column>
+                                <!-- response.headers 结束-->
+                                <!-- response.cookies 开始-->
+                                <el-table :data="current.response.cookies" border="true" stripe fit="true" v-if="item === 'Cookies'">
+                                    <el-table-column prop="name" label="Name"></el-table-column>
+                                    <el-table-column prop="value" label="Value"></el-table-column>
+                                    <el-table-column prop="path" label="Path"></el-table-column>
+                                    <el-table-column prop="Max-Age" label="Max-Age" width="90"></el-table-column>
+                                    <el-table-column prop="expires" label="expires" width="180"></el-table-column>
+                                    <el-table-column prop="SameSite" label="SameSite" width="90"></el-table-column>
+                                    <el-table-column prop="HTTPOnly" label="HttpOnly" width="80"></el-table-column>
+                                    <el-table-column prop="secure" label="Secure" width="80"></el-table-column>
                                 </el-table>
+                                <!-- response.cookies 结束-->
+                                <!-- response.raw 开始-->
+                                <div v-if="item === 'Raw'">
+                                    <div v-html="current.response.raw" v-show="!!current.response.raw" v-highlight class="p-raw"></div>
+                                    <div class="el-table__empty-block" v-show="!current.response.raw" style="width: 1264px; height: 100%;">
+                                        <span class="el-table__empty-text">暂无数据</span>
+                                    </div>
+                                </div>
+                                <!-- response.raw 结束-->
+                                <!-- response.json 开始-->
+                                <div v-if="item === 'JSON'">
+                                    <div v-html="current.response.json" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.json 结束-->
+                                <!-- response.html 开始-->
+                                <div v-if="item === 'HTML'">
+                                    <div v-html="current.response.html" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.html 结束-->
+                                <!-- response.image 开始-->
+                                <div v-if="item === 'Image'">
+                                    <div v-html="current.response.image" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.image 结束-->
+                                <!-- response.video 开始-->
+                                <div v-if="item === 'Video'">
+                                    <div style="padding-right: 10px;">
+                                        <div id="dplayer"></div>
+                                    </div>
+                                </div>
+                                <!-- response.video 结束-->
+                                <!-- response.plain 开始-->
+                                <div v-if="item === 'Plain'">
+                                    <div v-html="current.response.plain" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.plain 结束-->
                             </el-tab-pane>
-                            <el-tab-pane label="Raw">Raw</el-tab-pane>
                         </el-tabs>
                     </el-tab-pane>
                     <!--response 结束-->
@@ -241,7 +222,6 @@
         </div>
     </div>
     <!--aside & main 结束-->
-
 </div>
 </body>
 <script type="application/javascript" src="js/main.js"></script>

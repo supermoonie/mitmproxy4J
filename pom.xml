@@ -25,10 +25,12 @@
         <mybatisplus.version>3.1.2</mybatisplus.version>
         <netty.version>4.1.50.Final</netty.version>
         <protostuff.version>1.6.2</protostuff.version>
+        <commons.io.version>2.6</commons.io.version>
         <hutool.version>5.3.5</hutool.version>
         <bouncycastle.version>1.58</bouncycastle.version>
         <slf4j.version>1.7.26</slf4j.version>
         <swagger.version>2.9.2</swagger.version>
+        <apache.httpcliet.version>4.5.5</apache.httpcliet.version>
         <junit.version>4.12</junit.version>
     </properties>
 
@@ -60,7 +62,6 @@
                 <artifactId>spring-boot-devtools</artifactId>
                 <version>${springboot.version}</version>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
             <dependency>
                 <groupId>com.github.supermoonie</groupId>
                 <artifactId>sqlite-jdbc</artifactId>
@@ -82,23 +83,15 @@
                 <version>${swagger.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>swagger-bootstrap-ui</artifactId>
-                <version>1.9.6</version>
-            </dependency>
-            <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
-            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/io.netty/netty-handler -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-handler</artifactId>
                 <version>${netty.version}</version>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/io.netty/netty-handler-proxy -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-handler-proxy</artifactId>
@@ -120,7 +113,11 @@
                 <version>1.18.12</version>
                 <scope>provided</scope>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/cn.hutool/hutool-all -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons.io.version}</version>
+            </dependency>
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
@@ -135,6 +132,16 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>fluent-hc</artifactId>
+                <version>${apache.httpcliet.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>${apache.httpcliet.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>

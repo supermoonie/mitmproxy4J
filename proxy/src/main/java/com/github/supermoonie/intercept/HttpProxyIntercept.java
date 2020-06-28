@@ -1,6 +1,7 @@
 package com.github.supermoonie.intercept;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -41,5 +42,13 @@ public class HttpProxyIntercept {
     public void afterResponse(Channel clientChannel, Channel proxyChannel, HttpContent httpContent,
                               HttpProxyInterceptPipeline pipeline) throws Exception {
         pipeline.afterResponse(clientChannel, proxyChannel, httpContent);
+    }
+
+    /**
+     * 拦截代理服务器到目标服务器的异常
+     */
+    public void afterException(Channel clientChannel, Channel proxyChannel, Throwable cause,
+                               HttpProxyInterceptPipeline pipeline) throws Exception {
+        pipeline.afterException(clientChannel, proxyChannel, cause);
     }
 }

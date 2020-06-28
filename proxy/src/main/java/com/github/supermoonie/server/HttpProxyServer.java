@@ -134,7 +134,6 @@ public class HttpProxyServer {
                         @Override
                         protected void initChannel(Channel ch) {
                             ch.pipeline().addLast("httpCodec", new HttpServerCodec());
-//                            ch.pipeline().addLast("httpObjectAggregator", new HttpObjectAggregator(65536));
                             ch.pipeline().addLast("serverHandle",
                                     new HttpProxyServerHandle(serverConfig,
                                             proxyInterceptInitializer,
@@ -144,7 +143,7 @@ public class HttpProxyServer {
                         }
                     });
             ChannelFuture f = b.bind(port).sync();
-            log.info("proxy start listening on {}", port);
+            log.info("mitmproxy4J start listening on {}", port);
             f.channel().closeFuture().sync();
         } catch (Exception e) {
             log.error(e.getMessage(), e);

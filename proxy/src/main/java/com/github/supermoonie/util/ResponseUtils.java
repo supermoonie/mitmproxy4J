@@ -1,5 +1,6 @@
 package com.github.supermoonie.util;
 
+import com.github.supermoonie.constant.EnumContentType;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -65,14 +66,13 @@ public class ResponseUtils {
         StringBuilder buf = new StringBuilder();
         buf.append("<!DOCTYPE html>\r\n");
         buf.append("<html><head><title>");
-        buf.append("HttpGet");
+        buf.append("mitmproxy4J");
         buf.append("</title></head><body>\r\n");
         buf.append(body);
         buf.append("\r\n</body></html>\r\n");
-        HttpResponse response = new DefaultFullHttpResponse(
-                HTTP_1_1, status, Unpooled.copiedBuffer(buf, CharsetUtil.UTF_8));
-
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
+        HttpResponse response =
+                new DefaultFullHttpResponse(HTTP_1_1, status, Unpooled.copiedBuffer(buf, CharsetUtil.UTF_8));
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, EnumContentType.HTML_UTF8.toString());
         return response;
     }
 }

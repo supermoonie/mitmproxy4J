@@ -2,6 +2,7 @@ package com.github.supermoonie.intercept;
 
 import com.github.supermoonie.util.ProtoUtil.RequestProto;
 import io.netty.channel.Channel;
+import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -106,6 +107,15 @@ public class HttpProxyInterceptPipeline implements Iterable<HttpProxyIntercept> 
         if (this.posAfterContent < intercepts.size()) {
             HttpProxyIntercept intercept = intercepts.get(this.posAfterContent++);
             intercept.afterResponse(clientChannel, proxyChannel, httpContent, this);
+        }
+        this.posAfterContent = 0;
+    }
+
+    public void afterException(Channel clientChannel, Channel proxyChannel, Throwable cause)
+            throws Exception {
+        if (this.posAfterContent < intercepts.size()) {
+            HttpProxyIntercept intercept = intercepts.get(this.posAfterContent++);
+            intercept.afterException(clientChannel, proxyChannel, cause, this);
         }
         this.posAfterContent = 0;
     }

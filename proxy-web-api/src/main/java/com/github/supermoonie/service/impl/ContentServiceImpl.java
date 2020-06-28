@@ -26,7 +26,6 @@ public class ContentServiceImpl implements ContentService {
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public Content saveContent(ByteBuf buf, String uri) {
-//        return new Content();
         Content content = new Content();
         if (0 == buf.readableBytes()) {
             return content;

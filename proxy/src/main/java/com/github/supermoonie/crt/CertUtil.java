@@ -1,6 +1,6 @@
 package com.github.supermoonie.crt;
 
-import cn.hutool.core.io.IoUtil;
+import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
@@ -13,6 +13,7 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
@@ -94,8 +95,8 @@ public class CertUtil {
      * ca_private.der
      */
     public static PrivateKey loadPriKey(InputStream inputStream)
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-        byte[] bytes = IoUtil.readBytes(inputStream);
+            throws Exception {
+        byte[] bytes = IOUtils.toByteArray(inputStream);
         return loadPriKey(bytes);
     }
 
@@ -126,7 +127,7 @@ public class CertUtil {
      * 从文件加载RSA公钥 openssl rsa -in ca.key -pubout -outform DER -out ca_pub.der
      */
     public static PublicKey loadPubKey(InputStream inputStream) throws Exception {
-        byte[] bytes = IoUtil.readBytes(inputStream);
+        byte[] bytes = IOUtils.toByteArray(inputStream);
         return loadPubKey(bytes);
     }
 

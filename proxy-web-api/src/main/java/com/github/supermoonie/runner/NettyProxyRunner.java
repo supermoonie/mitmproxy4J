@@ -61,7 +61,8 @@ public class NettyProxyRunner implements CommandLineRunner {
         if (null == proxyConfig) {
             return null;
         }
-        boolean flag = null == proxyConfig.getType() || StringUtils.isEmpty(proxyConfig.getHost())
+        boolean flag = null == proxyConfig.getType()
+                || StringUtils.isEmpty(proxyConfig.getHost())
                 || proxyConfig.getPort() <= 0;
         if (flag) {
             return null;

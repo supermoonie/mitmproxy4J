@@ -115,11 +115,11 @@ html, body, #main{
     width: 0;
     border-left: solid 1px #909399;
     margin: 0;
-    z-index: 99999;
+    z-index: 99;
 }
 .p-search {
-    height: 25px;
-    line-height: 25px;
+    height: 30px;
+    line-height: 30px;
     width: 100%;
     padding: 5px 0;
 }
@@ -140,16 +140,12 @@ html, body, #main{
     height: 20px;
     line-height: 20px;
 }
-.p-search .el-input__inner {
-    height: 20px;
-    line-height: 20px;
-    padding: 0 2px;
-}
 .p-list-container {
     width: 100%;
     height: 100%;
     overflow-x: scroll;
 }
+/*.p-list-container::-webkit-scrollbar {display:none}*/
 .p-list {
     list-style: none;
     margin: 5px 0 0 0;
@@ -161,6 +157,9 @@ html, body, #main{
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 16px;
+    font-weight: normal;
+    color: black;
 }
 .p-url-active {
     color: white !important;
@@ -198,6 +197,9 @@ html, body, #main{
     margin: 0;
     overflow-x: scroll;
 }
+/*.p-main .el-tab-pane {*/
+/*    height: 100%;*/
+/*}*/
 .el-tabs__content {
     overflow: scroll;
 }
@@ -209,5 +211,14 @@ html, body, #main{
 }
 .el-table__empty-block {
     height: auto !important;
+}
+.p-raw {
+    height: 100%;
+}
+.p-raw p{
+    min-height: 25px;
+    line-height: 25px;
+    margin: 0 5px;
+    font-size: 14px;
 }
 /*main组件*/

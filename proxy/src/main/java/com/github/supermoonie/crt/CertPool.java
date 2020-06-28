@@ -14,13 +14,13 @@ import java.util.WeakHashMap;
  */
 public class CertPool {
 
-    private static final Map<Integer, Map<String, X509Certificate>> certCache = new WeakHashMap<>();
+    private static final Map<Integer, Map<String, X509Certificate>> CERT_CACHE = new WeakHashMap<>();
 
     public static X509Certificate getCert(Integer port, String host, HttpProxyServerConfig serverConfig)
             throws Exception {
         X509Certificate cert = null;
         if (host != null) {
-            Map<String, X509Certificate> portCertCache = certCache.computeIfAbsent(port, k -> new HashMap<>());
+            Map<String, X509Certificate> portCertCache = CERT_CACHE.computeIfAbsent(port, k -> new HashMap<>(5));
             String key = host.trim().toLowerCase();
             if (portCertCache.containsKey(key)) {
                 return portCertCache.get(key);
@@ -35,6 +35,6 @@ public class CertPool {
     }
 
     public static void clear() {
-        certCache.clear();
+        CERT_CACHE.clear();
     }
 }
