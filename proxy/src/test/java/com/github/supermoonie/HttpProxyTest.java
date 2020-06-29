@@ -68,7 +68,10 @@ public class HttpProxyTest {
 
     @Test
     public void test_get_m3u8() throws Exception {
-        try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8"))) {
+//        try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8"))) {
+//            System.out.println(EntityUtils.toString(response.getEntity()));
+//        }
+        try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://xigua-cdn.haima-zuida.com/20200625/8571_8cc90c6a/1000k/hls/index.m3u8"))) {
             System.out.println(EntityUtils.toString(response.getEntity()));
         }
     }

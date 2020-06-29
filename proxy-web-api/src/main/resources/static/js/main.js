@@ -42,7 +42,8 @@ new Vue({
             responseTabs: ['Headers', 'Cookies', 'Raw'],
             activeResponsePanel: '1',
             dp: '',
-            videoUrl: ''
+            videoUrl: '',
+            videoDialogVisible: false
         }
     },
     methods: {
@@ -123,7 +124,6 @@ new Vue({
             if (beforeLen !== afterLen) {
                 document.querySelector('#pane-Response #tab-0').click()
             }
-            this.responseTabClicked({label: 'Video'});
         },
         /**
          * 根据Flow数据创建Response/Raw 中的内容
@@ -161,7 +161,7 @@ new Vue({
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.responseTabs.push('Video');
                     this.videoUrl = data.request.uri;
-                } else  {
+                } else {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
                     console.log(content);
                     try {
@@ -177,36 +177,10 @@ new Vue({
             return raw;
         },
         /**
-         * 处理Response 中的Tab 的点击事件，主要用于创建视频播放器
+         * 创建Response/PLAIN 中的内容
          *
-         * @param tab   tab
+         * @param content   解码后的原文
          */
-        responseTabClicked(tab) {
-            if (tab.label === 'Video' && this.videoUrl && !!document.getElementById('dplayer')) {
-                if (!this.dp) {
-                    this.dp = new DPlayer({
-                        container: document.getElementById('dplayer'),
-                        loop: false,
-                        video: {
-                            url: this.videoUrl,
-                            type: 'hls'
-                        }
-                    });
-                    console.log('created dplayer url: ' + this.videoUrl);
-                } else {
-                    console.log('current video url: ' + this.dp.options.video.url);
-                    if (this.dp.options.video.url !== this.videoUrl) {
-                        this.dp.options.video.url = this.videoUrl;
-                        this.dp.switchVideo({url: this.videoUrl}, null);
-                        console.log('switch video: ' + this.videoUrl);
-                    }
-                }
-            } else {
-                if (this.dp) {
-                    this.dp.pause();
-                }
-            }
-        },
         buildCurrentResponsePlain(content) {
             this.responseTabs.push('Plain');
             this.current.response.plain = '<pre class="Plain" style="margin: 0;"><code>' + content + '</code></pre>';
@@ -503,6 +477,44 @@ new Vue({
             window.onresize = function () {
                 that.calAdjust();
             }
+        },
+        /**
+         * 当视频播放器Dialog打开时初始化视频播放器 & 切换视频 & 播放视频
+         */
+        videoDialogOpened() {
+            this.initialPlayer();
+            if (this.dp.options.video.url !== this.videoUrl) {
+                this.dp.options.video.url = this.videoUrl;
+                this.dp.switchVideo({url: this.videoUrl}, null);
+            }
+            let that = this;
+            setTimeout(function () {
+                that.dp.play();
+            }, 1000)
+        },
+        /**
+         * 当视频播放器Dialog关闭时暂停视频
+         */
+        videoDialogClose() {
+            if (this.dp) {
+                this.dp.pause();
+            }
+        },
+        /**
+         * 初始化视频播放器
+         */
+        initialPlayer() {
+            if (!this.dp) {
+                this.dp = new DPlayer({
+                    container: document.getElementById('dPlayer'),
+                    loop: false,
+                    autoplay: true,
+                    video: {
+                        url: '',
+                        type: 'hls'
+                    }
+                });
+            }
         }
     },
     mounted() {
@@ -511,7 +523,7 @@ new Vue({
             that.calAdjust();
             that.dragDivider();
             that.autoAdjustWhenWindowResize();
-            axios.defaults.baseURL="http://127.0.1:8866";
+            axios.defaults.baseURL = "http://127.0.1:8866";
         }
         this.timer = setTimeout(this.fetchFlow, 200);
     },

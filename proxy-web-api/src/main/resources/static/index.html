@@ -48,6 +48,19 @@
     </ul>
 </div>
 <div id="main">
+    <!--video dialog begin-->
+    <div class="p-video-container">
+        <el-dialog
+                title="Video"
+                top="10vh"
+                :visible.sync="videoDialogVisible"
+                @opened="videoDialogOpened"
+                @close="videoDialogClose">
+            <div id="dPlayer"></div>
+        </el-dialog>
+    </div>
+    <!--video dialog end-->
+
     <!--header开始-->
     <div class="p-header">
         <div class="p-menus p-border-bottom">
@@ -120,7 +133,8 @@
                 <el-tabs v-model="activeName" class="p-tabs">
                     <!--overview 开始-->
                     <el-tab-pane label="Overview" name="Overview">
-                        <el-table :data="current.overview" border="true" stripe fit="true" :show-header="false" :row-class-name="overviewRowClassName">
+                        <el-table :data="current.overview" border="true" stripe fit="true" :show-header="false"
+                                  :row-class-name="overviewRowClassName">
                             <el-table-column prop="name" label="Name" width="200"></el-table-column>
                             <el-table-column prop="value" label="Value"></el-table-column>
                         </el-table>
@@ -157,16 +171,19 @@
 
                     <!--response 开始-->
                     <el-tab-pane label="Response" name="Response">
-                        <el-tabs :tab-position="'left'" @tab-click="responseTabClicked">
-                            <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item" :label="item">
+                        <el-tabs :tab-position="'left'">
+                            <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item"
+                                         :label="item">
                                 <!-- response.headers 开始-->
-                                <el-table :data="current.response.headers" border="true" stripe fit="true" v-if="item === 'Headers'">
+                                <el-table :data="current.response.headers" border="true" stripe fit="true"
+                                          v-if="item === 'Headers'">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                                 <!-- response.headers 结束-->
                                 <!-- response.cookies 开始-->
-                                <el-table :data="current.response.cookies" border="true" stripe fit="true" v-if="item === 'Cookies'">
+                                <el-table :data="current.response.cookies" border="true" stripe fit="true"
+                                          v-if="item === 'Cookies'">
                                     <el-table-column prop="name" label="Name"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                     <el-table-column prop="path" label="Path"></el-table-column>
@@ -179,8 +196,10 @@
                                 <!-- response.cookies 结束-->
                                 <!-- response.raw 开始-->
                                 <div v-if="item === 'Raw'">
-                                    <div v-html="current.response.raw" v-show="!!current.response.raw" v-highlight class="p-raw"></div>
-                                    <div class="el-table__empty-block" v-show="!current.response.raw" style="width: 1264px; height: 100%;">
+                                    <div v-html="current.response.raw" v-show="!!current.response.raw" v-highlight
+                                         class="p-raw"></div>
+                                    <div class="el-table__empty-block" v-show="!current.response.raw"
+                                         style="width: 1264px; height: 100%;">
                                         <span class="el-table__empty-text">暂无数据</span>
                                     </div>
                                 </div>
@@ -202,9 +221,7 @@
                                 <!-- response.image 结束-->
                                 <!-- response.video 开始-->
                                 <div v-if="item === 'Video'">
-                                    <div style="padding-right: 10px;">
-                                        <div id="dplayer"></div>
-                                    </div>
+                                    <el-button icon="el-icon-video-play" @click="videoDialogVisible = true">Try Play</el-button>
                                 </div>
                                 <!-- response.video 结束-->
                                 <!-- response.plain 开始-->
