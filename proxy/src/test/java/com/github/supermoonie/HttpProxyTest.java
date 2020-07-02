@@ -55,7 +55,7 @@ public class HttpProxyTest {
         sslContext.init(null, new TrustManager[]{trustManager}, new SecureRandom());
         httpClient = HttpClientBuilder.create()
                 .setSSLContext(sslContext)
-                .setProxy(new HttpHost("127.0.0.1", 10801))
+                .setProxy(new HttpHost("127.0.0.1", 8888))
                 .build();
     }
 

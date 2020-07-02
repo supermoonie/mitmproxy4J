@@ -3,6 +3,7 @@ new Vue({
     data: function () {
         return {
             currentFlowId: '',
+            currentFlow: '',
             urlFilter: '',
             activeName: 'Overview',
             current: {
@@ -43,7 +44,34 @@ new Vue({
             activeResponsePanel: '1',
             dp: '',
             videoUrl: '',
-            videoDialogVisible: false
+            videoDialogVisible: false,
+            edit: {
+                tabs: ['URL', 'Headers', 'Text', 'Form'],
+                activeTab: '0',
+                requestDialogVisible: false,
+                request: {
+                    url: '',
+                    method: 'GET',
+                    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'TRACE']
+                },
+                query: {
+                    select: '',
+                    data: [{
+                        name: '',
+                        value: '',
+                        editing: false
+                    }]
+                },
+                headers: {
+                    select: '',
+                    data: [{
+                        name: '',
+                        value: '',
+                        editing: false
+                    }]
+                },
+                text: ''
+            }
         }
     },
     methods: {
@@ -97,6 +125,111 @@ new Vue({
             this.showFlows = [];
         },
         /**
+         * 请求方法改变时间处理
+         */
+        requestMethodChanged() {
+            if ('GET' === this.edit.request.method) {
+                this.edit.tabs = [].concat(['URL', 'Headers', 'Text']);
+            } else {
+                this.edit.tabs = [].concat(['URL', 'Headers', 'Text', 'Form']);
+                this.edit.request.allowMethods = [].concat(['POST', 'PUT', 'DELETE', 'HEAD', 'TRACE']);
+            }
+        },
+        /**
+         * 工具栏编辑图标点击事件处理
+         */
+        requestEditClicked() {
+            if (!this.currentFlow) {
+                this.$message({
+                    message: 'Please select one request!',
+                    type: 'warning'
+                });
+                return;
+            }
+            let index = this.currentFlow.request.uri.indexOf('?');
+            if (index !== -1) {
+                this.edit.request.url = this.currentFlow.request.uri.substring(0, index);
+            } else {
+                this.edit.request.url = this.currentFlow.request.uri;
+            }
+            this.edit.request.allowMethods = [];
+            if (this.currentFlow.request.method.toUpperCase() === 'GET') {
+                this.edit.request.allowMethods = [].concat(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
+            } else {
+                this.edit.request.allowMethods = [].concat(['POST', 'PUT', 'DELETE', 'HEAD', 'TRACE']);
+            }
+            this.edit.request.method = this.currentFlow.request.method.toUpperCase();
+            if ('GET' === this.edit.request.method) {
+                this.edit.tabs = [].concat(['URL', 'Headers', 'Text']);
+            } else {
+                this.edit.tabs = [].concat(['URL', 'Headers', 'Text', 'Form']);
+            }
+            this.edit.query.data = [].concat(this.getQueryString(this.currentFlow.request.uri)).map(query => {
+                query.editing = false;
+                return query;
+            });
+            let headerData = [];
+            this.currentFlow.requestHeaders.forEach(header => {
+                headerData.push({
+                    name: header.name,
+                    value: header.value,
+                    editing: false
+                })
+            })
+            this.edit.headers.data = headerData;
+            this.text = '';
+            if (!!this.currentFlow.requestContent) {
+                this.edit.text = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent));
+            }
+            this.edit.requestDialogVisible = true;
+        },
+        /**
+         * 增加一行事件处理
+         *
+         * @param field this.edit 中的字段
+         */
+        addClicked(field) {
+            this.edit[field].data.forEach(data => {
+                data.editing = false;
+            });
+            let row = {name: '', value: '', editing: true};
+            this.edit[field].data.push(row);
+            this.edit[field].select = row;
+        },
+        /**
+         * 表格行编辑事件处理
+         *
+         * @param row   行数据
+         * @param index 行号
+         * @param flag  true ? 编辑操作 : 取消操作
+         * @param field this.edit 中的字段
+         */
+        rowEditClicked(row, index, flag, field) {
+            console.log(row);
+            //是否是取消操作
+            if (!flag) {
+                return row.editing = !row.editing;
+            }
+            if (row.editing) {
+                row.name = this.edit[field].select.name;
+                row.value = this.edit[field].select.value;
+                row.editing = false;
+            } else {
+                this.edit[field].select = JSON.parse(JSON.stringify(row));
+                row.editing = true;
+            }
+        },
+        /**
+         * 表格行删除事件处理
+         *
+         * @param row   行数据
+         * @param index 行索引
+         * @param field this.edit 中的字段
+         */
+        rowDeleteClicked(row, index, field) {
+            this.edit[field].data.splice(index, 1);
+        },
+        /**
          * 处理Flow列表中元素点击事件
          *
          * @param id    flow.request.id
@@ -105,6 +238,7 @@ new Vue({
          */
         handleUrlClicked(id, data, event) {
             console.log(data);
+            this.currentFlow = data;
             this.currentFlowId = id;
             // Overview Tab
             this.current.overview = this.buildCurrentOverview(data);
@@ -373,7 +507,7 @@ new Vue({
                 let query = uri.split('?')[1];
                 let arr = query.split('&');
                 for (let i = 0; i < arr.length; i++) {
-                    queryList.push({'name': arr[i].split('=')[0], 'value': arr[i].split('=')[1]});
+                    queryList.push({name: arr[i].split('=')[0], value: arr[i].split('=')[1]});
                 }
             }
             return queryList;

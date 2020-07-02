@@ -50,16 +50,127 @@
 <div id="main">
     <!--video dialog begin-->
     <div class="p-video-container">
-        <el-dialog
-                title="Video"
-                top="10vh"
-                :visible.sync="videoDialogVisible"
-                @opened="videoDialogOpened"
-                @close="videoDialogClose">
+        <el-dialog title="Video" top="10vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
+                   @close="videoDialogClose">
             <div id="dPlayer"></div>
         </el-dialog>
     </div>
     <!--video dialog end-->
+
+    <!--request edit dialog begin-->
+    <div class="p-request-edit-container" v-cloak>
+        <el-dialog title="Edit" top="10vh" :visible.sync="edit.requestDialogVisible">
+            <el-tabs v-model="edit.activeTab">
+                <el-tab-pane v-for="(item, index) in edit.tabs" :key="item" :label="item">
+                    <!-- URL edit begin -->
+                    <div v-if="item === 'URL'">
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-header">
+                            <el-input placeholder="https://www.example.com/path" v-model="edit.request.url" class="input-with-select">
+                                <el-select v-model="edit.request.method" value-key="item" slot="prepend" @change="requestMethodChanged">
+                                    <el-option v-for="(item, key) in edit.request.allowMethods" :key="key" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-input>
+                        </div>
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-body" height="450">
+                            <el-table :data="edit.query.data" stripe border height="450" style="width: 100%">
+                                <el-table-column label="#" type="index" align="center"></el-table-column>
+                                <el-table-column prop="name" label="Name">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-model="edit.query.select['name']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['name']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="value" label="Value">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-model="edit.query.select['value']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['value']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="Operation" align="center" width="150">
+                                    <template slot-scope="scope">
+                                        <el-link type="primary" @click="rowEditClicked(scope.row, scope.$index, true, 'query')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
+                                        <el-link type="danger" v-if="!scope.row.editing" @click="rowDeleteClicked(scope.row, scope.$index, 'query')">Delete</el-link>&nbsp;&nbsp;
+                                        <el-link type="info" v-else @click="rowEditClicked(scope.row, scope.$index, false, 'query')">Cancel</el-link>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-footer p-select-none">
+                            <el-col span="24">
+                                <div @click="addClicked('query')"><span>+ Add</span></div>
+                            </el-col>
+                        </div>
+                    </div>
+                    <!-- URL edit end -->
+                    <!-- Header edit begin -->
+                    <div v-if="item === 'Headers'">
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-body" style="height: 500px;">
+                            <el-table :data="edit.headers.data" row-key="name" stripe border height="500" style="width: 100%">
+                                <el-table-column label="#" type="index" align="center"></el-table-column>
+                                <el-table-column prop="name" label="Name">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-model="edit.headers.select['name']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['name']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="value" label="Value">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-model="edit.headers.select['value']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['value']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="Operation" align="center" width="150">
+                                    <template slot-scope="scope">
+                                        <el-link type="primary" @click="rowEditClicked(scope.row, scope.$index, true, 'headers')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
+                                        <el-link type="danger" v-if="!scope.row.editing" @click="rowDeleteClicked(scope.row, scope.$index, 'headers')">Delete</el-link>&nbsp;&nbsp;
+                                        <el-link type="info" v-else @click="rowEditClicked(scope.row, scope.$index, false, 'headers')">Cancel</el-link>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-footer p-select-none">
+                            <el-col span="24">
+                                <div @click="addClicked('headers')"><span>+ Add</span></div>
+                            </el-col>
+                        </div>
+                    </div>
+                    <!-- Header edit end -->
+                    <!-- Text edit begin -->
+                    <div v-if="item === 'Text'">
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-body" style="height: 552px;">
+                            <el-input type="textarea" :rows="2" v-model="edit.text">
+                            </el-input>
+                        </div>
+                    </div>
+                    <!-- Text edit end -->
+                    <!-- Form edit begin -->
+                    <div v-if="item === 'Form'">
+                        Form
+                    </div>
+                    <!-- Form edit end -->
+                </el-tab-pane>
+            </el-tabs>
+            <div slot="footer" class="dialog-footer" align="center">
+                <el-button type="primary" plain>Execute</el-button>
+                <el-button type="info" plain @click="edit.requestDialogVisible = false">Cancel</el-button>
+            </div>
+        </el-dialog>
+    </div>
+    <!--request edit dialog end-->
 
     <!--header开始-->
     <div class="p-header">
@@ -96,7 +207,7 @@
         <div class="p-tools p-border-bottom">
             <div class="p-tool">
                 <i class="el-icon-delete p-icon" @click="clear()"></i>
-                <i class="el-icon-edit p-icon"></i>
+                <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
                 <i class="el-icon-search p-icon"></i>
             </div>
         </div>
@@ -221,7 +332,8 @@
                                 <!-- response.image 结束-->
                                 <!-- response.video 开始-->
                                 <div v-if="item === 'Video'">
-                                    <el-button icon="el-icon-video-play" @click="videoDialogVisible = true">Try Play</el-button>
+                                    <el-button type="primary" plain icon="el-icon-video-play" @click="videoDialogVisible = true">Try Play
+                                    </el-button>
                                 </div>
                                 <!-- response.video 结束-->
                                 <!-- response.plain 开始-->

@@ -1,9 +1,11 @@
-html, body, #main{
+html, body, #main {
     padding: 0;
     margin: 0;
     height: 100%;
 }
-.p-video-container .el-dialog{
+
+/*video container*/
+.p-video-container .el-dialog {
     width: 1500px;
     height: 673px;
     overflow: auto;
@@ -16,17 +18,78 @@ html, body, #main{
     padding: 0;
     background-color: black;
 }
-.p-select-none {
-    -webkit-user-select:none;
-    -moz-user-select:none;
-    -ms-user-select:none;
-    user-select:none;
+/*video container*/
+
+/*request edit container*/
+.p-request-edit-container .el-dialog {
+    width: 1500px;
+    height: 673px;
+    overflow: auto;
 }
+.p-request-edit-container .el-dialog__header {
+    display: none;
+}
+.p-request-edit-container .el-dialog__body {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.p-request-edit-container .el-table__row {
+    height: 35px;
+    line-height: 35px;
+}
+.p-request-edit-container .el-tabs__header {
+    margin: 0;
+}
+.p-url-header {
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+}
+.p-url-header .el-select .el-input {
+    width: 120px;
+}
+.p-url-body {
+    width: 100%;
+    overflow: auto;
+}
+.p-url-footer {
+    width: 1458px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border: 1px dashed #c1c1cd;
+    border-radius: 3px;
+    cursor: pointer;
+    justify-content: center;
+}
+.p-request-edit-container .el-dialog__footer {
+    padding: 0 20px;
+}
+.p-request-edit-container .el-textarea__inner {
+    height: 540px;
+    width: 1460px;
+    resize: none;
+}
+/*request edit container*/
+
+.p-select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.p-placeholder {
+    height: 10px;
+    width: 100%;
+}
+
 .p-header {
     height: 72px;
     width: 100%;
     overflow: hidden;
 }
+
 .p-container {
     width: 100%;
     position: absolute;
@@ -35,29 +98,39 @@ html, body, #main{
     left: 0;
     overflow: hidden;
 }
+
 .p-container-inner {
     padding-left: 300px;
     width: 100%;
     height: 100%;
 }
+
 .p-border-right {
     border-right: solid 1px #909399;
 }
+
 .p-border-left {
     border-left: solid 1px #909399;
 }
+
 .p-border-bottom {
     border-bottom: solid 1px #909399;
 }
+
 .el-table .warning-row {
     background: #fdf5e6;
 }
+
 .el-table .success-row {
     background: #f0f9eb;
 }
+
 .el-table .danger-row {
     background: #f9ebeb;
 }
+
+/*.el-table tbody tr { pointer-events:none; }*/
+
 /*header组件*/
 .p-menus {
     height: 35px;
@@ -65,6 +138,7 @@ html, body, #main{
     width: 100%;
     overflow: hidden;
 }
+
 .p-tools {
     padding: 0 10px;
     height: 35px;
@@ -72,13 +146,16 @@ html, body, #main{
     width: 100%;
     overflow: hidden;
 }
+
 .p-menus .p-menu {
     height: 35px;
 }
+
 .p-tools .p-tool {
     height: 35px;
     line-height: 35px;
 }
+
 .p-tools .p-tool .p-icon {
     height: 35px;
     line-height: 35px;
@@ -86,25 +163,31 @@ html, body, #main{
     text-align: center;
     padding: 0 5px;
 }
+
 .p-icon {
     font-size: 20px;
     color: #909399;
 }
+
 .p-icon:hover {
     color: black;
 }
-.el-menu--horizontal>.el-menu-item {
+
+.el-menu--horizontal > .el-menu-item {
     height: 35px;
     line-height: 35px;
 }
-.el-menu--horizontal>.el-submenu .el-submenu__title {
+
+.el-menu--horizontal > .el-submenu .el-submenu__title {
     height: 35px;
     line-height: 35px;
 }
+
 .el-menu-item {
     height: 35px;
     line-height: 35px;
 }
+
 /*header组件*/
 
 /*aside组件*/
@@ -115,10 +198,12 @@ html, body, #main{
     overflow: hidden;
     margin-left: -300px;
 }
+
 .p-aside-inner {
     height: 100%;
     width: 299px;
 }
+
 .p-divider {
     cursor: ew-resize;
     position: absolute;
@@ -130,12 +215,14 @@ html, body, #main{
     margin: 0;
     z-index: 99;
 }
+
 .p-search {
     height: 30px;
     line-height: 30px;
     width: 100%;
     padding: 5px 0;
 }
+
 .p-search .p-filter {
     font-style: normal;
     font-size: 14px;
@@ -145,19 +232,23 @@ html, body, #main{
     line-height: 20px;
     padding: 0 5px;
 }
+
 .p-aside .p-border-bottom {
     border-color: #e4e4e4;
 }
+
 .p-search .p-url-filter {
     width: 240px;
     height: 20px;
     line-height: 20px;
 }
+
 .p-list-container {
     width: 100%;
     height: 100%;
     overflow-x: scroll;
 }
+
 /*.p-list-container::-webkit-scrollbar {display:none}*/
 .p-list {
     list-style: none;
@@ -165,6 +256,7 @@ html, body, #main{
     padding-left: 5px;
     width: 600px;
 }
+
 .p-list li a span {
     width: 600px;
     overflow: hidden;
@@ -174,10 +266,12 @@ html, body, #main{
     font-weight: normal;
     color: black;
 }
+
 .p-url-active {
     color: white !important;
     background-color: #409EFF;
 }
+
 /*aside组件*/
 
 /*main组件*/
@@ -186,11 +280,13 @@ html, body, #main{
     height: 100%;
     float: right;
 }
+
 .p-tabs {
     width: 100%;
     height: 100%;
 }
-.p-main>.el-tabs>.el-tabs__header {
+
+.p-main > .el-tabs > .el-tabs__header {
     position: absolute;
     top: 0;
     left: 301px;
@@ -200,7 +296,8 @@ html, body, #main{
     margin: 0;
     height: 50px;
 }
-.p-main>.el-tabs>.el-tabs__content {
+
+.p-main > .el-tabs > .el-tabs__content {
     position: absolute;
     top: 50px;
     left: 301px;
@@ -210,28 +307,35 @@ html, body, #main{
     margin: 0;
     overflow-x: scroll;
 }
+
 /*.p-main .el-tab-pane {*/
 /*    height: 100%;*/
 /*}*/
 .el-tabs__content {
     overflow: scroll;
 }
+
 .el-table td, .el-table th {
     padding: 2px 0;
 }
+
 .cell {
     font-size: 14px;
 }
+
 .el-table__empty-block {
     height: auto !important;
 }
+
 .p-raw {
     height: 100%;
 }
-.p-raw p{
+
+.p-raw p {
     min-height: 25px;
     line-height: 25px;
     margin: 0 5px;
     font-size: 14px;
 }
+
 /*main组件*/
