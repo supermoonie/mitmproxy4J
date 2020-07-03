@@ -55,7 +55,7 @@ public class HttpProxyTest {
         sslContext.init(null, new TrustManager[]{trustManager}, new SecureRandom());
         httpClient = HttpClientBuilder.create()
                 .setSSLContext(sslContext)
-                .setProxy(new HttpHost("127.0.0.1", 8888))
+                .setProxy(new HttpHost("127.0.0.1", 10801))
                 .build();
     }
 
@@ -68,9 +68,9 @@ public class HttpProxyTest {
 
     @Test
     public void test_get_m3u8() throws Exception {
-//        try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8"))) {
-//            System.out.println(EntityUtils.toString(response.getEntity()));
-//        }
+        try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8"))) {
+            System.out.println(EntityUtils.toString(response.getEntity()));
+        }
         try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://xigua-cdn.haima-zuida.com/20200625/8571_8cc90c6a/1000k/hls/index.m3u8"))) {
             System.out.println(EntityUtils.toString(response.getEntity()));
         }
@@ -88,7 +88,7 @@ public class HttpProxyTest {
     @Test
     public void test_post_form() throws Exception {
 //        HttpPost httpPost = new HttpPost("http://127.0.0.1:8866/post");
-        HttpPost httpPost = new HttpPost("https://httpbin.org/post");
+        HttpPost httpPost = new HttpPost("https://httpbin.org/post?query=string");
         StringEntity entity = new StringEntity("foo=bar", ContentType.create("application/x-www-form-urlencoded", "UTF-8"));
         httpPost.setEntity(entity);
         try(CloseableHttpResponse response = httpClient.execute(httpPost)) {
@@ -99,7 +99,7 @@ public class HttpProxyTest {
     @Test
     public void test_post_form_data() throws Exception {
 //        HttpPost httpPost = new HttpPost("http://127.0.0.1:8866/post");
-        HttpPost httpPost = new HttpPost("https://httpbin.org/post");
+        HttpPost httpPost = new HttpPost("https://httpbin.org/post?query=string");
         InputStream in = HttpProxyTest.class.getClassLoader().getResourceAsStream("test.jpg");
         assert in != null;
         HttpEntity httpEntity = MultipartEntityBuilder.create()

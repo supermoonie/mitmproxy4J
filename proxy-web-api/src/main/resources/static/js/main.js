@@ -179,7 +179,10 @@ new Vue({
             this.edit.headers.data = headerData;
             this.text = '';
             if (!!this.currentFlow.requestContent) {
-                this.edit.text = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent));
+                if (this.currentFlow.request.contentType.indexOf('multipart/form-data') !== -1) {
+                    // TODO
+                }
+                this.edit.text = this.byteArrayToString(this.wordsToByteArray(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words));
             }
             this.edit.requestDialogVisible = true;
         },
@@ -379,16 +382,14 @@ new Vue({
          */
         buildCurrentRequestRaw(data) {
             let raw = '<p>' + data.request.method + ' ' + data.request.uri + ' ' + data.request.httpVersion + '</p>';
-            let requestContentType;
+
             for (let i = 0; i < data.requestHeaders.length; i++) {
                 let header = data.requestHeaders[i];
-                if (header.name === 'Content-Type') {
-                    requestContentType = header.value.trim();
-                }
                 raw = raw + '<p>' + header.name + ' : ' + header.value + '</p>';
             }
             if (data.requestContent) {
                 let content = this.byteArrayToString(this.wordsToByteArray(CryptoJS.enc.Hex.parse(data.requestContent).words));
+                let requestContentType = data.request.contentType;
                 if (requestContentType.indexOf('multipart/form-data') !== -1) {
                     raw = raw + '<p></p>';
                     let contents = content.split('\r\n');

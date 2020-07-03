@@ -20,6 +20,8 @@ public class Request extends BaseModel {
     private String uri;
 
     private String httpVersion;
+    
+    private String contentType;
 
     private String contentId;
 }

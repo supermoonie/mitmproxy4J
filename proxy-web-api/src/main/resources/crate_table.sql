@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS request
   port        INTEGER,
   uri         VARCHAR(2048),
   httpVersion VARCHAR(10),
+  contentType VARCHAR(100),
   contentId   VARCHAR(64),
   timeCreated DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
