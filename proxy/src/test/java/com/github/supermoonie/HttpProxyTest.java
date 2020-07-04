@@ -67,6 +67,16 @@ public class HttpProxyTest {
     }
 
     @Test
+    public void test_get_loop() throws Exception {
+        for (int i = 0; i < 100; i ++) {
+            try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://httpbin.org/get?index=" + i))) {
+                System.out.println(EntityUtils.toString(response.getEntity()));
+            }
+        }
+
+    }
+
+    @Test
     public void test_get_m3u8() throws Exception {
         try(CloseableHttpResponse response = httpClient.execute(new HttpGet("https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8"))) {
             System.out.println(EntityUtils.toString(response.getEntity()));

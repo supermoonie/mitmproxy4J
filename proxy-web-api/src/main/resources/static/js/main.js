@@ -3,7 +3,38 @@ new Vue({
     data: function () {
         return {
             currentFlowId: '',
-            currentFlow: '',
+            currentFlow: {
+                request: {
+                    contentId: undefined,
+                    contentType: undefined,
+                    host: undefined,
+                    httpVersion: undefined,
+                    id: undefined,
+                    method: undefined,
+                    port: undefined,
+                    timeCreated: undefined,
+                    uri: undefined
+                },
+                requestContent: undefined,
+                requestHeaders: [{
+                    name: undefined,
+                    value: undefined
+                }],
+                response: {
+                    contentId: undefined,
+                    contentType: undefined,
+                    httpVersion: undefined,
+                    id: undefined,
+                    requestId: undefined,
+                    status: undefined,
+                    timeCreated: undefined,
+                },
+                responseContent: undefined,
+                responseHeaders: [{
+                    name: undefined,
+                    value: undefined
+                }]
+            },
             urlFilter: '',
             activeName: 'Overview',
             current: {
@@ -89,8 +120,7 @@ new Vue({
                             that.showFlows.push(that.allFlows[i]);
                         }
                     }
-                })
-                .catch(function (error) {
+                }).catch(function (error) {
                     that.$message({
                         showClose: true,
                         message: error,
@@ -119,12 +149,6 @@ new Vue({
             }
         },
         /**
-         * 清除Flow列表
-         */
-        clear() {
-            this.showFlows = [];
-        },
-        /**
          * 请求方法改变时间处理
          */
         requestMethodChanged() {
@@ -146,43 +170,25 @@ new Vue({
                 });
                 return;
             }
-            let index = this.currentFlow.request.uri.indexOf('?');
-            if (index !== -1) {
-                this.edit.request.url = this.currentFlow.request.uri.substring(0, index);
-            } else {
-                this.edit.request.url = this.currentFlow.request.uri;
-            }
+            this.edit.request.url = Utils.truncate(this.currentFlow.request.uri, '?');
             this.edit.request.allowMethods = [];
             if (this.currentFlow.request.method.toUpperCase() === 'GET') {
-                this.edit.request.allowMethods = [].concat(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
+                this.edit.request.allowMethods = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD'];
+                this.edit.tabs = ['URL', 'Headers', 'Text'];
             } else {
-                this.edit.request.allowMethods = [].concat(['POST', 'PUT', 'DELETE', 'HEAD', 'TRACE']);
+                this.edit.request.allowMethods = ['POST', 'PUT', 'DELETE', 'HEAD', 'TRACE'];
+                this.edit.tabs = ['URL', 'Headers', 'Text', 'Form'];
             }
             this.edit.request.method = this.currentFlow.request.method.toUpperCase();
-            if ('GET' === this.edit.request.method) {
-                this.edit.tabs = [].concat(['URL', 'Headers', 'Text']);
-            } else {
-                this.edit.tabs = [].concat(['URL', 'Headers', 'Text', 'Form']);
-            }
-            this.edit.query.data = [].concat(this.getQueryString(this.currentFlow.request.uri)).map(query => {
-                query.editing = false;
-                return query;
-            });
-            let headerData = [];
-            this.currentFlow.requestHeaders.forEach(header => {
-                headerData.push({
-                    name: header.name,
-                    value: header.value,
-                    editing: false
-                })
-            })
-            this.edit.headers.data = headerData;
+            this.edit.query.data = Utils.unionListFrom(Utils.getQueryString(this.currentFlow.request.uri), {editing: false});
+            this.edit.headers.data = Utils.unionListFrom(this.currentFlow.requestHeaders, {editing: false});
             this.text = '';
             if (!!this.currentFlow.requestContent) {
+                this.edit.text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
                 if (this.currentFlow.request.contentType.indexOf('multipart/form-data') !== -1) {
-                    // TODO
+                    let boundary = this.currentFlow.request.contentType.split('boundary=')[1];
+                    let dataArr = this.edit.text.split(/[\r\n]/);
                 }
-                this.edit.text = this.byteArrayToString(this.wordsToByteArray(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words));
             }
             this.edit.requestDialogVisible = true;
         },
@@ -247,13 +253,13 @@ new Vue({
             this.current.overview = this.buildCurrentOverview(data);
             // Request Tab
             this.current.request.headers = data.requestHeaders;
-            this.current.request.queryString = this.getQueryString(data.request.uri);
+            this.current.request.queryString = Utils.getQueryString(data.request.uri);
             let requestCookies = data.requestHeaders.filter(header => header.name === 'Cookie');
-            this.current.request.cookies = this.parseRequestCookie(requestCookies);
+            this.current.request.cookies = Utils.parseRequestCookie(requestCookies);
             this.current.request.raw = this.buildCurrentRequestRaw(data);
             // Response Tab
             this.current.response.headers = !!data.responseHeaders ? data.responseHeaders : [];
-            this.current.response.cookies = this.parseResponseCookie(data);
+            this.current.response.cookies = Utils.parseResponseCookie(data.responseHeaders);
             let beforeLen = this.responseTabs.length;
             this.responseTabs = [].concat(this.baseResponseTabs);
             this.current.response.raw = this.buildCurrentResponseRaw(data);
@@ -278,19 +284,19 @@ new Vue({
                     raw = raw + '<p>' + header.name + ' : ' + header.value + '</p>';
                 }
                 let contentType = data.response.contentType;
-                let type = contentType.split(';')[0].split('/')[1].toLowerCase().trim();
+                let type = /.*\/(.*);?.*/.exec(contentType)[1].toLowerCase().trim();
                 if ('json' === type) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
-                    let clearedContent = this.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                    let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                     that.buildCurrentResponseJson(content);
                 } else if ('html' === type) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
-                    content = this.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                    content = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildCurrentResponseHtml(content);
                 } else if (contentType.indexOf('image') !== -1) {
-                    let content = this.byteArrayToString(this.wordsToByteArray(CryptoJS.enc.Hex.parse(data.responseContent).words));
+                    let content = Utils.wordsToString(CryptoJS.enc.Hex.parse(data.responseContent).words);
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildCurrentResponseImage(data.responseContent);
                 } else if ('vnd.apple.mpegurl' === type) {
@@ -303,7 +309,7 @@ new Vue({
                     console.log(content);
                     try {
                         JSON.parse(content);
-                        let clearedContent = this.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                        let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                         raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                         this.buildCurrentResponseJson(content);
                     } catch (ignore) {
@@ -339,10 +345,7 @@ new Vue({
          */
         buildCurrentResponseJson(content) {
             this.responseTabs.push('JSON');
-            content = content.replace(/ufffd/g, '\\----')
-            let json = JSON.stringify(JSON.parse(content), null, 2);
-            json = json.replace(/\\----/g, 'ufffd');
-            this.current.response.json = '<pre class="JSON" style="margin: 0;"><code>' + json + '</code></pre>';
+            this.current.response.json = '<pre class="JSON" style="margin: 0;"><code>' + JSON.pretty(content) + '</code></pre>';
         },
         /**
          * 数据创建Response/HTML 中的内容
@@ -363,7 +366,7 @@ new Vue({
             let overview = [];
             overview.push({
                 'name': 'Time',
-                'value': this.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(data.request.timeCreated))
+                'value': Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(data.request.timeCreated))
             });
             overview.push({'name': 'Uri', 'value': data.request.uri});
             overview.push({'name': 'Method', 'value': data.request.method});
@@ -382,39 +385,24 @@ new Vue({
          */
         buildCurrentRequestRaw(data) {
             let raw = '<p>' + data.request.method + ' ' + data.request.uri + ' ' + data.request.httpVersion + '</p>';
-
             for (let i = 0; i < data.requestHeaders.length; i++) {
                 let header = data.requestHeaders[i];
                 raw = raw + '<p>' + header.name + ' : ' + header.value + '</p>';
             }
             if (data.requestContent) {
-                let content = this.byteArrayToString(this.wordsToByteArray(CryptoJS.enc.Hex.parse(data.requestContent).words));
+                let content = Utils.wordsToString(CryptoJS.enc.Hex.parse(data.requestContent).words);
                 let requestContentType = data.request.contentType;
                 if (requestContentType.indexOf('multipart/form-data') !== -1) {
                     raw = raw + '<p></p>';
                     let contents = content.split('\r\n');
                     for (let i = 0; i < contents.length; i++) {
-                        raw = raw + '<p>' + this.replaceSpecialChar(contents[i]) + '</p>'
+                        raw = raw + '<p>' + Utils.replaceSpecialChar(contents[i]) + '</p>'
                     }
                 } else {
                     raw = raw + '<p></p><p>' + content + '</p>'
                 }
             }
             return raw;
-        },
-        /**
-         * 替换文本中的特殊字符，用于v-html 显示HTML 源码
-         *
-         * @param text 替换前的文本
-         * @returns string 替换后的文本
-         */
-        replaceSpecialChar(text) {
-            return text.replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;')
-                .replace(/\n/g, '<br>');
         },
         /**
          * Overview Table row 根据 response code 加载不同的ClassName
@@ -434,128 +422,6 @@ new Vue({
                 }
             }
             return '';
-        },
-        /**
-         * 解析请求头中的Cookie
-         *
-         * @param requestCookies 请求头中的Cookie
-         * @returns [{}] cookie list
-         */
-        parseRequestCookie(requestCookies) {
-            let cookies = [];
-            if (requestCookies.length !== 0) {
-                let cookie = requestCookies[0].value;
-                let cookieFieldList = cookie.split(';');
-                for (let i = 0; i < cookieFieldList.length; i++) {
-                    cookies.push({
-                        'name': cookieFieldList[i].split('=')[0],
-                        'value': cookieFieldList[i].split('=')[1].trim()
-                    })
-                }
-            }
-            return cookies;
-        },
-        /**
-         * 解析响应头中的 Set-Cookie
-         *
-         * @param data  Flow数据
-         * @returns [{}]    cookie list
-         */
-        parseResponseCookie(data) {
-            let cookies = [];
-            if (!!data.responseHeaders) {
-                let responseCookies = data.responseHeaders.filter(header => header.name === 'Set-Cookie');
-                if (responseCookies.length !== 0) {
-                    for (let i = 0; i < responseCookies.length; i++) {
-                        let cookieText = responseCookies[i].value;
-                        let cookieFieldList = cookieText.split(';');
-                        let cookie = {};
-                        for (let i = 0; i < cookieFieldList.length; i++) {
-                            let field = cookieFieldList[i].split('=')[0].toLowerCase().trim();
-                            let value = cookieFieldList[i].split('=')[1];
-                            if (field === 'httponly') {
-                                cookie['HTTPOnly'] = 'true';
-                            } else if (field === 'secure') {
-                                cookie['secure'] = 'true';
-                            } else if (field === 'max-age') {
-                                cookie['Max-Age'] = value;
-                            } else if (field === 'expires') {
-                                cookie['expires'] = this.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(value))
-                            } else if (field === 'path') {
-                                cookie['path'] = value;
-                            } else if (field === 'samesite') {
-                                cookie['SameSite'] = value;
-                            } else {
-                                cookie['name'] = cookieFieldList[i].split('=')[0];
-                                cookie['value'] = value;
-                            }
-                        }
-                        cookies.push(cookie);
-                    }
-                }
-            }
-            return cookies;
-        },
-        /**
-         * 从uri中获取queryString
-         *
-         * @param uri   request.uri
-         * @returns [{}]    queryString
-         */
-        getQueryString(uri) {
-            let queryList = [];
-            if (uri.indexOf('?') !== -1) {
-                let query = uri.split('?')[1];
-                let arr = query.split('&');
-                for (let i = 0; i < arr.length; i++) {
-                    queryList.push({name: arr[i].split('=')[0], value: arr[i].split('=')[1]});
-                }
-            }
-            return queryList;
-        },
-        wordsToByteArray(words) {
-            let byteArray = [], word, i, j;
-            for (i = 0; i < words.length; ++i) {
-                word = words[i];
-                for (j = 3; j >= 0; --j) {
-                    byteArray.push((word >> 8 * j) & 0xFF);
-                }
-            }
-            return byteArray;
-        },
-        byteArrayToString(byteArray) {
-            let binary = '';
-            let bytes = new Uint8Array(byteArray);
-            let len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return binary;
-        },
-        /**
-         * 日期格式化
-         *
-         * @param fmt   pattern
-         * @param date  日期
-         * @returns {*}
-         */
-        dateFormat(fmt, date) {
-            let ret;
-            const opt = {
-                'Y+': date.getFullYear().toString(),        // 年
-                'm+': (date.getMonth() + 1).toString(),     // 月
-                'd+': date.getDate().toString(),            // 日
-                'H+': date.getHours().toString(),           // 时
-                'M+': date.getMinutes().toString(),         // 分
-                'S+': date.getSeconds().toString()          // 秒
-            };
-            for (let k in opt) {
-                ret = new RegExp('(' + k + ')').exec(fmt);
-                if (ret) {
-                    fmt = fmt.replace(ret[1], (ret[1].length === 1) ? (opt[k]) : (opt[k].padStart(ret[1].length, '0')))
-                }
-            }
-            return fmt;
         },
         /**
          * 分割线拖动
@@ -602,7 +468,8 @@ new Vue({
         calAdjust: function () {
             let offsetHeight = document.body.offsetHeight;
             let listContainer = document.getElementById('p-list-container');
-            listContainer.style.height = offsetHeight - 108 + 'px';
+            // 113: p-list-container 距离顶部的高度，即 header.height + aside.search.height
+            listContainer.style.height = offsetHeight - 113 + 'px';
         },
         /**
          * 窗口大小变化时自动调整元素标签高度
@@ -628,28 +495,18 @@ new Vue({
             }, 1000)
         },
         /**
-         * 当视频播放器Dialog关闭时暂停视频
-         */
-        videoDialogClose() {
-            if (this.dp) {
-                this.dp.pause();
-            }
-        },
-        /**
          * 初始化视频播放器
          */
         initialPlayer() {
-            if (!this.dp) {
-                this.dp = new DPlayer({
-                    container: document.getElementById('dPlayer'),
-                    loop: false,
-                    autoplay: true,
-                    video: {
-                        url: '',
-                        type: 'hls'
-                    }
-                });
-            }
+            !this.dp && (this.dp = new DPlayer({
+                container: document.getElementById('dPlayer'),
+                loop: false,
+                autoplay: true,
+                video: {
+                    url: '',
+                    type: 'hls'
+                }
+            }));
         }
     },
     mounted() {

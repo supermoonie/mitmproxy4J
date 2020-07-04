@@ -62,6 +62,9 @@ html, body, #main {
     cursor: pointer;
     justify-content: center;
 }
+.p-request-edit-container .el-textarea__inner {
+    overflow-x: hidden;
+}
 .p-request-edit-container .el-dialog__footer {
     padding: 0 20px;
 }
@@ -308,12 +311,13 @@ html, body, #main {
     overflow-x: scroll;
 }
 
-/*.p-main .el-tab-pane {*/
-/*    height: 100%;*/
-/*}*/
-.el-tabs__content {
-    overflow: scroll;
+.p-main .el-tab-pane {
+    overflow: auto;
 }
+
+/*.el-tabs__content {*/
+/*    overflow: scroll;*/
+/*}*/
 
 .el-table td, .el-table th {
     padding: 2px 0;

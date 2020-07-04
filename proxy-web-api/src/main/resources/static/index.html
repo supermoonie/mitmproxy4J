@@ -13,7 +13,7 @@
     <script src="third/crypto-js/crypto-js.js"></script>
     <script src="third/crypto-js/cipher-core.js"></script>
     <script src="third/crypto-js/format-hex.js"></script>
-    <script src="third/dplayer/hls.js"></script>
+    <script src="third/dplayer/hls.min.js"></script>
     <script src="third/dplayer/DPlayer.min.js"></script>
     <style>
         #menu {
@@ -51,7 +51,7 @@
     <!--video dialog begin-->
     <div class="p-video-container">
         <el-dialog title="Video" top="10vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
-                   @close="videoDialogClose">
+                   @close="!!dp && dp.pause()">
             <div id="dPlayer"></div>
         </el-dialog>
     </div>
@@ -206,7 +206,7 @@
         </div>
         <div class="p-tools p-border-bottom">
             <div class="p-tool">
-                <i class="el-icon-delete p-icon" @click="clear()"></i>
+                <i class="el-icon-delete p-icon" @click="showFlows = []"></i>
                 <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
                 <i class="el-icon-search p-icon"></i>
             </div>
@@ -353,5 +353,6 @@
     <!--aside & main 结束-->
 </div>
 </body>
+<script type="application/javascript" src="js/utils.js"></script>
 <script type="application/javascript" src="js/main.js"></script>
 </html>
