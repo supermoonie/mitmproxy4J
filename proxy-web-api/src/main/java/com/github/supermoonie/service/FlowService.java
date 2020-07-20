@@ -1,6 +1,8 @@
 package com.github.supermoonie.service;
 
-import com.github.supermoonie.bo.Flow;
+import com.github.supermoonie.dto.FlowDTO;
+import com.github.supermoonie.dto.FlowNode;
+import com.github.supermoonie.dto.SimpleRequestDTO;
 import com.github.supermoonie.model.Request;
 import com.github.supermoonie.model.Response;
 
@@ -16,11 +18,30 @@ public interface FlowService {
     /**
      * 根据条件过滤请求
      *
-     * @param host        域名 {@link Request#getHost()}
-     * @param port        端口 {@link Request#getPort()}
-     * @param contentType 响应类型 {@link Response#getContentType()}
-     * @param start       开始时间 {@link Request#getTimeCreated()}
-     * @return list of {@link Flow}
+     * @param host   域名 {@link Request#getHost()}
+     * @param method 请求方法 {@link Request#getMethod()}
+     * @param start  开始时间 {@link Request#getTimeCreated()}
+     * @param end    结束时间 {@link Request#getTimeCreated()}
+     * @return list of {@link SimpleRequestDTO}
      */
-    List<Flow> fetch(String host, Integer port, String contentType, Date start);
+    List<SimpleRequestDTO> list(String host, String method, Date start, Date end);
+
+    /**
+     * 根据条件过滤请求
+     *
+     * @param host   域名 {@link Request#getHost()}
+     * @param method 请求方法 {@link Request#getMethod()}
+     * @param start  开始时间 {@link Request#getTimeCreated()}
+     * @param end    结束时间 {@link Request#getTimeCreated()}
+     * @return list of {@link FlowNode}
+     */
+    List<FlowNode> tree(String host, String method, Date start, Date end);
+
+    /**
+     * 根据requestId获取flow
+     *
+     * @param requestId 请求id {@link Request#getId()}
+     * @return flow {@link FlowDTO}
+     */
+    FlowDTO detail(String requestId);
 }

@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="third/element-ui/css/element-ui.css">
     <link rel="stylesheet" href="third/highlight/css/default.css">
     <link rel="stylesheet" href="third/highlight/css/github.css">
+    <link rel="stylesheet" href="css/iconfont.css">
     <link rel="stylesheet" href="css/main.css">
     <script src="third/vue/vue@2.6.11.js"></script>
     <script src="third/element-ui/element-ui@2.13.2.js"></script>
@@ -13,8 +14,32 @@
     <script src="third/crypto-js/crypto-js.js"></script>
     <script src="third/crypto-js/cipher-core.js"></script>
     <script src="third/crypto-js/format-hex.js"></script>
+    <script src="third/beautify/beautify.min.js"></script>
+    <script src="third/beautify/beautify-css.min.js"></script>
+    <script src="third/beautify/beautify-html.min.js"></script>
     <script src="third/dplayer/hls.min.js"></script>
     <script src="third/dplayer/DPlayer.min.js"></script>
+    <script>
+        const opts = {
+            indent_size: '4',
+            indent_char: ' ',
+            max_preserve_newlines: '5',
+            preserve_newlines: true,
+            keep_array_indentation: false,
+            break_chained_methods: false,
+            indent_scripts: 'normal',
+            brace_style: 'collapse',
+            space_before_conditional: true,
+            unescape_strings: false,
+            jslint_happy: false,
+            end_with_newline: false,
+            wrap_line_length: '0',
+            indent_inner_html: false,
+            comma_first: false,
+            e4x: false,
+            indent_empty_lines: false
+        }
+    </script>
     <style>
         #menu {
             border: 1px solid #ccc;
@@ -47,7 +72,7 @@
         <li><a href="#">举报</a></li>
     </ul>
 </div>
-<div id="main">
+<div id="main" class="" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.8)">
     <!--video dialog begin-->
     <div class="p-video-container">
         <el-dialog title="Video" top="10vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
@@ -59,27 +84,33 @@
 
     <!--request edit dialog begin-->
     <div class="p-request-edit-container" v-cloak>
-        <el-dialog title="Edit" top="10vh" :visible.sync="edit.requestDialogVisible">
+        <el-dialog title="Edit" top="10vh" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.3)"
+                   :visible.sync="edit.requestDialogVisible" :close-on-click-modal="false" :show-close="true">
             <el-tabs v-model="edit.activeTab">
                 <el-tab-pane v-for="(item, index) in edit.tabs" :key="item" :label="item">
                     <!-- URL edit begin -->
                     <div v-if="item === 'URL'">
                         <div class="p-placeholder"></div>
                         <div class="p-url-header">
-                            <el-input placeholder="https://www.example.com/path" v-model="edit.request.url" class="input-with-select">
-                                <el-select v-model="edit.request.method" value-key="item" slot="prepend" @change="requestMethodChanged">
-                                    <el-option v-for="(item, key) in edit.request.allowMethods" :key="key" :label="item" :value="item"></el-option>
+                            <el-input placeholder="https://www.example.com/path" v-model="edit.request.url"
+                                      class="input-with-select" @input="requestUrlInput">
+                                <el-select v-model="edit.request.method" value-key="item" slot="prepend"
+                                           @change="requestMethodChanged">
+                                    <el-option
+                                            v-for="(item, key) in ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'TRACE']"
+                                            :key="key" :label="item" :value="item"></el-option>
                                 </el-select>
                             </el-input>
                         </div>
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" height="450">
-                            <el-table :data="edit.query.data" stripe border height="450" style="width: 100%">
+                            <el-table :data="edit.query.data" :empty-text="'No data :)'" stripe border height="450" style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-model="edit.query.select['name']"></el-input>
+                                            <el-input size="mini" clearable v-focus
+                                                      v-model="edit.query.select['name']"></el-input>
                                         </span>
                                         <span v-else>{{scope.row['name']}}</span>
                                     </template>
@@ -87,16 +118,24 @@
                                 <el-table-column prop="value" label="Value">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-model="edit.query.select['value']"></el-input>
+                                            <el-input size="mini" clearable @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'query')"
+                                                      v-model="edit.query.select['value']"></el-input>
                                         </span>
                                         <span v-else>{{scope.row['value']}}</span>
                                     </template>
                                 </el-table-column>
                                 <el-table-column label="Operation" align="center" width="150">
                                     <template slot-scope="scope">
-                                        <el-link type="primary" @click="rowEditClicked(scope.row, scope.$index, true, 'query')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
-                                        <el-link type="danger" v-if="!scope.row.editing" @click="rowDeleteClicked(scope.row, scope.$index, 'query')">Delete</el-link>&nbsp;&nbsp;
-                                        <el-link type="info" v-else @click="rowEditClicked(scope.row, scope.$index, false, 'query')">Cancel</el-link>
+                                        <el-link type="primary"
+                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'query')">
+                                            {{scope.row.editing ? 'Ok' : 'Edit'}}
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="danger" v-if="!scope.row.editing"
+                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'query')">Delete
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="info" v-else
+                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'query')">Cancel
+                                        </el-link>
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -113,12 +152,12 @@
                     <div v-if="item === 'Headers'">
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" style="height: 500px;">
-                            <el-table :data="edit.headers.data" row-key="name" stripe border height="500" style="width: 100%">
+                            <el-table :data="edit.headers.data" :empty-text="'No data :)'" row-key="name" stripe border height="500" style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-model="edit.headers.select['name']"></el-input>
+                                            <el-input size="mini" v-focus v-model="edit.headers.select['name']"></el-input>
                                         </span>
                                         <span v-else>{{scope.row['name']}}</span>
                                     </template>
@@ -126,16 +165,22 @@
                                 <el-table-column prop="value" label="Value">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-model="edit.headers.select['value']"></el-input>
+                                            <el-input size="mini" v-model="edit.headers.select['value']" @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'headers')"></el-input>
                                         </span>
-                                        <span v-else>{{scope.row['value']}}</span>
+                                        <span v-else>
+                                            <sapn v-if="scope.row.editable">{{scope.row['value']}}</sapn>
+                                            <span v-else
+                                                  style="color: #909399;">&lt;calculated when request is sent&gt;</span>
+                                        </span>
                                     </template>
                                 </el-table-column>
                                 <el-table-column label="Operation" align="center" width="150">
                                     <template slot-scope="scope">
-                                        <el-link type="primary" @click="rowEditClicked(scope.row, scope.$index, true, 'headers')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
-                                        <el-link type="danger" v-if="!scope.row.editing" @click="rowDeleteClicked(scope.row, scope.$index, 'headers')">Delete</el-link>&nbsp;&nbsp;
-                                        <el-link type="info" v-else @click="rowEditClicked(scope.row, scope.$index, false, 'headers')">Cancel</el-link>
+                                        <span v-if="scope.row.editable">
+                                            <el-link type="primary" @click="rowEditClicked(scope.row, scope.$index, true, 'headers')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
+                                            <el-link type="danger" v-if="!scope.row.editing" @click="rowDeleteClicked(scope.row, scope.$index, 'headers')">Delete</el-link>&nbsp;&nbsp;
+                                            <el-link type="info" v-else @click="rowEditClicked(scope.row, scope.$index, false, 'headers')">Cancel</el-link>
+                                        </span>
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -148,24 +193,235 @@
                         </div>
                     </div>
                     <!-- Header edit end -->
-                    <!-- Text edit begin -->
-                    <div v-if="item === 'Text'">
+                    <!-- Body edit begin -->
+                    <div v-if="item === 'Body'">
                         <div class="p-placeholder"></div>
-                        <div class="p-url-body" style="height: 552px;">
-                            <el-input type="textarea" :rows="2" v-model="edit.text">
-                            </el-input>
+                        <div class="p-body-type">
+                            <div class="p-body-type-radio">
+                                <el-radio v-model="edit.request.contentType" label="none">none</el-radio>
+                                <el-radio v-model="edit.request.contentType" label="formData">form-data</el-radio>
+                                <el-radio v-model="edit.request.contentType" label="x-www-form-urlencoded">x-www-form-urlencoded
+                                </el-radio>
+                                <el-radio v-model="edit.request.contentType" label="binary">binary</el-radio>
+                                <el-radio v-model="edit.request.contentType" label="raw">raw</el-radio>
+                            </div>
+                            <div class="p-body-type-select" v-if="'raw' === edit.request.contentType">
+                                <el-select size="small" v-model="edit.request.rawContentType" style="width: 110px;"
+                                           placeholder="Please select">
+                                    <el-option v-for="item in ['JSON', 'Text', 'JavaScript', 'HTML', 'XML']" :key="item"
+                                               :label="item"
+                                               :value="item"></el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="p-placeholder"></div>
+                        <div v-if="'none' === edit.request.contentType" class="p-request-edit-none">
+                            This request does not have a body
+                        </div>
+                        <!-- formData start -->
+                        <div v-else-if="'formData' === edit.request.contentType">
+                            <el-table :data="edit.multipart.data" :empty-text="'No data :)'" row-key="name" stripe
+                                      border height="460"
+                                      style="width: 100%">
+                                <el-table-column label="#" type="index" align="center"></el-table-column>
+                                <el-table-column prop="name" label="Name">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-focus v-model="edit.multipart.select['name']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['name']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="type" label="ContentType">
+                                    <template slot-scope="scope">
+                                        <div v-if="scope.row.editing">
+                                            <el-select v-model="edit.multipart.select['type']" size="mini"
+                                                       style="width: 100px;">
+                                                <el-option v-for="item in ['Text', 'File']"
+                                                           :key="item" :label="item" :value="item">
+                                                </el-option>
+                                            </el-select>
+                                        </div>
+                                        <div v-else>{{scope.row['type']}} <span style="color: #909399;">{{scope.row['contentType']}}</span>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="value" label="Value">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input v-if="edit.multipart.select['type'] === 'Text'" size="mini"
+                                                      @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'multipart')"
+                                                      v-model="edit.multipart.select['value']"></el-input>
+                                            <span v-else>
+                                                <el-button type="text" size="mini"
+                                                           @click="!!event.target.children[0] && event.target.children[0].click()"
+                                                           style="padding-top: 0;">
+                                                    <input style="visibility: hidden;width: 0;height: 0;" type="file"
+                                                           @change="uploadFileChange(edit.multipart.select, event)">
+                                                    Select<i class="el-icon-upload el-icon--right"></i>
+                                                </el-button>
+                                                &nbsp;&nbsp;{{edit.multipart.select.uploadFile.name}}
+                                            </span>
+                                        </span>
+                                        <span v-else>{{scope.row['value']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="Operation" align="center" width="150">
+                                    <template slot-scope="scope">
+                                        <el-link type="primary"
+                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'multipart')">
+                                            {{scope.row.editing ? 'Ok' : 'Edit'}}
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="danger" v-if="!scope.row.editing"
+                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'multipart')">Delete
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="info" v-else
+                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'multipart')">
+                                            Cancel
+                                        </el-link>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                            <div class="p-placeholder"></div>
+                            <div class="p-url-footer p-select-none">
+                                <el-col span="24">
+                                    <div @click="addClicked('multipart')"><span>+ Add</span></div>
+                                </el-col>
+                            </div>
+                        </div>
+                        <!-- formData end -->
+                        <div v-else-if="'form' === edit.request.contentType">
+                            <el-table :data="edit.form.data" :empty-text="'No data :)'" row-key="name" stripe
+                                      border height="460"
+                                      style="width: 100%">
+                                <el-table-column label="#" type="index" align="center"></el-table-column>
+                                <el-table-column prop="name" label="Name">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-focus v-model="edit.form.select['name']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['name']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="value" label="Value">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input v-if="edit.form.select['type'] === 'Text'" size="mini"
+                                                      @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'form')"
+                                                      v-model="edit.form.select['value']"></el-input>
+                                            <span v-else>
+                                                <el-button type="text" size="mini"
+                                                           @click="!!event.target.children[0] && event.target.children[0].click()"
+                                                           style="padding-top: 0;">
+                                                    <input style="visibility: hidden;width: 0;height: 0;" type="file"
+                                                           @change="uploadFileChange(edit.multipart.select, event)">
+                                                    Select<i class="el-icon-upload el-icon--right"></i>
+                                                </el-button>
+                                                &nbsp;&nbsp;{{edit.form.select.uploadFile.name}}
+                                            </span>
+                                        </span>
+                                        <span v-else>{{scope.row['value']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="Operation" align="center" width="150">
+                                    <template slot-scope="scope">
+                                        <el-link type="primary"
+                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'multipart')">
+                                            {{scope.row.editing ? 'Ok' : 'Edit'}}
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="danger" v-if="!scope.row.editing"
+                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'multipart')">Delete
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="info" v-else
+                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'multipart')">
+                                            Cancel
+                                        </el-link>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                            <div class="p-placeholder"></div>
+                            <div class="p-url-footer p-select-none">
+                                <el-col span="24">
+                                    <div @click="addClicked('multipart')"><span>+ Add</span></div>
+                                </el-col>
+                            </div>
+
+                        </div>
+                        <div v-else-if="'binary' === edit.request.contentType">
+                            binary
+                        </div>
+                        <div v-else-if="'raw' === edit.request.contentType">
+                            <div class="p-url-body" style="height: 512px;">
+                                <el-input type="textarea" :rows="2" v-model="edit.body"></el-input>
+                            </div>
                         </div>
                     </div>
-                    <!-- Text edit end -->
-                    <!-- Form edit begin -->
-                    <div v-if="item === 'Form'">
-                        Form
+                    <!-- Body edit end -->
+                    <!-- Multiform edit begin -->
+                    <div v-if="item === 'Multipart'">
+                        <div class="p-placeholder"></div>
+                        <div class="p-url-body" style="height: 552px;">
+                            <el-table :data="edit.multipart.data" :empty-text="'No data :)'" row-key="name" stripe
+                                      border height="552"
+                                      style="width: 100%">
+                                <el-table-column label="#" type="index" align="center"></el-table-column>
+                                <el-table-column prop="part" label="Part">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-model="edit.multipart.select['part']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['part']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="contentType" label="Content-Type">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini"
+                                                      v-model="edit.multipart.select['contentType']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['contentType']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="fileName" label="File name">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini"
+                                                      v-model="edit.multipart.select['fileName']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['fileName']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="value" label="Value">
+                                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" v-model="edit.multipart.select['value']"></el-input>
+                                        </span>
+                                        <span v-else>{{scope.row['value']}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="Operation" align="center" width="150">
+                                    <template slot-scope="scope">
+                                        <el-link type="primary"
+                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'multipart')">
+                                            {{scope.row.editing ? 'Ok' : 'Edit'}}
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="danger" v-if="!scope.row.editing"
+                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'multipart')">Delete
+                                        </el-link>&nbsp;&nbsp;
+                                        <el-link type="info" v-else
+                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'multipart')">
+                                            Cancel
+                                        </el-link>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
                     </div>
-                    <!-- Form edit end -->
+                    <!-- Multiform edit end -->
                 </el-tab-pane>
             </el-tabs>
             <div slot="footer" class="dialog-footer" align="center">
-                <el-button type="primary" plain>Execute</el-button>
+                <el-button type="primary" plain @click="executeRequest">Execute</el-button>
                 <el-button type="info" plain @click="edit.requestDialogVisible = false">Cancel</el-button>
             </div>
         </el-dialog>
@@ -175,7 +431,7 @@
     <!--header开始-->
     <div class="p-header">
         <div class="p-menus p-border-bottom">
-            <el-menu v-cloak :default-active="'1'" class="p-menu" menu-trigger="hover" mode="horizontal"
+            <el-menu v-cloak :default-active="'1'" :unique-opened="true" class="p-menu" menu-trigger="click" mode="horizontal"
                      @select="handleSelect">
                 <el-submenu index="1">
                     <template slot="title">File</template>
@@ -206,9 +462,9 @@
         </div>
         <div class="p-tools p-border-bottom">
             <div class="p-tool">
-                <i class="el-icon-delete p-icon" @click="showFlows = []"></i>
+                <i class="el-icon-delete p-icon" @click="clearClicked()"></i>
                 <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
-                <i class="el-icon-search p-icon"></i>
+                <i class="el-icon-search p-icon" @click="searchClicked()"></i>
             </div>
         </div>
     </div>
@@ -219,22 +475,59 @@
         <div class="p-container-inner">
             <!--aside 开始-->
             <div class="p-aside" id="p-aside">
-                <div class="p-search p-border-bottom">
+                <div class="p-search">
                     <span class="p-filter">Filter:</span>
                     <el-input class="p-url-filter" @input="filter()"
-                              size="mini"
-                              clearable="true" v-model="urlFilter"></el-input>
+                              size="mini" clearable="true" v-model="urlFilter"></el-input>
+                </div>
+                <div class="p-show-type">
+                    <el-tabs type="border-card" :stretch="true" v-model="flowTypeTabActive">
+                        <el-tab-pane label="Structure" name="Structure"></el-tab-pane>
+                        <el-tab-pane label="Sequence" name="Sequence"></el-tab-pane>
+                    </el-tabs>
                 </div>
                 <div class="p-list-container" id="p-list-container">
-                    <ul class="p-list" id="p-url-list">
-                        <li v-cloak v-for="flow in showFlows" :key="flow.request.id">
-                            <el-link :underline="false" :title="flow.request.uri"
-                                     :class="{'p-url-active': currentFlowId == flow.request.id}"
-                                     v-on:click="handleUrlClicked(flow.request.id, flow, $event)">
-                                {{ flow.request.uri }}
-                            </el-link>
-                        </li>
-                    </ul>
+                    <div v-show="flowTypeTabActive === 'Structure'" id="p-url-tree-container">
+                        <el-tree v-cloak
+                                 :empty-text="'No data :)'"
+                                 :data="flow.tree.shown"
+                                 :show-checkbox="false"
+                                 :expand-on-click-node="true"
+                                 :highlight-current="true"
+                                 :props="tree.nodeProps"
+                                 :default-expand-all="true"
+                                 @node-click="flowNodeClicked"
+                                 node-key="id">
+                                <span class="custom-tree-node" slot-scope="{node, data}">
+                                    <span style="height: 22px; line-height: 22px;">
+                                        <span v-if="data.type === 'TARGET' && data.status >= 200 && data.status < 300"
+                                              class="iconfont icon-oksignlarge" style="color: green;"></span>
+                                        <span v-else-if="data.type === 'TARGET' && data.status >= 300 && data.status < 400"
+                                              class="iconfont icon-warn" style="color: #e6a23c;"></span>
+                                        <span v-else-if="data.type === 'TARGET' && data.status >= 400"
+                                              class="iconfont icon-fail" style="color: red;"></span>
+                                        {{data.url}}
+                                    </span>
+                                </span>
+                        </el-tree>
+                    </div>
+                    <div v-show="flowTypeTabActive === 'Sequence'" id="p-url-list-container">
+                        <ul class="p-list" id="p-url-list">
+                            <li v-cloak v-for="flow in flow.list.shown" :key="flow.id">
+                                <el-link :underline="false" :title="flow.url"
+                                         :class="{'p-url-active': currentFlowId == flow.id}"
+                                         v-on:click="flowNodeClicked(flow)">
+                                    <span v-if="flow.status >= 200 && flow.status < 300"
+                                          class="iconfont icon-oksignlarge" style="color: green;"></span>
+                                    <span v-else-if="flow.status >= 300 && flow.status < 400" class="iconfont icon-warn"
+                                          style="color: #e6a23c;"></span>
+                                    <span v-else-if="flow.status >= 400" class="iconfont icon-fail"
+                                          style="color: red;"></span>
+                                    {{ flow.url }}
+                                </el-link>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             <!--aside 结束-->
@@ -245,6 +538,7 @@
                     <!--overview 开始-->
                     <el-tab-pane label="Overview" name="Overview">
                         <el-table :data="current.overview" border="true" stripe fit="true" :show-header="false"
+                                  :empty-text="'No data :)'"
                                   :row-class-name="overviewRowClassName">
                             <el-table-column prop="name" label="Name" width="200"></el-table-column>
                             <el-table-column prop="value" label="Value"></el-table-column>
@@ -256,19 +550,22 @@
                     <el-tab-pane label="Request" name="Request">
                         <el-tabs :tab-position="'left'">
                             <el-tab-pane label="Headers">
-                                <el-table :data="current.request.headers" border="true" stripe fit="true">
+                                <el-table :data="current.request.headers" :empty-text="'No data :)'" border="true"
+                                          stripe fit="true">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
                             <el-tab-pane label="Query">
-                                <el-table :data="current.request.queryString" border="true" stripe fit="true">
+                                <el-table :data="current.request.queryString" :empty-text="'No data :)'" border="true"
+                                          stripe fit="true">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
                             <el-tab-pane label="Cookies">
-                                <el-table :data="current.request.cookies" border="true" stripe fit="true">
+                                <el-table :data="current.request.cookies" :empty-text="'No data :)'" border="true"
+                                          stripe fit="true">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
@@ -286,14 +583,16 @@
                             <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item"
                                          :label="item">
                                 <!-- response.headers 开始-->
-                                <el-table :data="current.response.headers" border="true" stripe fit="true"
+                                <el-table :data="current.response.headers" :empty-text="'No data :)'" border="true"
+                                          stripe fit="true"
                                           v-if="item === 'Headers'">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                                 <!-- response.headers 结束-->
                                 <!-- response.cookies 开始-->
-                                <el-table :data="current.response.cookies" border="true" stripe fit="true"
+                                <el-table :data="current.response.cookies" :empty-text="'No data :)'" border="true"
+                                          stripe fit="true"
                                           v-if="item === 'Cookies'">
                                     <el-table-column prop="name" label="Name"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
@@ -311,7 +610,7 @@
                                          class="p-raw"></div>
                                     <div class="el-table__empty-block" v-show="!current.response.raw"
                                          style="width: 1264px; height: 100%;">
-                                        <span class="el-table__empty-text">暂无数据</span>
+                                        <span class="el-table__empty-text">No data :)</span>
                                     </div>
                                 </div>
                                 <!-- response.raw 结束-->
@@ -325,6 +624,16 @@
                                     <div v-html="current.response.html" v-highlight class="p-raw"></div>
                                 </div>
                                 <!-- response.html 结束-->
+                                <!-- response.html 开始-->
+                                <div v-if="item === 'CSS'">
+                                    <div v-html="current.response.css" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.html 结束-->
+                                <!-- response.html 开始-->
+                                <div v-if="item === 'JavaScript'">
+                                    <div v-html="current.response.js" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.html 结束-->
                                 <!-- response.image 开始-->
                                 <div v-if="item === 'Image'">
                                     <div v-html="current.response.image" v-highlight class="p-raw"></div>
@@ -332,13 +641,19 @@
                                 <!-- response.image 结束-->
                                 <!-- response.video 开始-->
                                 <div v-if="item === 'Video'">
-                                    <el-button type="primary" plain icon="el-icon-video-play" @click="videoDialogVisible = true">Try Play
+                                    <el-button type="primary" plain icon="el-icon-video-play"
+                                               @click="videoDialogVisible = true">Try Play
                                     </el-button>
                                 </div>
                                 <!-- response.video 结束-->
                                 <!-- response.plain 开始-->
                                 <div v-if="item === 'Plain'">
                                     <div v-html="current.response.plain" v-highlight class="p-raw"></div>
+                                </div>
+                                <!-- response.plain 结束-->
+                                <!-- response.plain 开始-->
+                                <div v-if="item === 'Hex'">
+                                    <div v-html="current.response.hex" v-highlight class="p-raw"></div>
                                 </div>
                                 <!-- response.plain 结束-->
                             </el-tab-pane>
@@ -353,6 +668,7 @@
     <!--aside & main 结束-->
 </div>
 </body>
+<script type="application/javascript" src="third/url-search-params-polyfill.js"></script>
 <script type="application/javascript" src="js/utils.js"></script>
 <script type="application/javascript" src="js/main.js"></script>
 </html>

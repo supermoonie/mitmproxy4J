@@ -1,0 +1,29 @@
+@font-face {font-family: "iconfont";
+  src: url('iconfont.eot?t=1594299987511'); /* IE9 */
+  src: url('iconfont.eot?t=1594299987511#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('data:application/x-font-woff2;charset=utf-8;base64,d09GMgABAAAAAAPQAAsAAAAACBQAAAODAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHEIGVgCDHAqDVIMnATYCJAMQCwoABCAFhG0HQxsUB8gusG3YEyGYG9gP+EABACBEgK3lLDyi+q8CVGjZkmp8FZBQpGpbYatUhWx8PRtxlzprbfkAWPcEXIXYl8gOK6Mol8lXhFQCQMdUAXaBXmCYopUAARANEGBm/n8OlzafBzZ/23IZa9OYi3oBxgEFtDe2KdEO5E6QT2F47WKHeZ6Auhm9CAdTZukgV0anBYRrnypDbkYvN+CCqqpcsTZDeIUs1bhUfAi8BD8f/mGtXBCVEtC5J5vsgXEf9G0ympN5YvMQIJjOCmETCatAJpxX2s+gKLQKqWt/I9kCqqoiX4O+0m+TMxkIjyKvWv/ySKJAKAPNbIINRpYuTODwEwUFi8j3ZOEDDMigCiHdM/ABVD2ZJi7JzcJse4+G8qKiPPnpU8OzZ8YnT/SPH88mUl3ITZc+fWozjNSrwwNVcl1zq75hjnnjlgPVBt2GZZvm1hgN7uc2L6/SGzcf3DinUpcoXnb/1P6GwPEryy91923de+Ku/0A375aTg0vOnK73bzMtOyaguceXHwXx6Yhue8jx+yw7llle+vVL2uJ4XFec5BXUZR96/hxBso/lQszu8dGx8Xw+X410dZB5uAJduIAgWcFyUcfG9YmLu3aJkMRZLsRsnsDixljcaqE0pOxhmd6qtRhCLbHwD9XDgzKDxQKDb93XYfjJ7imtq+j94PdFOleq+8nhLFOqVk72L91X2j+pQ1zZm+KyYuzIG73E0RQd63asO66DCEDxBB1HPQFIh+IjULxDN1DLf/0db/dzbjlLRv3PRQL47D1UG7iKJxIM4/8cQWfBXxR0bMm6iBpyVsUO33Bkm6kEEXXLxL+L0fd2CucIJNagKgoAUcUUkqpZZMauQknDBpRVbUPdiqmbGwYYJOQ8YNlCAkHXaYja3iHpeoTM2DdQMvYdyrohqDutYs+G+Xz5ExmROfHgtgT2uWlYsU08P8zWEDUWlFlaFOANhEV9Xty/T798dCoJEzbFgmi7OoBzBSuMhvAUchkJBimOMOonbt7Hy3lkRN++StWb+rhpCPLtYwgZR3hgbRIwHzcqTPE6c/mF72sQqpggGWtoqrEbEEyUr3esvz76dUBOlYc7Nd3KNVHtVANwnAJTMFQINoVYiaAVorBI9Sg/wo3rwzsgEDFCX6ad0lXeZ3ll6A13QR1dnIMoIEESsqBxF4j61PDTLFGJpMi+oBSXWRgAAA==') format('woff2'),
+  url('iconfont.woff?t=1594299987511') format('woff'),
+  url('iconfont.ttf?t=1594299987511') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+ */
+  url('iconfont.svg?t=1594299987511#iconfont') format('svg'); /* iOS 4.1- */
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-oksignlarge:before {
+  content: "\e745";
+}
+
+.icon-fail:before {
+  content: "\e66f";
+}
+
+.icon-warn:before {
+  content: "\e634";
+}
+

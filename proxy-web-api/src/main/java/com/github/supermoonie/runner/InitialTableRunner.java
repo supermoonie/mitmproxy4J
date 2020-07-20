@@ -16,7 +16,7 @@ import javax.annotation.Resource;
 @Component
 @Slf4j
 @Order(0)
-public class CreateTableRunner implements CommandLineRunner {
+public class InitialTableRunner implements CommandLineRunner {
 
     @Resource
     private JdbcTemplate jdbcTemplate;

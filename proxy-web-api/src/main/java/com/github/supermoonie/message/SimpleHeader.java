@@ -1,13 +1,13 @@
-package com.github.supermoonie.bo;
+package com.github.supermoonie.message;
 
 import lombok.Data;
 
 /**
  * @author supermoonie
- * @date 2020-06-13
+ * @since 2020/7/15
  */
 @Data
-public class HeaderBO {
+public class SimpleHeader {
 
     private String name;
 

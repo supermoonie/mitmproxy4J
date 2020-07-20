@@ -1,7 +1,95 @@
 (function (win) {
     let Utils = {};
-    Utils.parseFormData = (contentType, requestContent) => {
-
+    const _sub = function (str) {
+        return [...str.matchAll(/name="([^\s]+)"/g)].map(item => item[1])
+    };
+    Utils.clone = function (obj) {
+        let o;
+        if (typeof obj === "object") {
+            if (obj === null) {
+                o = null;
+            } else if (obj instanceof Array) {
+                o = [];
+                for (let i = 0; i < obj.length; i++) {
+                    o.push(clone(obj[i]));
+                }
+            } else {
+                o = {}
+                for (let j in obj) {
+                    if (obj.hasOwnProperty(j)) {
+                        o[j] = Utils.clone(obj[j])
+                    }
+                }
+            }
+        } else {
+            o = obj;
+        }
+        return o;
+    };
+    /**
+     * 解析multipart
+     *
+     * @param contentType   request.contentType
+     * @param text          字符串类型requestContent
+     * @returns [{}]        multipart
+     */
+    Utils.parseMultipartData = (contentType, text) => {
+        let result = [];
+        let boundary = contentType.split('boundary=')[1];
+        let parts = text.split(new RegExp('\\S*' + boundary + '[\r\n]*'));
+        for (let part of parts) {
+            if (!part || part.indexOf('Content') === -1) {
+                continue;
+            }
+            let formData = {
+                name: '',
+                value: '',
+                fileName: '',
+                contentType: '',
+                file: '',
+                fileType: 'hex',
+                type: ''
+            };
+            if (part.indexOf('Content-Type:') !== -1) {
+                formData.contentType = part.split('Content-Type: ')[1].split('\n')[0];
+            } else {
+                continue;
+            }
+            let contentDispositionMatcher = _sub(part);
+            if (!!contentDispositionMatcher) {
+                formData.name = contentDispositionMatcher[0];
+                if (contentDispositionMatcher.length === 2) {
+                    // 二进制格式的formData
+                    formData.value = contentDispositionMatcher[1];
+                    if (part.indexOf('\r\n\r\n') !== -1) {
+                        let value = part.substring(part.indexOf('\r\n\r\n') + 4, part.length - 1);
+                        formData.file = CryptoJS.enc.Hex.stringify(CryptoJS.enc.Latin1.parse(value));
+                        formData.type = 'File';
+                    }
+                } else {
+                    let encoding = part.split("Content-Transfer-Encoding: ")[1].split('\r')[0];
+                    if (encoding === 'binary') {
+                        formData.type = 'File';
+                        if (part.indexOf('\r\n\r\n') !== -1) {
+                            let value = part.substring(part.indexOf('\r\n\r\n') + 4, part.length - 1);
+                            let wordArray = CryptoJS.enc.Latin1.parse(value);
+                            formData.file = CryptoJS.enc.Hex.stringify(wordArray);
+                            formData.value = wordArray.sigBytes + ' bytes';
+                        }
+                    } else {
+                        // 文本格式的formData
+                        if (part.indexOf('\r\n\r\n') !== -1) {
+                            formData.value = part.substring(part.indexOf('\r\n\r\n') + 4, part.length - 1);
+                            formData.type = 'Text';
+                        }
+                    }
+                }
+            } else {
+                continue;
+            }
+            result.push(formData);
+        }
+        return result;
     };
     /**
      * 将源对象的字段复制到目标对象集合中的每一个对象中
@@ -41,9 +129,20 @@
      * @param delimiter 分隔符
      * @returns {any}   截断后的URL
      */
-    Utils.truncate = (url, delimiter) => {
+    Utils.truncateUrl = (url, delimiter) => {
         let index = url.indexOf(delimiter);
         return index !== -1 ? url.substring(0, index) : url;
+    };
+    Utils.isArray = function(o){
+        return Object.prototype.toString.call(o) === '[object Array]';
+    };
+    Utils.toQueryString = function(params) {
+        let queryString = '';
+        !!params && Utils.isArray(params) && params.forEach(item => {
+            queryString = queryString + item.name + '=' + item.value + '&';
+        });
+        queryString = queryString.substring(0, queryString.length - 1);
+        return queryString;
     };
     /**
      * 从uri中获取queryString
@@ -55,9 +154,9 @@
         let queryList = [];
         if (uri.indexOf('?') !== -1) {
             let query = uri.split('?')[1];
-            let arr = query.split('&');
-            for (let i = 0; i < arr.length; i++) {
-                queryList.push({name: arr[i].split('=')[0], value: arr[i].split('=')[1]});
+            let search = new URLSearchParams(query);
+            for (let item of search) {
+                queryList.push({name: item[0], value: item[1]})
             }
         }
         return queryList;

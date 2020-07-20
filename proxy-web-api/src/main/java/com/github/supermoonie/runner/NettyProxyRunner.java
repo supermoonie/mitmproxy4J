@@ -25,6 +25,8 @@ import javax.annotation.Resource;
 @Order()
 public class NettyProxyRunner implements CommandLineRunner {
 
+    public static HttpProxyServer PROXY_SERVER = null;
+
     @Resource
     private MyProxyConfig myProxyConfig;
 
@@ -39,12 +41,12 @@ public class NettyProxyRunner implements CommandLineRunner {
         log.debug("MyProxyConfig: {}", JSONUtil.toJsonStr(myProxyConfig));
         HttpProxyServerConfig serverConfig = proxyServerConfig();
         SecondProxyConfig proxyConfig = proxyConfig();
-        HttpProxyServer proxyServer = new HttpProxyServer()
+        PROXY_SERVER = new HttpProxyServer()
                 .proxyConfig(proxyConfig)
                 .serverConfig(serverConfig)
                 .proxyInterceptInitializer(applicationContext.getBean("defaultHttpProxyInterceptInitializer", DefaultHttpProxyInterceptInitializer.class))
                 .httpProxyExceptionHandle(defaultHttpProxyExceptionHandle);
-        proxyServer.start(myProxyConfig.getPort());
+        PROXY_SERVER.start(myProxyConfig.getPort());
     }
 
     private HttpProxyServerConfig proxyServerConfig() {

@@ -43,6 +43,7 @@ public class HttpProxyServer {
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    private volatile boolean listening = false;
 
     private void init() {
         if (serverConfig == null) {
@@ -121,7 +122,11 @@ public class HttpProxyServer {
         return this;
     }
 
-    public void start(int port) {
+    public synchronized void start(int port) {
+        if (listening) {
+            log.warn("mitmproxy4J is listening on " + port);
+            return;
+        }
         init();
         bossGroup = new NioEventLoopGroup(serverConfig.getBossGroupThreads());
         workerGroup = new NioEventLoopGroup(serverConfig.getWorkerGroupThreads());
@@ -144,6 +149,7 @@ public class HttpProxyServer {
                     });
             ChannelFuture f = b.bind(port).sync();
             log.info("mitmproxy4J start listening on {}", port);
+            listening = true;
             f.channel().closeFuture().sync();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -153,11 +159,16 @@ public class HttpProxyServer {
         }
     }
 
-    public void close() {
-        serverConfig.getProxyLoopGroup().shutdownGracefully();
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
-        CertPool.clear();
+    public synchronized void close() {
+        if (listening) {
+            serverConfig.getProxyLoopGroup().shutdownGracefully();
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+            listening = false;
+        }
     }
 
+    public boolean isListening() {
+        return listening;
+    }
 }

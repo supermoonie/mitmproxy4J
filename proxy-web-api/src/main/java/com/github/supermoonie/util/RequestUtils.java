@@ -48,22 +48,6 @@ public final class RequestUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        try (ServletInputStream inputStream = request.getInputStream()) {
-//            String charset = request.getCharacterEncoding();
-//            if (null == charset) {
-//                charset = StandardCharsets.UTF_8.toString();
-//            }
-//            Reader reader = new InputStreamReader(inputStream, charset);
-//            StringBuilder response = new StringBuilder();
-//            final char[] buff = new char[1024];
-//            int read;
-//            while ((read = reader.read(buff)) > 0) {
-//                response.append(buff, 0, read);
-//            }
-//            return response.toString();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
     public static LinkedMultiObjectValueMap<String> parseQueryString(String queryString) {

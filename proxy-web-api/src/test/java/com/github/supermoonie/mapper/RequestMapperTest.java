@@ -1,12 +1,15 @@
 package com.github.supermoonie.mapper;
 
 import com.github.supermoonie.WithSpringBootTest;
+import com.github.supermoonie.mapper.dao.SimpleRequestDAO;
 import com.github.supermoonie.model.Request;
+import com.github.supermoonie.util.JSON;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Test;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -34,4 +37,9 @@ public class RequestMapperTest extends WithSpringBootTest {
         System.out.println(request);
     }
 
+    @Test
+    public void selectSimple() {
+        List<SimpleRequestDAO> list = requestMapper.selectSimple("weilekangnet", null, null, null);
+        System.out.println(JSON.toJsonString(list));
+    }
 }

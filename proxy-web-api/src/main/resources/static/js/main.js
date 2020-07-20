@@ -2,6 +2,12 @@ new Vue({
     el: '#main',
     data: function () {
         return {
+            loading: false,
+            tree: {
+                nodeProps: {
+                    label: 'url'
+                }
+            },
             currentFlowId: '',
             currentFlow: {
                 request: {
@@ -37,6 +43,7 @@ new Vue({
             },
             urlFilter: '',
             activeName: 'Overview',
+            flowTypeTabActive: 'Structure',
             current: {
                 overview: [],
                 request: {
@@ -51,14 +58,22 @@ new Vue({
                     raw: '',
                     json: '',
                     html: '',
+                    css: '',
+                    js: '',
                     image: '',
                     plain: ''
                 }
             },
-            // 服务器端返回的所有Flow
-            allFlows: [],
-            // 过滤后用于展示的Flow
-            showFlows: [],
+            flow: {
+                tree: {
+                    all: [],
+                    shown: []
+                },
+                list: {
+                    all: [],
+                    shown: []
+                }
+            },
             contentTypeList: [
                 'application/json', 'multipart/form-data', 'application/x-www-form-urlencoded', 'application/xhtml+xml',
                 'text/html', 'text/plain', 'text/xml', 'image/gif', 'image/jpeg', 'image/png',
@@ -77,13 +92,14 @@ new Vue({
             videoUrl: '',
             videoDialogVisible: false,
             edit: {
-                tabs: ['URL', 'Headers', 'Text', 'Form'],
+                tabs: ['URL', 'Headers', 'Body'],
                 activeTab: '0',
                 requestDialogVisible: false,
                 request: {
                     url: '',
                     method: 'GET',
-                    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'TRACE']
+                    contentType: 'none',
+                    rawContentType: 'JSON'
                 },
                 query: {
                     select: '',
@@ -98,35 +114,186 @@ new Vue({
                     data: [{
                         name: '',
                         value: '',
+                        editing: false,
+                        editable: true
+                    }]
+                },
+                form: {
+                    select: '',
+                    data: [{
+                        name: '',
+                        value: '',
                         editing: false
                     }]
                 },
-                text: ''
+                multipart: {
+                    select: '',
+                    data: []
+                }
             }
         }
     },
     methods: {
+        clearClicked() {
+            this.showFlows = [];
+            this.currentFlow = undefined;
+            this.currentFlowId = undefined;
+        },
+        searchClicked() {
+            this.currentFlow = undefined;
+            this.currentFlowId = undefined;
+            this.fetchTreeFlow();
+            this.fetchListFlow();
+        },
+        executeRequest() {
+            const that = this;
+            that.loading = true;
+            let formData = new FormData();
+            const method = this.edit.request.method;
+            formData.append('method', method);
+            formData.append('url', this.edit.request.url);
+            let headers = [];
+            this.edit.headers.data.forEach(header => {
+                headers.push({name: header.name, value: header.value});
+            });
+            formData.append('headers', JSON.stringify(headers));
+            if (['POST', 'PUT', 'PATCH'].indexOf(method) !== -1) {
+                let textFormData = [];
+                this.edit.multipart.data.forEach(part => {
+                    console.log(part);
+                    if (part.type === 'Text') {
+                        textFormData.push({name: part.name.trim(), value: part.value.trim(), type: 'Text', fileName: '', contentType: part.contentType});
+                    } else {
+                        if (part.fileType === 'hex') {
+                            textFormData.push({name: part.name.trim(), value: part.file, type: 'File', fileName: part.value.trim(), contentType: part.contentType});
+                        } else {
+                            formData.append(part.name.trim(), part.file);
+                        }
+                    }
+                });
+                formData.append('textFormData', JSON.stringify(textFormData));
+                let contentType = this.edit.request.contentType;
+                if (contentType === 'raw') {
+                    contentType = this.edit.request.rawContentType;
+                }
+                formData.append('requestContentType', contentType);
+            }
+            axios({
+                method: 'post',
+                url: '/http/execute',
+                data: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then(function (response) {
+                setTimeout(() => {
+                    that.loading = false;
+                    that.edit.requestDialogVisible = false;
+                }, 1000);
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
+        },
+        uploadFileChange(multipart, event) {
+            multipart.uploadFile = event.target.files[0];
+            multipart.fileType = 'binary';
+        },
+        fetchListFlow() {
+            const that = this;
+            that.loading = true;
+            axios({
+                method: 'post',
+                url: '/flow/list',
+                data: {
+                    host: '',
+                    method: '',
+                    start: '',
+                    end: ''
+                },
+                transformRequest: [function (data) {
+                    let ret = '';
+                    for (let key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
+                        }
+                    }
+                    return ret;
+                }],
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(function (response) {
+                that.loading = false;
+                that.flowResponseDataHandler(response.data, 'list');
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
+        },
         /**
          * 从服务器端拉取Flow数据
          */
-        fetchFlow() {
+        fetchTreeFlow() {
             const that = this;
-            axios.get('/flow/fetch?host=' + this.search.host + '&port' + this.search.port + '&contentType=' + this.search.contentType + '&start=2020-06-11 07:54:00')
-                .then(function (response) {
-                    that.allFlows = response.data;
-                    that.showFlows = [];
-                    for (let i = 0; i < that.allFlows.length; i++) {
-                        if (that.allFlows[i].request.uri.indexOf(that.urlFilter) !== -1) {
-                            that.showFlows.push(that.allFlows[i]);
+            that.loading = true;
+            axios({
+                method: 'post',
+                url: '/flow/tree',
+                data: {
+                    host: '',
+                    method: '',
+                    start: '',
+                    end: ''
+                },
+                transformRequest: [function (data) {
+                    let ret = '';
+                    for (let key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
                         }
                     }
-                }).catch(function (error) {
-                    that.$message({
-                        showClose: true,
-                        message: error,
-                        type: 'error'
+                    return ret;
+                }],
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(function (response) {
+                that.loading = false;
+                that.flowResponseDataHandler(response.data, 'tree');
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
+        },
+        flowResponseDataHandler(data, field) {
+            this.flow[field].all = data;
+            this.doFilter(data, field);
+        },
+        responseErrorHandler(error) {
+            this.$message({
+                showClose: true,
+                message: error,
+                type: 'error'
+            });
+        },
+        flowNodeClicked(data, node) {
+            if (!data.type || (!!data.type && data.type === 'TARGET')) {
+                if (!!this.currentFlowId && this.currentFlowId === data.id) {
+                    return;
+                }
+                const that = this;
+                that.loading = true;
+                axios.get('/flow/detail/' + data.id)
+                    .then(res => {
+                        setTimeout(() => that.loading = false, 300);
+                        that.handleUrlClicked(data.id, res.data, null)
+                    })
+                    .catch(error => {
+                        that.loading = false;
+                        that.responseErrorHandler(error);
                     });
-                });
+            }
         },
         /**
          * 处理菜单栏选择事件
@@ -137,60 +304,104 @@ new Vue({
         handleSelect(key, keyPath) {
             console.log(key, keyPath);
         },
+        doFilter(data, field) {
+            const that = this;
+            this.flow[field].shown = data.filter(flow => {
+                if (!that.urlFilter.trim()) {
+                    return true;
+                }
+                return flow.url.indexOf(that.urlFilter.trim()) !== -1;
+            })
+        },
         /**
          * Flow列表过滤器
          */
         filter() {
-            this.showFlows = [];
-            for (let i = 0; i < this.allFlows.length; i++) {
-                if (this.allFlows[i].request.uri.indexOf(this.urlFilter) !== -1) {
-                    this.showFlows.push(this.allFlows[i]);
-                }
-            }
+            this.doFilter(this.flow.list.all, 'list');
+            this.doFilter(this.flow.tree.all, 'tree');
         },
         /**
-         * 请求方法改变时间处理
+         * 请求方法改变事件处理
          */
         requestMethodChanged() {
-            if ('GET' === this.edit.request.method) {
-                this.edit.tabs = [].concat(['URL', 'Headers', 'Text']);
+            if ('POST' === this.edit.request.method || 'PUT' === this.edit.request.method) {
+                this.edit.tabs = [].concat(['URL', 'Headers', 'Body']);
             } else {
-                this.edit.tabs = [].concat(['URL', 'Headers', 'Text', 'Form']);
-                this.edit.request.allowMethods = [].concat(['POST', 'PUT', 'DELETE', 'HEAD', 'TRACE']);
+                this.edit.tabs = [].concat(['URL', 'Headers']);
             }
+        },
+        initRequestEdit() {
+            this.edit.request.url = '';
+            this.edit.request.method = 'GET';
+            this.edit.tabs = ['URL', 'Headers'];
+            this.edit.query.data = [];
+            this.edit.query.select = '';
+            this.edit.headers = [];
+            this.edit.request.contentType = 'none';
+            this.edit.multipart.select = '';
+            this.edit.multipart.data = [];
+            this.edit.form.select = '';
+            this.edit.form.data = [];
         },
         /**
          * 工具栏编辑图标点击事件处理
          */
         requestEditClicked() {
-            if (!this.currentFlow) {
-                this.$message({
-                    message: 'Please select one request!',
-                    type: 'warning'
-                });
+            this.initRequestEdit();
+            if (!this.currentFlow.request.id) {
+                this.edit.requestDialogVisible = true;
+                this.edit.activeTab = '0';
                 return;
             }
-            this.edit.request.url = Utils.truncate(this.currentFlow.request.uri, '?');
-            this.edit.request.allowMethods = [];
-            if (this.currentFlow.request.method.toUpperCase() === 'GET') {
-                this.edit.request.allowMethods = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD'];
-                this.edit.tabs = ['URL', 'Headers', 'Text'];
-            } else {
-                this.edit.request.allowMethods = ['POST', 'PUT', 'DELETE', 'HEAD', 'TRACE'];
-                this.edit.tabs = ['URL', 'Headers', 'Text', 'Form'];
+            this.edit.request.url = this.currentFlow.request.uri;
+            this.edit.tabs = ['URL', 'Headers'];
+            const entityMethod = ['POST', 'PUT', 'PATCH'];
+            if (entityMethod.indexOf(this.currentFlow.request.method.toUpperCase()) !== -1) {
+                this.edit.tabs = ['URL', 'Headers', 'Body'];
             }
             this.edit.request.method = this.currentFlow.request.method.toUpperCase();
             this.edit.query.data = Utils.unionListFrom(Utils.getQueryString(this.currentFlow.request.uri), {editing: false});
+            let headers = [];
+            this.currentFlow.requestHeaders.forEach(header => {
+                header.editing = false;
+                header.editable = ['content-length', 'content-type', 'host'].indexOf(header.name.toLowerCase()) === -1;
+                headers.push(header);
+            });
+            this.edit.headers.data = headers;
             this.edit.headers.data = Utils.unionListFrom(this.currentFlow.requestHeaders, {editing: false});
-            this.text = '';
             if (!!this.currentFlow.requestContent) {
-                this.edit.text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
                 if (this.currentFlow.request.contentType.indexOf('multipart/form-data') !== -1) {
-                    let boundary = this.currentFlow.request.contentType.split('boundary=')[1];
-                    let dataArr = this.edit.text.split(/[\r\n]/);
+                    this.edit.request.contentType = 'formData';
+                    let text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
+                    let formData = Utils.parseMultipartData(this.currentFlow.request.contentType, text);
+                    this.edit.multipart.data = Utils.unionListFrom(formData, {editing: false, uploadFile: ''});
+                } else if (this.currentFlow.request.contentType.indexOf('x-www-form-urlencoded') !== -1) {
+                    this.edit.request.contentType = 'x-www-form-urlencoded';
+                } else if (this.currentFlow.request.contentType.indexOf('image/') !== -1
+                    || this.currentFlow.request.contentType.indexOf('octet-stream') !== -1) {
+                    this.edit.request.contentType = 'binary';
+                } else {
+                    this.edit.request.contentType = 'raw';
+                    if (this.currentFlow.request.contentType.indexOf('application/json') !== -1) {
+                        this.edit.request.rawContentType = 'JSON';
+                    } else if (this.currentFlow.request.contentType.indexOf('xml') !== -1) {
+                        this.edit.request.rawContentType = 'XML';
+                    } else if (this.currentFlow.request.contentType.indexOf('html') !== -1) {
+                        this.edit.request.rawContentType = 'HTML';
+                    } else if (this.currentFlow.request.contentType.indexOf('plain') !== -1) {
+                        this.edit.request.rawContentType = 'Text';
+                    } else {
+                        this.edit.request.contentType = 'none';
+                    }
                 }
+            } else {
+                this.edit.request.contentType = 'none';
             }
             this.edit.requestDialogVisible = true;
+            this.edit.activeTab = '0';
+        },
+        requestUrlInput(value) {
+            this.edit.query.data = Utils.getQueryString(value);
         },
         /**
          * 增加一行事件处理
@@ -201,9 +412,14 @@ new Vue({
             this.edit[field].data.forEach(data => {
                 data.editing = false;
             });
-            let row = {name: '', value: '', editing: true};
+            let row;
+            if ('multipart' === field) {
+                row = {name: '', type: 'Text', value: '', uploadFile: '', editing: true, editable: true};
+            } else {
+                row = {name: '', value: '', editing: true, editable: true};
+            }
             this.edit[field].data.push(row);
-            this.edit[field].select = row;
+            this.edit[field].select = Utils.clone(row);
         },
         /**
          * 表格行编辑事件处理
@@ -217,15 +433,45 @@ new Vue({
             console.log(row);
             //是否是取消操作
             if (!flag) {
+                if (row.name === '' && row.value === '') {
+                    this.rowDeleteClicked(row, index, field);
+                }
                 return row.editing = !row.editing;
             }
             if (row.editing) {
-                row.name = this.edit[field].select.name;
-                row.value = this.edit[field].select.value;
+                // OK
+                if ('query' === field) {
+                    row.name = this.edit[field].select.name.trim();
+                    row.value = this.edit[field].select.value.trim();
+                    let queryString = Utils.toQueryString(this.edit.query.data)
+                    this.edit.request.url = Utils.truncateUrl(this.edit.request.url, '?') + '?' + queryString;
+                } else if ('multipart' === field) {
+                    const select = this.edit[field].select;
+                    row.name = select.name.trim();
+                    row.type = select.type;
+                    row.fileType = select.fileType;
+                    if (row.fileType === 'binary') {
+                        row.file = select.uploadFile;
+                        row.value = row.file.name.trim();
+                    } else {
+                        row.value = select.value.trim();
+                    }
+                    console.log(select);
+                    console.log(row);
+                } else {
+                    // header
+                    row.name = this.edit[field].select.name.trim();
+                    row.value = this.edit[field].select.value.trim();
+                }
                 row.editing = false;
             } else {
-                this.edit[field].select = JSON.parse(JSON.stringify(row));
+                // Edit
+                this.edit[field].data.forEach(data => {
+                    data.editing = false;
+                });
+                this.edit[field].select = Utils.clone(row);
                 row.editing = true;
+                console.log(row);
             }
         },
         /**
@@ -237,6 +483,14 @@ new Vue({
          */
         rowDeleteClicked(row, index, field) {
             this.edit[field].data.splice(index, 1);
+            if ('query' === field) {
+                let queryString = Utils.toQueryString(this.edit.query.data)
+                if (!!queryString) {
+                    this.edit.request.url = Utils.truncateUrl(this.edit.request.url, '?') + '?' + queryString;
+                } else {
+                    this.edit.request.url = Utils.truncateUrl(this.edit.request.url, '?');
+                }
+            }
         },
         /**
          * 处理Flow列表中元素点击事件
@@ -246,7 +500,6 @@ new Vue({
          * @param event client event
          */
         handleUrlClicked(id, data, event) {
-            console.log(data);
             this.currentFlow = data;
             this.currentFlowId = id;
             // Overview Tab
@@ -254,7 +507,9 @@ new Vue({
             // Request Tab
             this.current.request.headers = data.requestHeaders;
             this.current.request.queryString = Utils.getQueryString(data.request.uri);
-            let requestCookies = data.requestHeaders.filter(header => header.name === 'Cookie');
+            let requestCookies = data.requestHeaders.filter(header => header.name === 'Cookie').map(header => {
+                return header.value
+            });
             this.current.request.cookies = Utils.parseRequestCookie(requestCookies);
             this.current.request.raw = this.buildCurrentRequestRaw(data);
             // Response Tab
@@ -267,6 +522,7 @@ new Vue({
             if (beforeLen !== afterLen) {
                 document.querySelector('#pane-Response #tab-0').click()
             }
+            console.log(this.currentFlow);
         },
         /**
          * 根据Flow数据创建Response/Raw 中的内容
@@ -276,37 +532,48 @@ new Vue({
          */
         buildCurrentResponseRaw(data) {
             let raw = '';
+            const that = this;
+            raw = '<p>' + data.response.httpVersion + ' ' + data.response.status + '</p>';
+            for (let i = 0; i < data.responseHeaders.length; i++) {
+                let header = data.responseHeaders[i];
+                raw = raw + '<p>' + header.name + ' : ' + header.value + '</p>';
+            }
             if (data.responseContent) {
-                const that = this;
-                raw = '<p>' + data.response.httpVersion + ' ' + data.response.status + '</p>';
-                for (let i = 0; i < data.responseHeaders.length; i++) {
-                    let header = data.responseHeaders[i];
-                    raw = raw + '<p>' + header.name + ' : ' + header.value + '</p>';
-                }
-                let contentType = data.response.contentType;
-                let type = /.*\/(.*);?.*/.exec(contentType)[1].toLowerCase().trim();
-                if ('json' === type) {
+                let contentType = data.response.contentType.toLowerCase();
+                if (contentType.indexOf('json') !== -1) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
                     let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                     that.buildCurrentResponseJson(content);
-                } else if ('html' === type) {
+                } else if (contentType.indexOf('text/html') !== -1) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
-                    content = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
-                    raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
+                    let rawContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                    raw = raw + '<p></p><pre>' + rawContent + '</pre><p></p>';
                     this.buildCurrentResponseHtml(content);
+                } else if (contentType.indexOf('text/css') !== -1) {
+                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
+                    this.buildCurrentResponseCss(content);
+                } else if (contentType.indexOf('application/javascript') !== -1) {
+                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let rawContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                    raw = raw + '<p></p><pre>' + rawContent + '</pre><p></p>';
+                    this.buildCurrentResponseJavaScript(content);
                 } else if (contentType.indexOf('image') !== -1) {
                     let content = Utils.wordsToString(CryptoJS.enc.Hex.parse(data.responseContent).words);
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildCurrentResponseImage(data.responseContent);
-                } else if ('vnd.apple.mpegurl' === type) {
+                } else if (contentType.indexOf('vnd.apple.mpegurl') !== -1) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.responseTabs.push('Video');
                     this.videoUrl = data.request.uri;
+                } else if (contentType.indexOf('video/mp2t') !== -1 || contentType.indexOf('application/octet-stream') !== -1) {
+                    let content = Utils.wordsToString(CryptoJS.enc.Hex.parse(data.responseContent).words);
+                    raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
+                    this.buildHexResponse(data.responseContent);
                 } else {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
-                    console.log(content);
                     try {
                         JSON.parse(content);
                         let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
@@ -318,6 +585,13 @@ new Vue({
                 }
             }
             return raw;
+        },
+        /**
+         * 创建Response/Hex 中的内容
+         */
+        buildHexResponse(hexContent) {
+            this.responseTabs.push('Hex');
+            this.current.response.hex = '<pre class="Plain" style="margin: 0;"><code>' + hexContent + '</code></pre>';
         },
         /**
          * 创建Response/PLAIN 中的内容
@@ -354,7 +628,28 @@ new Vue({
          */
         buildCurrentResponseHtml(content) {
             this.responseTabs.push('HTML');
+            content = Utils.replaceSpecialChar(html_beautify(content, opts)).replace(/\s{2}/g, '&nbsp;&nbsp;');
             this.current.response.html = '<pre class="HTML" style="margin: 0;"><code>' + content + '</code></pre>';
+        },
+        /**
+         * 数据创建Response/JavaScript 中的内容
+         *
+         * @param content  JavaScript Content
+         */
+        buildCurrentResponseCss(content) {
+            this.responseTabs.push('CSS');
+            content = css_beautify(content, opts);
+            this.current.response.css = '<pre class="css" style="margin: 0;"><code>' + content + '</code></pre>';
+        },
+        /**
+         * 数据创建Response/JavaScript 中的内容
+         *
+         * @param content  JavaScript Content
+         */
+        buildCurrentResponseJavaScript(content) {
+            this.responseTabs.push('JavaScript');
+            content = Utils.replaceSpecialChar(js_beautify(content, opts)).replace(/\s{2}/g, '&nbsp;&nbsp;');
+            this.current.response.js = '<pre class="JavaScript" style="margin: 0;"><code>' + content + '</code></pre>';
         },
         /**
          * 根据Flow数据创建Overview 中的内容
@@ -431,6 +726,7 @@ new Vue({
             controller.onmousedown = function (e) {
                 let main = document.querySelector('#main');
                 main.className = 'p-select-none';
+                const listContainer = document.querySelector('#p-list-container')
                 let urlList = document.querySelectorAll('#p-url-list li a span');
                 let startX = e.clientX;
                 let aside = document.querySelector('#p-aside');
@@ -445,20 +741,22 @@ new Vue({
                     if (clientWidth - 20 < endX) {
                         return;
                     }
+                    listContainer.style.overflowY = 'hidden';
                     let moveLen = startX + (endX - startX);
                     controller.style.left = moveLen + 'px';
                     aside.style.width = moveLen + 'px';
                     header.style.left = moveLen + 'px';
                     content.style.left = moveLen + 'px';
-                    if (!!urlList && moveLen > 580) {
-                        for (let i = 0; i < urlList.length; i++)
-                            urlList[i].style.width = moveLen + 'px';
-                    }
+                    // if (!!urlList && moveLen > 580) {
+                    //     for (let i = 0; i < urlList.length; i++)
+                    //         urlList[i].style.width = moveLen + 'px';
+                    // }
                 }
                 document.onmouseup = function () {
                     document.onmousemove = null;
                     document.onmouseup = null;
                     main.className = null;
+                    listContainer.style.overflowY = 'scroll';
                 }
             }
         },
@@ -469,7 +767,7 @@ new Vue({
             let offsetHeight = document.body.offsetHeight;
             let listContainer = document.getElementById('p-list-container');
             // 113: p-list-container 距离顶部的高度，即 header.height + aside.search.height
-            listContainer.style.height = offsetHeight - 113 + 'px';
+            listContainer.style.height = offsetHeight - 152 + 'px';
         },
         /**
          * 窗口大小变化时自动调整元素标签高度
@@ -517,7 +815,10 @@ new Vue({
             that.autoAdjustWhenWindowResize();
             axios.defaults.baseURL = "http://127.0.1:8866";
         }
-        this.timer = setTimeout(this.fetchFlow, 200);
+        this.timer = setTimeout(() => {
+            that.fetchTreeFlow();
+            that.fetchListFlow();
+        }, 200);
     },
     beforeDestroy() {
         clearInterval(this.timer);
@@ -527,5 +828,16 @@ Vue.directive('highlight', function (el) {
     let blocks = el.querySelectorAll('pre code');
     blocks.forEach((block) => {
         hljs.highlightBlock(block)
-    })
+    });
+});
+Vue.directive('focus', {
+    inserted: function (el) {
+        el.children[0].focus();
+    },
+    // componentUpdated: function (el) {
+    //     el.children[0].focus();
+    // },
+    // update: function (el) {
+    //     el.children[0].focus();
+    // }
 });
