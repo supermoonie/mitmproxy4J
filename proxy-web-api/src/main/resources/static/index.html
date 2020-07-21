@@ -104,7 +104,7 @@
                         </div>
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" height="450">
-                            <el-table :data="edit.query.data" :empty-text="'No data :)'" stripe border height="450" style="width: 100%">
+                            <el-table :data="edit.query.data" :empty-text="'No data'" stripe border height="450" style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
@@ -152,7 +152,7 @@
                     <div v-if="item === 'Headers'">
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" style="height: 500px;">
-                            <el-table :data="edit.headers.data" :empty-text="'No data :)'" row-key="name" stripe border height="500" style="width: 100%">
+                            <el-table :data="edit.headers.data" :empty-text="'No data'" row-key="name" stripe border height="500" style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
@@ -220,7 +220,7 @@
                         </div>
                         <!-- formData start -->
                         <div v-else-if="'formData' === edit.request.contentType">
-                            <el-table :data="edit.multipart.data" :empty-text="'No data :)'" row-key="name" stripe
+                            <el-table :data="edit.multipart.data" :empty-text="'No data'" row-key="name" stripe
                                       border height="460"
                                       style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
@@ -290,8 +290,8 @@
                             </div>
                         </div>
                         <!-- formData end -->
-                        <div v-else-if="'form' === edit.request.contentType">
-                            <el-table :data="edit.form.data" :empty-text="'No data :)'" row-key="name" stripe
+                        <div v-else-if="'x-www-form-urlencoded' === edit.request.contentType">
+                            <el-table :data="edit.form.data" :empty-text="'No data'" row-key="name" stripe
                                       border height="460"
                                       style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
@@ -306,19 +306,9 @@
                                 <el-table-column prop="value" label="Value">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input v-if="edit.form.select['type'] === 'Text'" size="mini"
+                                            <el-input size="mini"
                                                       @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'form')"
                                                       v-model="edit.form.select['value']"></el-input>
-                                            <span v-else>
-                                                <el-button type="text" size="mini"
-                                                           @click="!!event.target.children[0] && event.target.children[0].click()"
-                                                           style="padding-top: 0;">
-                                                    <input style="visibility: hidden;width: 0;height: 0;" type="file"
-                                                           @change="uploadFileChange(edit.multipart.select, event)">
-                                                    Select<i class="el-icon-upload el-icon--right"></i>
-                                                </el-button>
-                                                &nbsp;&nbsp;{{edit.form.select.uploadFile.name}}
-                                            </span>
                                         </span>
                                         <span v-else>{{scope.row['value']}}</span>
                                     </template>
@@ -326,14 +316,14 @@
                                 <el-table-column label="Operation" align="center" width="150">
                                     <template slot-scope="scope">
                                         <el-link type="primary"
-                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'multipart')">
+                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'form')">
                                             {{scope.row.editing ? 'Ok' : 'Edit'}}
                                         </el-link>&nbsp;&nbsp;
                                         <el-link type="danger" v-if="!scope.row.editing"
-                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'multipart')">Delete
+                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'form')">Delete
                                         </el-link>&nbsp;&nbsp;
                                         <el-link type="info" v-else
-                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'multipart')">
+                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'form')">
                                             Cancel
                                         </el-link>
                                     </template>
@@ -342,10 +332,9 @@
                             <div class="p-placeholder"></div>
                             <div class="p-url-footer p-select-none">
                                 <el-col span="24">
-                                    <div @click="addClicked('multipart')"><span>+ Add</span></div>
+                                    <div @click="addClicked('form')"><span>+ Add</span></div>
                                 </el-col>
                             </div>
-
                         </div>
                         <div v-else-if="'binary' === edit.request.contentType">
                             binary
@@ -361,7 +350,7 @@
                     <div v-if="item === 'Multipart'">
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" style="height: 552px;">
-                            <el-table :data="edit.multipart.data" :empty-text="'No data :)'" row-key="name" stripe
+                            <el-table :data="edit.multipart.data" :empty-text="'No data'" row-key="name" stripe
                                       border height="552"
                                       style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
@@ -489,7 +478,7 @@
                 <div class="p-list-container" id="p-list-container">
                     <div v-show="flowTypeTabActive === 'Structure'" id="p-url-tree-container">
                         <el-tree v-cloak
-                                 :empty-text="'No data :)'"
+                                 :empty-text="'No data'"
                                  :data="flow.tree.shown"
                                  :show-checkbox="false"
                                  :expand-on-click-node="true"
@@ -538,7 +527,7 @@
                     <!--overview 开始-->
                     <el-tab-pane label="Overview" name="Overview">
                         <el-table :data="current.overview" border="true" stripe fit="true" :show-header="false"
-                                  :empty-text="'No data :)'"
+                                  :empty-text="'No data'"
                                   :row-class-name="overviewRowClassName">
                             <el-table-column prop="name" label="Name" width="200"></el-table-column>
                             <el-table-column prop="value" label="Value"></el-table-column>
@@ -550,21 +539,21 @@
                     <el-tab-pane label="Request" name="Request">
                         <el-tabs :tab-position="'left'">
                             <el-tab-pane label="Headers">
-                                <el-table :data="current.request.headers" :empty-text="'No data :)'" border="true"
+                                <el-table :data="current.request.headers" :empty-text="'No data'" border="true"
                                           stripe fit="true">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
                             <el-tab-pane label="Query">
-                                <el-table :data="current.request.queryString" :empty-text="'No data :)'" border="true"
+                                <el-table :data="current.request.queryString" :empty-text="'No data'" border="true"
                                           stripe fit="true">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
                                 </el-table>
                             </el-tab-pane>
                             <el-tab-pane label="Cookies">
-                                <el-table :data="current.request.cookies" :empty-text="'No data :)'" border="true"
+                                <el-table :data="current.request.cookies" :empty-text="'No data'" border="true"
                                           stripe fit="true">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
@@ -583,7 +572,7 @@
                             <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item"
                                          :label="item">
                                 <!-- response.headers 开始-->
-                                <el-table :data="current.response.headers" :empty-text="'No data :)'" border="true"
+                                <el-table :data="current.response.headers" :empty-text="'No data'" border="true"
                                           stripe fit="true"
                                           v-if="item === 'Headers'">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
@@ -591,7 +580,7 @@
                                 </el-table>
                                 <!-- response.headers 结束-->
                                 <!-- response.cookies 开始-->
-                                <el-table :data="current.response.cookies" :empty-text="'No data :)'" border="true"
+                                <el-table :data="current.response.cookies" :empty-text="'No data'" border="true"
                                           stripe fit="true"
                                           v-if="item === 'Cookies'">
                                     <el-table-column prop="name" label="Name"></el-table-column>
@@ -610,7 +599,7 @@
                                          class="p-raw"></div>
                                     <div class="el-table__empty-block" v-show="!current.response.raw"
                                          style="width: 1264px; height: 100%;">
-                                        <span class="el-table__empty-text">No data :)</span>
+                                        <span class="el-table__empty-text">No data</span>
                                     </div>
                                 </div>
                                 <!-- response.raw 结束-->

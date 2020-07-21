@@ -159,18 +159,24 @@ new Vue({
             formData.append('headers', JSON.stringify(headers));
             if (['POST', 'PUT', 'PATCH'].indexOf(method) !== -1) {
                 let textFormData = [];
-                this.edit.multipart.data.forEach(part => {
-                    console.log(part);
-                    if (part.type === 'Text') {
-                        textFormData.push({name: part.name.trim(), value: part.value.trim(), type: 'Text', fileName: '', contentType: part.contentType});
-                    } else {
-                        if (part.fileType === 'hex') {
-                            textFormData.push({name: part.name.trim(), value: part.file, type: 'File', fileName: part.value.trim(), contentType: part.contentType});
+                if (this.edit.request.contentType === 'formData') {
+                    this.edit.multipart.data.forEach(part => {
+                        if (part.type === 'Text') {
+                            textFormData.push({name: part.name.trim(), value: part.value.trim(), type: 'Text', fileName: '', contentType: part.contentType});
                         } else {
-                            formData.append(part.name.trim(), part.file);
+                            if (part.fileType === 'hex') {
+                                textFormData.push({name: part.name.trim(), value: part.file, type: 'File', fileName: part.value.trim(), contentType: part.contentType});
+                            } else {
+                                formData.append(part.name.trim(), part.file);
+                            }
                         }
-                    }
-                });
+                    });
+                } else if (this.edit.request.contentType === 'x-www-form-urlencoded') {
+                    this.edit.form.data.forEach(form => {
+                        textFormData.push({name: form.name.trim(), value: form.value.trim()});
+                    });
+                }
+
                 formData.append('textFormData', JSON.stringify(textFormData));
                 let contentType = this.edit.request.contentType;
                 if (contentType === 'raw') {

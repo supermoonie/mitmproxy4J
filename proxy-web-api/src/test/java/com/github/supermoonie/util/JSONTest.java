@@ -2,8 +2,10 @@ package com.github.supermoonie.util;
 
 import cn.hutool.core.util.HexUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.github.supermoonie.controller.params.TextFormData;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,5 +20,13 @@ public class JSONTest {
         Map<String, Object> map = JSON.parse(HexUtil.decodeHexStr(hex), new TypeReference<Map<String, Object>>() {
         });
         System.out.println(JSON.toJsonString(map, true));
+    }
+
+    @Test
+    public void testParse() {
+        String text = "[{\"name\":\"foo\", \"value\":\"bar\"}]";
+        List<TextFormData> data = JSON.parse(text, new TypeReference<List<TextFormData>>() {
+        });
+        System.out.println(data);
     }
 }

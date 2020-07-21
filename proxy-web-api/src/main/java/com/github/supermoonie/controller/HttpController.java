@@ -19,6 +19,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -84,10 +85,10 @@ public class HttpController {
                 case PATCH:
                     EnumBodyType bodyType = EnumBodyType.of(requestContentType).orElseThrow(() -> new ApiException("Request contentType: " + requestContentType + " not support!", HttpStatus.BAD_GATEWAY));
                     List<TextFormData> textFormDataList = resolveTextFormData(textFormData);
-                    List<TextFormData> hexFileFormDataList = textFormDataList.stream().filter(data -> data.getType().equals(EnumTextFormDataType.FILE.getType())).collect(Collectors.toList());
-                    textFormDataList = textFormDataList.stream().filter(data -> data.getType().equals(EnumTextFormDataType.TEXT.getType())).collect(Collectors.toList());
                     switch (bodyType) {
                         case FORM_DATA:
+                            List<TextFormData> hexFileFormDataList = textFormDataList.stream().filter(data -> null != data.getType() && data.getType().equals(EnumTextFormDataType.FILE.getType())).collect(Collectors.toList());
+                            textFormDataList = textFormDataList.stream().filter(data -> null != data.getType() && data.getType().equals(EnumTextFormDataType.TEXT.getType())).collect(Collectors.toList());
                             MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
                             textFormDataList.forEach(data -> entityBuilder.addTextBody(data.getName(),
                                     data.getValue(), ContentType.create(ContentType.TEXT_PLAIN.getMimeType(), "UTF-8")));
@@ -111,7 +112,7 @@ public class HttpController {
                             requestBuilder.setEntity(httpEntity);
                             break;
                         case X_WWW_FORM_URLENCODED:
-                            log.info(EnumBodyType.X_WWW_FORM_URLENCODED.getName());
+                            textFormDataList.forEach(data -> requestBuilder.addParameter(data.getName(), data.getValue()));
                             break;
                         default:
                             break;
