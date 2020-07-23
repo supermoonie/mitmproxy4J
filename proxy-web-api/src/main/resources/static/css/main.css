@@ -22,7 +22,7 @@ html, body, #main {
 
 /*request edit container*/
 .p-request-edit-container .el-dialog {
-    width: 1500px;
+    width: 1324px;
     height: 673px;
     overflow: auto;
 }
@@ -62,7 +62,7 @@ html, body, #main {
     overflow: auto;
 }
 .p-url-footer {
-    width: 1458px;
+    width: 1282px;
     height: 40px;
     line-height: 40px;
     text-align: center;

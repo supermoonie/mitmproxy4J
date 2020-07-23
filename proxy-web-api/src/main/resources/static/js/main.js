@@ -377,11 +377,18 @@ new Vue({
             this.edit.headers.data = Utils.unionListFrom(this.currentFlow.requestHeaders, {editing: false});
             if (!!this.currentFlow.requestContent) {
                 if (this.currentFlow.request.contentType.indexOf('multipart/form-data') !== -1) {
-                    this.edit.request.contentType = 'formData';
                     let text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
                     let formData = Utils.parseMultipartData(this.currentFlow.request.contentType, text);
                     this.edit.multipart.data = Utils.unionListFrom(formData, {editing: false, uploadFile: ''});
+                    this.edit.request.contentType = 'formData';
                 } else if (this.currentFlow.request.contentType.indexOf('x-www-form-urlencoded') !== -1) {
+                    let text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
+                    let queryList = [];
+                    let search = new URLSearchParams(text);
+                    for (let item of search) {
+                        queryList.push({name: item[0], value: item[1], editing: false})
+                    }
+                    this.edit.form.data = queryList;
                     this.edit.request.contentType = 'x-www-form-urlencoded';
                 } else if (this.currentFlow.request.contentType.indexOf('image/') !== -1
                     || this.currentFlow.request.contentType.indexOf('octet-stream') !== -1) {
