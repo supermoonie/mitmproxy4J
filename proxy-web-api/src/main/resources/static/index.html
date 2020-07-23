@@ -221,7 +221,7 @@
                         <!-- formData start -->
                         <div v-show="'formData' === edit.request.contentType">
                             <el-table :data="edit.multipart.data" :empty-text="'No data'" row-key="name" stripe
-                                      border height="460"
+                                      border height="450"
                                       style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
@@ -292,7 +292,7 @@
                         <!-- formData end -->
                         <div v-show="'x-www-form-urlencoded' === edit.request.contentType">
                             <el-table :data="edit.form.data" :empty-text="'No data'" row-key="name" stripe
-                                      border height="460"
+                                      border height="450"
                                       style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
@@ -340,73 +340,12 @@
                             binary
                         </div>
                         <div v-show="'raw' === edit.request.contentType">
-                            <div class="p-url-body" style="height: 512px;">
+                            <div class="p-url-body" style="height: 502px;">
                                 <el-input type="textarea" :rows="2" v-model="edit.body"></el-input>
                             </div>
                         </div>
                     </div>
                     <!-- Body edit end -->
-                    <!-- Multiform edit begin -->
-<!--                    <div v-if="item === 'Multipart'">-->
-<!--                        <div class="p-placeholder"></div>-->
-<!--                        <div class="p-url-body" style="height: 552px;">-->
-<!--                            <el-table :data="edit.multipart.data" :empty-text="'No data'" row-key="name" stripe-->
-<!--                                      border height="552"-->
-<!--                                      style="width: 100%">-->
-<!--                                <el-table-column label="#" type="index" align="center"></el-table-column>-->
-<!--                                <el-table-column prop="part" label="Part">-->
-<!--                                    <template slot-scope="scope">-->
-<!--                                        <span v-if="scope.row.editing">-->
-<!--                                            <el-input size="mini" v-model="edit.multipart.select['part']"></el-input>-->
-<!--                                        </span>-->
-<!--                                        <span v-else>{{scope.row['part']}}</span>-->
-<!--                                    </template>-->
-<!--                                </el-table-column>-->
-<!--                                <el-table-column prop="contentType" label="Content-Type">-->
-<!--                                    <template slot-scope="scope">-->
-<!--                                        <span v-if="scope.row.editing">-->
-<!--                                            <el-input size="mini"-->
-<!--                                                      v-model="edit.multipart.select['contentType']"></el-input>-->
-<!--                                        </span>-->
-<!--                                        <span v-else>{{scope.row['contentType']}}</span>-->
-<!--                                    </template>-->
-<!--                                </el-table-column>-->
-<!--                                <el-table-column prop="fileName" label="File name">-->
-<!--                                    <template slot-scope="scope">-->
-<!--                                        <span v-if="scope.row.editing">-->
-<!--                                            <el-input size="mini"-->
-<!--                                                      v-model="edit.multipart.select['fileName']"></el-input>-->
-<!--                                        </span>-->
-<!--                                        <span v-else>{{scope.row['fileName']}}</span>-->
-<!--                                    </template>-->
-<!--                                </el-table-column>-->
-<!--                                <el-table-column prop="value" label="Value">-->
-<!--                                    <template slot-scope="scope">-->
-<!--                                        <span v-if="scope.row.editing">-->
-<!--                                            <el-input size="mini" v-model="edit.multipart.select['value']"></el-input>-->
-<!--                                        </span>-->
-<!--                                        <span v-else>{{scope.row['value']}}</span>-->
-<!--                                    </template>-->
-<!--                                </el-table-column>-->
-<!--                                <el-table-column label="Operation" align="center" width="150">-->
-<!--                                    <template slot-scope="scope">-->
-<!--                                        <el-link type="primary"-->
-<!--                                                 @click="rowEditClicked(scope.row, scope.$index, true, 'multipart')">-->
-<!--                                            {{scope.row.editing ? 'Ok' : 'Edit'}}-->
-<!--                                        </el-link>&nbsp;&nbsp;-->
-<!--                                        <el-link type="danger" v-if="!scope.row.editing"-->
-<!--                                                 @click="rowDeleteClicked(scope.row, scope.$index, 'multipart')">Delete-->
-<!--                                        </el-link>&nbsp;&nbsp;-->
-<!--                                        <el-link type="info" v-else-->
-<!--                                                 @click="rowEditClicked(scope.row, scope.$index, false, 'multipart')">-->
-<!--                                            Cancel-->
-<!--                                        </el-link>-->
-<!--                                    </template>-->
-<!--                                </el-table-column>-->
-<!--                            </el-table>-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    <!-- Multiform edit end -->
                 </el-tab-pane>
             </el-tabs>
             <div slot="footer" class="dialog-footer" align="center">

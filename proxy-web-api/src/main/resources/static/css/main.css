@@ -78,25 +78,26 @@ html, body, #main {
     padding: 0 20px;
 }
 .p-request-edit-container .el-textarea__inner {
-    height: 510px;
-    width: 1460px;
+    height: 500px;
+    width: 1284px;
     resize: none;
 }
 .p-body-type {
-    height: 30px;
-    line-height: 30px;
+    height: 40px;
+    line-height: 40px;
     width: 100%;
 }
 .p-body-type-radio {
     float: left;
-    height: 30px;
-    line-height: 30px;
+    height: 40px;
+    line-height: 40px;
     margin: 0;
     padding: 0;
 }
 .p-body-type-select {
     float: left;
     margin-left: 20px;
+    margin-top: 5px;
 }
 /*request edit container*/
 

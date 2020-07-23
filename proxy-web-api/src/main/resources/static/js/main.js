@@ -377,12 +377,12 @@ new Vue({
             this.edit.headers.data = Utils.unionListFrom(this.currentFlow.requestHeaders, {editing: false});
             if (!!this.currentFlow.requestContent) {
                 if (this.currentFlow.request.contentType.indexOf('multipart/form-data') !== -1) {
-                    let text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
+                    let text = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent));
                     let formData = Utils.parseMultipartData(this.currentFlow.request.contentType, text);
                     this.edit.multipart.data = Utils.unionListFrom(formData, {editing: false, uploadFile: ''});
                     this.edit.request.contentType = 'formData';
                 } else if (this.currentFlow.request.contentType.indexOf('x-www-form-urlencoded') !== -1) {
-                    let text = Utils.wordsToString(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).words);
+                    let text = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(this.currentFlow.requestContent));
                     let queryList = [];
                     let search = new URLSearchParams(text);
                     for (let item of search) {
@@ -393,19 +393,20 @@ new Vue({
                 } else if (this.currentFlow.request.contentType.indexOf('image/') !== -1
                     || this.currentFlow.request.contentType.indexOf('octet-stream') !== -1) {
                     this.edit.request.contentType = 'binary';
-                } else {
+                } else if (this.currentFlow.request.contentType.indexOf('application/json') !== -1) {
                     this.edit.request.contentType = 'raw';
-                    if (this.currentFlow.request.contentType.indexOf('application/json') !== -1) {
-                        this.edit.request.rawContentType = 'JSON';
-                    } else if (this.currentFlow.request.contentType.indexOf('xml') !== -1) {
-                        this.edit.request.rawContentType = 'XML';
-                    } else if (this.currentFlow.request.contentType.indexOf('html') !== -1) {
-                        this.edit.request.rawContentType = 'HTML';
-                    } else if (this.currentFlow.request.contentType.indexOf('plain') !== -1) {
-                        this.edit.request.rawContentType = 'Text';
-                    } else {
-                        this.edit.request.contentType = 'none';
-                    }
+                    this.edit.request.rawContentType = 'JSON';
+                } else if (this.currentFlow.request.contentType.indexOf('xml') !== -1) {
+                    this.edit.request.contentType = 'raw';
+                    this.edit.request.rawContentType = 'XML';
+                } else if (this.currentFlow.request.contentType.indexOf('html') !== -1) {
+                    this.edit.request.contentType = 'raw';
+                    this.edit.request.rawContentType = 'HTML';
+                } else if (this.currentFlow.request.contentType.indexOf('plain') !== -1) {
+                    this.edit.request.contentType = 'raw';
+                    this.edit.request.rawContentType = 'Text';
+                } else {
+                    this.edit.request.contentType = 'none';
                 }
             } else {
                 this.edit.request.contentType = 'none';

@@ -442,6 +442,5 @@ public class MimeTypeUtils {
         MIME_TYPE_MAP.put("z", "application/x-compress");
         MIME_TYPE_MAP.put("zac", "application/x-zaurus-zac");
         MIME_TYPE_MAP.put("zip", "application/zip");
-
     }
 }
