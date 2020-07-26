@@ -5,23 +5,55 @@
     <title>Video</title>
     <script src="third/dplayer/hls.min.js"></script>
     <script src="third/dplayer/DPlayer.min.js"></script>
+    <script src="third/ace/ace.min.js"></script>
+    <script src="third/ace/theme-chrome.min.js"></script>
+    <script src="third/ace/mode-html.min.js"></script>
+    <script src="third/ace/mode-javascript.min.js"></script>
+    <script src="third/ace/mode-json.min.js"></script>
+    <script src="third/ace/mode-xml.min.js"></script>
+    <script src="third/ace/ext-language_tools.min.js"></script>
+    <style type="text/css" media="screen">
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+
 </head>
 <body>
 <h1>\ufffd</h1>
+<div id="editor">function foo(items) {
+    var x = "All this is syntax highlighted";
+    return x;
+    }
+</div>
+<script>
+    let editor = ace.edit("editor");
+    editor.setTheme("ace/theme/chrome");
+    editor.session.setMode("ace/mode/javascript");
+    // editor.setReadOnly(true);
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true
+    })
+</script>
 <div id="dplayer"></div>
 <script>
-    const dp = new DPlayer({
-        container: document.getElementById('dplayer'),
-        loop: false,
-        video: {
-            // url: 'http://ivi.bupt.edu.cn/hls/cctv1hd.m3u8',
-            // url: 'https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8',
-            url: 'https://baiducdncnnmsla.weilekangnet.com:59666/data5/08D01D34EDF5EC26/B8F999719875362E/360p/0out360p49.ts',
-            pic: '',
-            thumbnails: '',
-            type: 'hls'
-        }
-    });
+    // const dp = new DPlayer({
+    //     container: document.getElementById('dplayer'),
+    //     loop: false,
+    //     video: {
+    //         // url: 'http://ivi.bupt.edu.cn/hls/cctv1hd.m3u8',
+    //         // url: 'https://meinv.jingyu-zuida.com/20200318/13035_bebdd0ec/1000k/hls/index.m3u8',
+    //         url: 'https://baiducdncnnmsla.weilekangnet.com:59666/data5/08D01D34EDF5EC26/B8F999719875362E/360p/0out360p49.ts',
+    //         pic: '',
+    //         thumbnails: '',
+    //         type: 'hls'
+    //     }
+    // });
 </script>
 </body>
 </html>

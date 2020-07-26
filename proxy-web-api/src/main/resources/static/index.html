@@ -19,6 +19,14 @@
     <script src="third/beautify/beautify-html.min.js"></script>
     <script src="third/dplayer/hls.min.js"></script>
     <script src="third/dplayer/DPlayer.min.js"></script>
+    <script src="third/ace/ace.min.js"></script>
+    <script src="third/ace/theme-chrome.min.js"></script>
+    <script src="third/ace/mode-html.min.js"></script>
+    <script src="third/ace/mode-javascript.min.js"></script>
+    <script src="third/ace/mode-json.min.js"></script>
+    <script src="third/ace/mode-xml.min.js"></script>
+    <script src="third/ace/mode-plain_text.min.js"></script>
+    <script src="third/ace/ext-language_tools.min.js"></script>
     <script>
         const opts = {
             indent_size: '4',
@@ -39,6 +47,7 @@
             e4x: false,
             indent_empty_lines: false
         }
+        ace.config.set("basePath", "third/ace");
     </script>
     <style>
         #menu {
@@ -337,7 +346,23 @@
                             </div>
                         </div>
                         <div v-show="'binary' === edit.request.contentType">
-                            binary
+                            <div class="p-url-body" style="height: 502px;">
+                                <div class="p-body-binary-content">
+                                    <el-button type="text" size="mini"
+                                               @click="!!event.target.children[0] && event.target.children[0].click()"
+                                               style="padding-top: 0;">
+                                        <input style="visibility: hidden;width: 0;height: 0;" type="file"
+                                               @change="binaryUploadFileChange(event)">
+                                        Select<i class="el-icon-upload el-icon--right"></i>
+                                    </el-button>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;{{edit.binary.text}}&nbsp;&nbsp;
+                                    <el-button v-show="!!edit.binary.data" type="text" size="mini"
+                                               @click="clearRequestBinaryClicked"
+                                               style="padding-top: 0;">
+                                        Clear
+                                    </el-button>
+                                </div>
+                            </div>
                         </div>
                         <div v-show="'raw' === edit.request.contentType">
                             <div class="p-url-body" style="height: 502px;">
@@ -511,7 +536,7 @@
                             <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item"
                                          :label="item">
                                 <!-- response.headers 开始-->
-                                <el-table :data="current.response.headers" :empty-text="'No data'" border="true"
+                                <el-table v-if="item === 'Headers'" :data="current.response.headers" :empty-text="'No data'" border="true"
                                           stripe fit="true"
                                           v-if="item === 'Headers'">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
@@ -519,7 +544,7 @@
                                 </el-table>
                                 <!-- response.headers 结束-->
                                 <!-- response.cookies 开始-->
-                                <el-table :data="current.response.cookies" :empty-text="'No data'" border="true"
+                                <el-table v-else-if="item === 'Cookies'" :data="current.response.cookies" :empty-text="'No data'" border="true"
                                           stripe fit="true"
                                           v-if="item === 'Cookies'">
                                     <el-table-column prop="name" label="Name"></el-table-column>
@@ -533,7 +558,7 @@
                                 </el-table>
                                 <!-- response.cookies 结束-->
                                 <!-- response.raw 开始-->
-                                <div v-if="item === 'Raw'">
+                                <div v-else-if="item === 'Raw'">
                                     <div v-html="current.response.raw" v-show="!!current.response.raw" v-highlight
                                          class="p-raw"></div>
                                     <div class="el-table__empty-block" v-show="!current.response.raw"
@@ -542,48 +567,56 @@
                                     </div>
                                 </div>
                                 <!-- response.raw 结束-->
-                                <!-- response.json 开始-->
-                                <div v-if="item === 'JSON'">
-                                    <div v-html="current.response.json" v-highlight class="p-raw"></div>
+                                <div v-else>
+                                    <!-- response.json 开始-->
+                                    <div v-if="item === 'JSON'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.json, readOnly: true, mode: 'json'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.json 结束-->
+                                    <!-- response.xml 开始-->
+                                    <div v-else-if="item === 'XML'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.xml, readOnly: true, mode: 'xml'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.xml 结束-->
+                                    <!-- response.html 开始-->
+                                    <div v-else-if="item === 'HTML'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.html, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.html 结束-->
+                                    <!-- response.html 开始-->
+                                    <div v-else-if="item === 'CSS'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.css, readOnly: true, mode: 'css'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.html 结束-->
+                                    <!-- response.html 开始-->
+                                    <div v-else-if="item === 'JavaScript'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.js, readOnly: true, mode: 'javascript'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.html 结束-->
+                                    <!-- response.image 开始-->
+                                    <div v-else-if="item === 'Image'">
+                                        <div v-html="current.response.image" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.image 结束-->
+                                    <!-- response.video 开始-->
+                                    <div v-else-if="item === 'Video'">
+                                        <el-button type="primary" plain icon="el-icon-video-play"
+                                                   @click="videoDialogVisible = true">Try Play
+                                        </el-button>
+                                    </div>
+                                    <!-- response.video 结束-->
+                                    <!-- response.plain 开始-->
+                                    <div v-else-if="item === 'Plain'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.plain, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.plain 结束-->
+                                    <!-- response.hex 开始-->
+                                    <div v-else-if="item === 'Hex'">
+                                        <div id="readOnlyEditor" v-editor="{data: current.response.hex, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                    </div>
+                                    <!-- response.hex 结束-->
                                 </div>
-                                <!-- response.json 结束-->
-                                <!-- response.html 开始-->
-                                <div v-if="item === 'HTML'">
-                                    <div v-html="current.response.html" v-highlight class="p-raw"></div>
-                                </div>
-                                <!-- response.html 结束-->
-                                <!-- response.html 开始-->
-                                <div v-if="item === 'CSS'">
-                                    <div v-html="current.response.css" v-highlight class="p-raw"></div>
-                                </div>
-                                <!-- response.html 结束-->
-                                <!-- response.html 开始-->
-                                <div v-if="item === 'JavaScript'">
-                                    <div v-html="current.response.js" v-highlight class="p-raw"></div>
-                                </div>
-                                <!-- response.html 结束-->
-                                <!-- response.image 开始-->
-                                <div v-if="item === 'Image'">
-                                    <div v-html="current.response.image" v-highlight class="p-raw"></div>
-                                </div>
-                                <!-- response.image 结束-->
-                                <!-- response.video 开始-->
-                                <div v-if="item === 'Video'">
-                                    <el-button type="primary" plain icon="el-icon-video-play"
-                                               @click="videoDialogVisible = true">Try Play
-                                    </el-button>
-                                </div>
-                                <!-- response.video 结束-->
-                                <!-- response.plain 开始-->
-                                <div v-if="item === 'Plain'">
-                                    <div v-html="current.response.plain" v-highlight class="p-raw"></div>
-                                </div>
-                                <!-- response.plain 结束-->
-                                <!-- response.plain 开始-->
-                                <div v-if="item === 'Hex'">
-                                    <div v-html="current.response.hex" v-highlight class="p-raw"></div>
-                                </div>
-                                <!-- response.plain 结束-->
+
                             </el-tab-pane>
                         </el-tabs>
                     </el-tab-pane>

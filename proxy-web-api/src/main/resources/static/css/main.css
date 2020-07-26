@@ -41,10 +41,10 @@ html, body, #main {
     margin: 0;
 }
 .p-request-edit-none {
-    height: 510px;
-    width: 1458px;
+    height: 500px;
+    width: 1282px;
     text-align: center;
-    line-height: 510px;
+    line-height: 500px;
     border: 1px solid #DCDFE6;
     border-radius: 4px;
     font-size: 16px;
@@ -98,6 +98,11 @@ html, body, #main {
     float: left;
     margin-left: 20px;
     margin-top: 5px;
+}
+
+.p-body-binary-content {
+    height: 500px;
+    border: 1px solid #DCDFE6;
 }
 /*request edit container*/
 

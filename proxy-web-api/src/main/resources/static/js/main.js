@@ -58,6 +58,7 @@ new Vue({
                     raw: '',
                     json: '',
                     html: '',
+                    xml: '',
                     css: '',
                     js: '',
                     image: '',
@@ -129,6 +130,11 @@ new Vue({
                 multipart: {
                     select: '',
                     data: []
+                },
+                binary: {
+                    data: '',
+                    text: '',
+                    contentType: ''
                 }
             }
         }
@@ -175,6 +181,12 @@ new Vue({
                     this.edit.form.data.forEach(form => {
                         textFormData.push({name: form.name.trim(), value: form.value.trim()});
                     });
+                } else if (this.edit.request.contentType === 'binary') {
+                    if (typeof this.edit.binary.data === 'object') {
+                        formData.append(this.edit.binary.data.name.trim(), this.edit.binary.data);
+                    } else {
+                        textFormData.push({name: "", value: this.edit.binary.data, contentType: this.edit.binary.contentType});
+                    }
                 }
 
                 formData.append('textFormData', JSON.stringify(textFormData));
@@ -204,6 +216,13 @@ new Vue({
         uploadFileChange(multipart, event) {
             multipart.uploadFile = event.target.files[0];
             multipart.fileType = 'binary';
+        },
+        binaryUploadFileChange(event) {
+            console.log(event);
+            console.log(typeof event.target.files[0]);
+            this.edit.binary.data = event.target.files[0];
+            this.edit.binary.text = this.edit.binary.data.name + '  ' + this.edit.binary.data.size + ' bytes';
+            this.edit.binary.contentType = this.edit.binary.data.type;
         },
         fetchListFlow() {
             const that = this;
@@ -296,6 +315,7 @@ new Vue({
                         that.handleUrlClicked(data.id, res.data, null)
                     })
                     .catch(error => {
+                        console.error(error);
                         that.loading = false;
                         that.responseErrorHandler(error);
                     });
@@ -390,9 +410,6 @@ new Vue({
                     }
                     this.edit.form.data = queryList;
                     this.edit.request.contentType = 'x-www-form-urlencoded';
-                } else if (this.currentFlow.request.contentType.indexOf('image/') !== -1
-                    || this.currentFlow.request.contentType.indexOf('octet-stream') !== -1) {
-                    this.edit.request.contentType = 'binary';
                 } else if (this.currentFlow.request.contentType.indexOf('application/json') !== -1) {
                     this.edit.request.contentType = 'raw';
                     this.edit.request.rawContentType = 'JSON';
@@ -406,13 +423,24 @@ new Vue({
                     this.edit.request.contentType = 'raw';
                     this.edit.request.rawContentType = 'Text';
                 } else {
-                    this.edit.request.contentType = 'none';
+                    if (!!this.currentFlow.requestContent) {
+                        this.edit.request.contentType = 'binary';
+                        this.edit.binary.contentType = this.currentFlow.request.contentType;
+                        this.edit.binary.data = this.currentFlow.requestContent;
+                        this.edit.binary.text = CryptoJS.enc.Hex.parse(this.currentFlow.requestContent).sigBytes + ' bytes';
+                    } else {
+                        this.edit.request.contentType = 'none';
+                    }
                 }
             } else {
                 this.edit.request.contentType = 'none';
             }
             this.edit.requestDialogVisible = true;
             this.edit.activeTab = '0';
+        },
+        clearRequestBinaryClicked() {
+            this.edit.binary.data = null;
+            this.edit.binary.text = '';
         },
         requestUrlInput(value) {
             this.edit.query.data = Utils.getQueryString(value);
@@ -536,7 +564,6 @@ new Vue({
             if (beforeLen !== afterLen) {
                 document.querySelector('#pane-Response #tab-0').click()
             }
-            console.log(this.currentFlow);
         },
         /**
          * 根据Flow数据创建Response/Raw 中的内容
@@ -547,6 +574,9 @@ new Vue({
         buildCurrentResponseRaw(data) {
             let raw = '';
             const that = this;
+            if (!data.response) {
+                return;
+            }
             raw = '<p>' + data.response.httpVersion + ' ' + data.response.status + '</p>';
             for (let i = 0; i < data.responseHeaders.length; i++) {
                 let header = data.responseHeaders[i];
@@ -559,6 +589,11 @@ new Vue({
                     let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                     that.buildCurrentResponseJson(content);
+                } else if (contentType.indexOf('text/xml') !== -1) {
+                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                    raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
+                    that.buildCurrentResponseXml(content);
                 } else if (contentType.indexOf('text/html') !== -1) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
                     let rawContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
@@ -568,7 +603,7 @@ new Vue({
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildCurrentResponseCss(content);
-                } else if (contentType.indexOf('application/javascript') !== -1) {
+                } else if (contentType.indexOf('application/javascript') !== -1 || contentType.indexOf('application/x-javascript') !== -1) {
                     let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
                     let rawContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + rawContent + '</pre><p></p>';
@@ -594,6 +629,7 @@ new Vue({
                         raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                         this.buildCurrentResponseJson(content);
                     } catch (ignore) {
+                        raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                         this.buildCurrentResponsePlain(content);
                     }
                 }
@@ -605,7 +641,7 @@ new Vue({
          */
         buildHexResponse(hexContent) {
             this.responseTabs.push('Hex');
-            this.current.response.hex = '<pre class="Plain" style="margin: 0;"><code>' + hexContent + '</code></pre>';
+            this.current.response.hex = hexContent;
         },
         /**
          * 创建Response/PLAIN 中的内容
@@ -614,7 +650,7 @@ new Vue({
          */
         buildCurrentResponsePlain(content) {
             this.responseTabs.push('Plain');
-            this.current.response.plain = '<pre class="Plain" style="margin: 0;"><code>' + content + '</code></pre>';
+            this.current.response.plain = content;
         },
         /**
          * 创建Response/IMAGE 中的内容
@@ -633,7 +669,11 @@ new Vue({
          */
         buildCurrentResponseJson(content) {
             this.responseTabs.push('JSON');
-            this.current.response.json = '<pre class="JSON" style="margin: 0;"><code>' + JSON.pretty(content) + '</code></pre>';
+            this.current.response.json = js_beautify(content);
+        },
+        buildCurrentResponseXml(content) {
+            this.responseTabs.push('XML');
+            this.current.response.xml = html_beautify(content);
         },
         /**
          * 数据创建Response/HTML 中的内容
@@ -642,8 +682,7 @@ new Vue({
          */
         buildCurrentResponseHtml(content) {
             this.responseTabs.push('HTML');
-            content = Utils.replaceSpecialChar(html_beautify(content, opts)).replace(/\s{2}/g, '&nbsp;&nbsp;');
-            this.current.response.html = '<pre class="HTML" style="margin: 0;"><code>' + content + '</code></pre>';
+            this.current.response.html = html_beautify(content, opts);
         },
         /**
          * 数据创建Response/JavaScript 中的内容
@@ -653,7 +692,7 @@ new Vue({
         buildCurrentResponseCss(content) {
             this.responseTabs.push('CSS');
             content = css_beautify(content, opts);
-            this.current.response.css = '<pre class="css" style="margin: 0;"><code>' + content + '</code></pre>';
+            this.current.response.css = content;
         },
         /**
          * 数据创建Response/JavaScript 中的内容
@@ -662,8 +701,7 @@ new Vue({
          */
         buildCurrentResponseJavaScript(content) {
             this.responseTabs.push('JavaScript');
-            content = Utils.replaceSpecialChar(js_beautify(content, opts)).replace(/\s{2}/g, '&nbsp;&nbsp;');
-            this.current.response.js = '<pre class="JavaScript" style="margin: 0;"><code>' + content + '</code></pre>';
+            this.current.response.js = js_beautify(content, opts);
         },
         /**
          * 根据Flow数据创建Overview 中的内容
@@ -844,14 +882,27 @@ Vue.directive('highlight', function (el) {
         hljs.highlightBlock(block)
     });
 });
+Vue.directive('editor', {
+    editor: undefined,
+    inserted: function (el, binding, vNode) {
+        this.editor = ace.edit("readOnlyEditor");
+        this.editor.setTheme("ace/theme/chrome");
+        this.editor.getSession().setMode("ace/mode/" + binding.value.mode);
+        this.editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true
+        });
+        this.editor.setValue(binding.value.data, 1);
+        this.editor.setReadOnly(binding.value.readOnly);
+    },
+    componentUpdated: function (el, binding, vNode) {
+        this.editor.getSession().setMode("ace/mode/" + binding.value.mode);
+        this.editor.setValue(binding.value.data, -1);
+        this.editor.setReadOnly(binding.value.readOnly);
+    }
+});
 Vue.directive('focus', {
     inserted: function (el) {
         el.children[0].focus();
-    },
-    // componentUpdated: function (el) {
-    //     el.children[0].focus();
-    // },
-    // update: function (el) {
-    //     el.children[0].focus();
-    // }
+    }
 });

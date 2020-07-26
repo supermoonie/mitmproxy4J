@@ -18,6 +18,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -114,7 +116,26 @@ public class HttpController {
                         case X_WWW_FORM_URLENCODED:
                             textFormDataList.forEach(data -> requestBuilder.addParameter(data.getName(), data.getValue()));
                             break;
+                        case BINARY:
+                            if (!CollectionUtils.isEmpty(textFormDataList)) {
+                                TextFormData firstTextFormData = textFormDataList.get(0);
+                                String hexData = firstTextFormData.getValue();
+                                ContentType contentType = StringUtils.isEmpty(firstTextFormData.getContentType()) ? ContentType.DEFAULT_BINARY : ContentType.create(firstTextFormData.getContentType());
+                                requestBuilder.setEntity(new ByteArrayEntity(HexUtil.decodeHex(hexData), contentType));
+                            } else {
+                                for (Part part : request.getParts()) {
+                                    String contentDisposition = part.getHeader("Content-Disposition");
+                                    if (!contentDisposition.matches("form-data;\\s+name=.*;\\s+filename=.*")) {
+                                        continue;
+                                    }
+                                    byte[] bytes = IOUtils.readFully(part.getInputStream(), (int) part.getSize());
+                                    requestBuilder.setEntity(new ByteArrayEntity(bytes, ContentType.parse(part.getContentType())));
+                                    break;
+                                }
+                            }
+                            break;
                         default:
+
                             break;
                     }
                     break;
