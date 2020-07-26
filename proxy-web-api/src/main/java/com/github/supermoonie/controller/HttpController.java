@@ -134,8 +134,42 @@ public class HttpController {
                                 }
                             }
                             break;
+                        case JSON:
+                            requestBuilder.setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+                            if (!CollectionUtils.isEmpty(textFormDataList)) {
+                                TextFormData firstTextFormData = textFormDataList.get(0);
+                                requestBuilder.setEntity(new StringEntity(firstTextFormData.getValue()));
+                            }
+                            break;
+                        case XML:
+                            requestBuilder.setHeader("Content-Type", MediaType.APPLICATION_XML_VALUE);
+                            if (!CollectionUtils.isEmpty(textFormDataList)) {
+                                TextFormData firstTextFormData = textFormDataList.get(0);
+                                requestBuilder.setEntity(new StringEntity(firstTextFormData.getValue()));
+                            }
+                            break;
+                        case HTML:
+                            requestBuilder.setHeader("Content-Type", MediaType.TEXT_HTML_VALUE);
+                            if (!CollectionUtils.isEmpty(textFormDataList)) {
+                                TextFormData firstTextFormData = textFormDataList.get(0);
+                                requestBuilder.setEntity(new StringEntity(firstTextFormData.getValue()));
+                            }
+                            break;
+                        case TEXT:
+                            requestBuilder.setHeader("Content-Type", MediaType.TEXT_PLAIN_VALUE);
+                            if (!CollectionUtils.isEmpty(textFormDataList)) {
+                                TextFormData firstTextFormData = textFormDataList.get(0);
+                                requestBuilder.setEntity(new StringEntity(firstTextFormData.getValue()));
+                            }
+                            break;
+                        case JAVASCRIPT:
+                            requestBuilder.setHeader("Content-Type", "application/javascript;charset=UTF-8");
+                            if (!CollectionUtils.isEmpty(textFormDataList)) {
+                                TextFormData firstTextFormData = textFormDataList.get(0);
+                                requestBuilder.setEntity(new StringEntity(firstTextFormData.getValue()));
+                            }
+                            break;
                         default:
-
                             break;
                     }
                     break;

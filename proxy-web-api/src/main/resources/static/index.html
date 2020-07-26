@@ -10,7 +10,7 @@
     <script src="third/vue/vue@2.6.11.js"></script>
     <script src="third/element-ui/element-ui@2.13.2.js"></script>
     <script src="third/axios/axios.min.js"></script>
-    <script src="third/highlight/highlight.pack.js"></script>
+<!--    <script src="third/highlight/highlight.pack.js"></script>-->
     <script src="third/crypto-js/crypto-js.js"></script>
     <script src="third/crypto-js/cipher-core.js"></script>
     <script src="third/crypto-js/format-hex.js"></script>
@@ -27,60 +27,13 @@
     <script src="third/ace/mode-xml.min.js"></script>
     <script src="third/ace/mode-plain_text.min.js"></script>
     <script src="third/ace/ext-language_tools.min.js"></script>
-    <script>
-        const opts = {
-            indent_size: '4',
-            indent_char: ' ',
-            max_preserve_newlines: '5',
-            preserve_newlines: true,
-            keep_array_indentation: false,
-            break_chained_methods: false,
-            indent_scripts: 'normal',
-            brace_style: 'collapse',
-            space_before_conditional: true,
-            unescape_strings: false,
-            jslint_happy: false,
-            end_with_newline: false,
-            wrap_line_length: '0',
-            indent_inner_html: false,
-            comma_first: false,
-            e4x: false,
-            indent_empty_lines: false
-        }
-        ace.config.set("basePath", "third/ace");
-    </script>
     <style>
-        #menu {
-            border: 1px solid #ccc;
-            background: #eee;
-            position: absolute;
-            width: 100px;
-            height: 120px;
-            display: none;
-            z-index: 99;
-        }
-
         [v-cloak] {
             display: none;
         }
     </style>
-    <script>
-        window.onload = function () {
-            let menu = document.getElementById('menu');
-            document.onclick = function () {
-                menu.style.display = 'none';
-            }
-        }
-    </script>
 </head>
 <body>
-<div id="menu">
-    <ul>
-        <li><a href="#">分享</a></li>
-        <li><a href="#">收藏</a></li>
-        <li><a href="#">举报</a></li>
-    </ul>
-</div>
 <div id="main" class="" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.8)">
     <!--video dialog begin-->
     <div class="p-video-container">
@@ -215,7 +168,8 @@
                                 <el-radio v-model="edit.request.contentType" label="raw">raw</el-radio>
                             </div>
                             <div class="p-body-type-select" v-if="'raw' === edit.request.contentType">
-                                <el-select size="small" v-model="edit.request.rawContentType" style="width: 110px;"
+                                <el-select size="small" v-model="edit.rawBody.type" style="width: 110px;"
+                                           @change="rawContentTypeChanged"
                                            placeholder="Please select">
                                     <el-option v-for="item in ['JSON', 'Text', 'JavaScript', 'HTML', 'XML']" :key="item"
                                                :label="item"
@@ -350,23 +304,23 @@
                                 <div class="p-body-binary-content">
                                     <el-button type="text" size="mini"
                                                @click="!!event.target.children[0] && event.target.children[0].click()"
-                                               style="padding-top: 0;">
+                                               style="padding-top: 0; width: 80px; text-align: center;">
                                         <input style="visibility: hidden;width: 0;height: 0;" type="file"
                                                @change="binaryUploadFileChange(event)">
                                         Select<i class="el-icon-upload el-icon--right"></i>
                                     </el-button>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;{{edit.binary.text}}&nbsp;&nbsp;
+                                    {{edit.binary.text}}
                                     <el-button v-show="!!edit.binary.data" type="text" size="mini"
                                                @click="clearRequestBinaryClicked"
-                                               style="padding-top: 0;">
+                                               style="padding-top: 0; width: 60px; text-align: center;">
                                         Clear
                                     </el-button>
                                 </div>
                             </div>
                         </div>
-                        <div v-show="'raw' === edit.request.contentType">
+                        <div v-if="'raw' === edit.request.contentType">
                             <div class="p-url-body" style="height: 502px;">
-                                <el-input type="textarea" :rows="2" v-model="edit.body"></el-input>
+                                <div id="editBodyEditor" v-editor="{data: edit.rawBody.data, readOnly: false, mode: edit.rawBody.type.toLowerCase()}" class="p-raw"></div>
                             </div>
                         </div>
                     </div>
@@ -570,27 +524,27 @@
                                 <div v-else>
                                     <!-- response.json 开始-->
                                     <div v-if="item === 'JSON'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.json, readOnly: true, mode: 'json'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.json, readOnly: true, mode: 'json'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.json 结束-->
                                     <!-- response.xml 开始-->
                                     <div v-else-if="item === 'XML'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.xml, readOnly: true, mode: 'xml'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.xml, readOnly: true, mode: 'xml'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.xml 结束-->
                                     <!-- response.html 开始-->
                                     <div v-else-if="item === 'HTML'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.html, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.html, readOnly: true, mode: 'html'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.html 结束-->
                                     <!-- response.html 开始-->
                                     <div v-else-if="item === 'CSS'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.css, readOnly: true, mode: 'css'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.css, readOnly: true, mode: 'css'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.html 结束-->
                                     <!-- response.html 开始-->
                                     <div v-else-if="item === 'JavaScript'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.js, readOnly: true, mode: 'javascript'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.js, readOnly: true, mode: 'javascript'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.html 结束-->
                                     <!-- response.image 开始-->
@@ -607,12 +561,12 @@
                                     <!-- response.video 结束-->
                                     <!-- response.plain 开始-->
                                     <div v-else-if="item === 'Plain'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.plain, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.plain, readOnly: true, mode: 'html'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.plain 结束-->
                                     <!-- response.hex 开始-->
                                     <div v-else-if="item === 'Hex'">
-                                        <div id="readOnlyEditor" v-editor="{data: current.response.hex, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.hex, readOnly: true, mode: 'html'}" class="p-raw"></div>
                                     </div>
                                     <!-- response.hex 结束-->
                                 </div>
