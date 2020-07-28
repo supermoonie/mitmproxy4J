@@ -1,5 +1,6 @@
 package com.github.supermoonie.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.HexUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.constant.EnumFlowNodeType;
@@ -56,7 +57,15 @@ public class FlowServiceImpl implements FlowService {
         if (StringUtils.isEmpty(method)) {
             method = null;
         }
-        List<SimpleRequestDAO> requestList = requestMapper.selectSimple(host, method, start, end);
+        String startTime = null;
+        if (null != start) {
+            startTime = DateUtil.format(start, "yyyy-MM-dd HH:mm:ss");
+        }
+        String endTime = null;
+        if (null != end) {
+            endTime = DateUtil.format(end, "yyyy-MM-dd HH:mm:ss");
+        }
+        List<SimpleRequestDAO> requestList = requestMapper.selectSimple(host, method, startTime, endTime);
         return requestList.stream().map(request -> {
             SimpleRequestDTO dto = new SimpleRequestDTO();
             dto.setId(request.getId());
@@ -75,7 +84,15 @@ public class FlowServiceImpl implements FlowService {
         if (StringUtils.isEmpty(method)) {
             method = null;
         }
-        List<SimpleRequestDAO> simpleRequestList = requestMapper.selectSimple(host, method, start, end);
+        String startTime = null;
+        if (null != start) {
+            startTime = DateUtil.format(start, "yyyy-MM-dd HH:mm:ss");
+        }
+        String endTime = null;
+        if (null != end) {
+            endTime = DateUtil.format(end, "yyyy-MM-dd HH:mm:ss");
+        }
+        List<SimpleRequestDAO> simpleRequestList = requestMapper.selectSimple(host, method, startTime, endTime);
         for (SimpleRequestDAO request : simpleRequestList) {
             String uri = request.getUri();
             if (StringUtils.isEmpty(uri)) {

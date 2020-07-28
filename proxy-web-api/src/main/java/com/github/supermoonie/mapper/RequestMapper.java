@@ -6,7 +6,6 @@ import com.github.supermoonie.model.Request;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,5 +24,5 @@ public interface RequestMapper extends BaseMapper<Request> {
             "order by request.timeCreated desc" +
             "</script>")
     List<SimpleRequestDAO> selectSimple(@Param("host") String host, @Param("method") String method,
-                                        @Param("start") Date start, @Param("end") Date end);
+                                        @Param("start") String start, @Param("end") String end);
 }

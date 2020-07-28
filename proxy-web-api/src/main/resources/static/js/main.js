@@ -23,6 +23,7 @@ new Vue({
     data: function () {
         return {
             loading: false,
+            fetchSwitch: false,
             tree: {
                 nodeProps: {
                     label: 'url'
@@ -95,11 +96,6 @@ new Vue({
                     shown: []
                 }
             },
-            contentTypeList: [
-                'application/json', 'multipart/form-data', 'application/x-www-form-urlencoded', 'application/xhtml+xml',
-                'text/html', 'text/plain', 'text/xml', 'image/gif', 'image/jpeg', 'image/png',
-                'application/xml', 'application/atom+xml', 'application/pdf', 'application/msword', 'application/octet-stream',
-            ],
             timer: '',
             search: {
                 host: '',
@@ -254,13 +250,14 @@ new Vue({
         fetchListFlow() {
             const that = this;
             that.loading = true;
+            const start = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 1000));
             axios({
                 method: 'post',
-                url: '/flow/list',
+                url: '/flow/list?start=' + start,
                 data: {
                     host: '',
                     method: '',
-                    start: '',
+                    start: start,
                     end: ''
                 },
                 transformRequest: [function (data) {
@@ -295,7 +292,7 @@ new Vue({
                 data: {
                     host: '',
                     method: '',
-                    start: '',
+                    start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 1000)),
                     end: ''
                 },
                 transformRequest: [function (data) {
@@ -319,7 +316,7 @@ new Vue({
             });
         },
         flowResponseDataHandler(data, field) {
-            this.flow[field].all = data;
+            this.flow[field].all = this.flow[field].all.concat(data);
             this.doFilter(data, field);
         },
         responseErrorHandler(error) {
@@ -359,12 +356,12 @@ new Vue({
         },
         doFilter(data, field) {
             const that = this;
-            this.flow[field].shown = data.filter(flow => {
+            this.flow[field].shown = this.flow[field].shown.concat(data.filter(flow => {
                 if (!that.urlFilter.trim()) {
                     return true;
                 }
                 return flow.url.indexOf(that.urlFilter.trim()) !== -1;
-            })
+            }));
         },
         /**
          * Flow列表过滤器
@@ -909,10 +906,12 @@ new Vue({
             that.autoAdjustWhenWindowResize();
             axios.defaults.baseURL = "http://127.0.1:8866";
         }
-        this.timer = setTimeout(() => {
-            that.fetchTreeFlow();
-            that.fetchListFlow();
-        }, 200);
+        this.timer = setInterval(() => {
+            if (that.fetchSwitch) {
+                that.fetchTreeFlow();
+                that.fetchListFlow();
+            }
+        }, 1000);
     },
     beforeDestroy() {
         clearInterval(this.timer);

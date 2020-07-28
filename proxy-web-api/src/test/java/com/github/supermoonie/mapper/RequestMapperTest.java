@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Test;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ public class RequestMapperTest extends WithSpringBootTest {
 
     @Test
     public void selectSimple() {
-        List<SimpleRequestDAO> list = requestMapper.selectSimple("weilekangnet", null, null, null);
+        List<SimpleRequestDAO> list = requestMapper.selectSimple(null, null, "2020-07-28 07:36:37", null);
         System.out.println(JSON.toJsonString(list));
     }
 }
