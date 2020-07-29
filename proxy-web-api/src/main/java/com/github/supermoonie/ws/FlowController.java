@@ -5,6 +5,7 @@ import com.github.supermoonie.service.FlowService;
 import com.github.supermoonie.ws.request.FetchRequest;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import javax.annotation.Resource;
@@ -21,7 +22,6 @@ public class FlowController {
     private FlowService flowService;
 
     @MessageMapping("/list")
-    @SendTo("/topic/flow/list")
     public List<SimpleRequestDTO> list(FetchRequest request) {
         return flowService.list(request.getHost(), request.getMethod(), request.getStart(), request.getEnd());
     }

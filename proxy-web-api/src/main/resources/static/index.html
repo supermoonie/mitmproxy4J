@@ -375,6 +375,7 @@
                 <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
                 <i class="el-icon-search p-icon" @click="searchClicked()"></i>
                 <i :class="{'el-icon-video-play': !fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}" @click="fetchSwitch = !fetchSwitch"></i>
+                <i class="el-icon-search p-icon" @click="disconnect()"></i>
             </div>
         </div>
     </div>

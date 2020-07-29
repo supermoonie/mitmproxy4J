@@ -149,7 +149,6 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
             cf.channel().close();
         }
         ctx.channel().close();
-        log.error(cause.getMessage(), cause);
         exceptionHandle.beforeCatch(ctx.channel(), cause);
     }
 
