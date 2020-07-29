@@ -15,7 +15,7 @@ public abstract class BaseFullReqIntercept extends HttpProxyIntercept {
      */
     private static final int DEFAULT_MAX_CONTENT_LENGTH = 1024 * 1024 * 8;
 
-    private int maxContentLength;
+    private final int maxContentLength;
 
     public BaseFullReqIntercept() {
         this(DEFAULT_MAX_CONTENT_LENGTH);
@@ -24,7 +24,6 @@ public abstract class BaseFullReqIntercept extends HttpProxyIntercept {
     public BaseFullReqIntercept(int maxContentLength) {
         this.maxContentLength = maxContentLength;
     }
-
 
     @Override
     public final void beforeRequest(Channel clientChannel, HttpRequest httpRequest, HttpProxyInterceptPipeline pipeline) throws Exception {
@@ -42,7 +41,7 @@ public abstract class BaseFullReqIntercept extends HttpProxyIntercept {
             //添加gzip解压处理
             clientChannel.pipeline().addAfter("httpCodec", "decompress", new HttpContentDecompressor());
             //添加Full request解码器
-            clientChannel.pipeline().addAfter("decompress", "aggregator", new HttpObjectAggregator(DEFAULT_MAX_CONTENT_LENGTH));
+            clientChannel.pipeline().addAfter("decompress", "aggregator", new HttpObjectAggregator(this.maxContentLength));
             //重新过一遍处理器链
             clientChannel.pipeline().fireChannelRead(httpRequest);
             return;

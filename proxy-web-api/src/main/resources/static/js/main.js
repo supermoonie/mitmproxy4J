@@ -22,6 +22,7 @@ new Vue({
     el: '#main',
     data: function () {
         return {
+            stompClient: undefined,
             loading: false,
             fetchSwitch: false,
             tree: {
@@ -248,72 +249,73 @@ new Vue({
             this.edit.binary.contentType = this.edit.binary.data.type;
         },
         fetchListFlow() {
-            const that = this;
-            that.loading = true;
-            const start = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 1000));
-            axios({
-                method: 'post',
-                url: '/flow/list?start=' + start,
-                data: {
-                    host: '',
-                    method: '',
-                    start: start,
-                    end: ''
-                },
-                transformRequest: [function (data) {
-                    let ret = '';
-                    for (let key in data) {
-                        if (data.hasOwnProperty(key)) {
-                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
-                        }
-                    }
-                    return ret;
-                }],
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function (response) {
-                that.loading = false;
-                that.flowResponseDataHandler(response.data, 'list');
-            }).catch(error => {
-                that.loading = false;
-                that.responseErrorHandler(error);
-            });
+            // const that = this;
+            // that.loading = true;
+            // const start = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 10000));
+            // axios({
+            //     method: 'post',
+            //     url: '/flow/list?start=' + start,
+            //     data: {
+            //         host: '',
+            //         method: '',
+            //         start: start,
+            //         end: ''
+            //     },
+            //     transformRequest: [function (data) {
+            //         let ret = '';
+            //         for (let key in data) {
+            //             if (data.hasOwnProperty(key)) {
+            //                 ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
+            //             }
+            //         }
+            //         return ret;
+            //     }],
+            //     headers: {
+            //         'Content-Type': 'application/x-www-form-urlencoded'
+            //     }
+            // }).then(function (response) {
+            //     that.loading = false;
+            //     that.flowResponseDataHandler(response.data, 'list');
+            // }).catch(error => {
+            //     that.loading = false;
+            //     that.responseErrorHandler(error);
+            // });
         },
         /**
          * 从服务器端拉取Flow数据
          */
         fetchTreeFlow() {
-            const that = this;
-            that.loading = true;
-            axios({
-                method: 'post',
-                url: '/flow/tree',
-                data: {
-                    host: '',
-                    method: '',
-                    start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 1000)),
-                    end: ''
-                },
-                transformRequest: [function (data) {
-                    let ret = '';
-                    for (let key in data) {
-                        if (data.hasOwnProperty(key)) {
-                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
-                        }
-                    }
-                    return ret;
-                }],
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function (response) {
-                that.loading = false;
-                that.flowResponseDataHandler(response.data, 'tree');
-            }).catch(error => {
-                that.loading = false;
-                that.responseErrorHandler(error);
-            });
+            this.stompClient.send('/flow/list', {}, JSON.stringify({'host': '', 'method': '', 'start': '', 'end': ''}));
+            // const that = this;
+            // that.loading = true;
+            // axios({
+            //     method: 'post',
+            //     url: '/flow/tree',
+            //     data: {
+            //         host: '',
+            //         method: '',
+            //         start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 1000)),
+            //         end: ''
+            //     },
+            //     transformRequest: [function (data) {
+            //         let ret = '';
+            //         for (let key in data) {
+            //             if (data.hasOwnProperty(key)) {
+            //                 ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
+            //             }
+            //         }
+            //         return ret;
+            //     }],
+            //     headers: {
+            //         'Content-Type': 'application/x-www-form-urlencoded'
+            //     }
+            // }).then(function (response) {
+            //     that.loading = false;
+            //     that.flowResponseDataHandler(response.data, 'tree');
+            // }).catch(error => {
+            //     that.loading = false;
+            //     that.responseErrorHandler(error);
+            // });
         },
         flowResponseDataHandler(data, field) {
             this.flow[field].all = this.flow[field].all.concat(data);
@@ -896,6 +898,23 @@ new Vue({
                     type: 'hls'
                 }
             }));
+        },
+        connect(url) {
+            let that = this;
+            let socket = new SockJS(url + '/ws');
+            this.stompClient = Stomp.over(socket);
+            this.stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                that.stompClient.subscribe('/topic/flow/list', function (greeting) {
+                    console.log(JSON.parse(greeting.body));
+                });
+            });
+        },
+        disconnect() {
+            if (this.stompClient !== null) {
+                this.stompClient.disconnect();
+            }
+            console.log("Disconnected");
         }
     },
     mounted() {
@@ -904,7 +923,8 @@ new Vue({
             that.calAdjust();
             that.dragDivider();
             that.autoAdjustWhenWindowResize();
-            axios.defaults.baseURL = "http://127.0.1:8866";
+            axios.defaults.baseURL = 'http://127.0.1:8866';
+            that.connect(axios.defaults.baseURL);
         }
         this.timer = setInterval(() => {
             if (that.fetchSwitch) {
@@ -914,6 +934,7 @@ new Vue({
         }, 1000);
     },
     beforeDestroy() {
+        this.disconnect();
         clearInterval(this.timer);
     }
 });

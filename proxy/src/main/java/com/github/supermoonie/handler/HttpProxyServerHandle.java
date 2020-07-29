@@ -149,6 +149,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
             cf.channel().close();
         }
         ctx.channel().close();
+        log.error(cause.getMessage(), cause);
         exceptionHandle.beforeCatch(ctx.channel(), cause);
     }
 
@@ -217,9 +218,9 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                     String body = "<h1>mitmproxy4J Error Report:</h1><h3>" + cause.getMessage() + "</h3>";
                     HttpResponse httpResponse = ResponseUtils.htmlResponse(body, HttpResponseStatus.SERVICE_UNAVAILABLE);
                     interceptPipeline.afterResponse(channel, future.channel(), httpResponse);
+                    interceptPipeline.afterException(future.channel(), channel, cause);
                     future.channel().close();
                     channel.close();
-                    log.error(cause.getMessage(), cause);
                 }
             });
         } else {

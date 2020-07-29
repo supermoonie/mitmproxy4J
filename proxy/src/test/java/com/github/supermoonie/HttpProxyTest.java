@@ -142,6 +142,7 @@ public class HttpProxyTest {
         String url = "https://privacypic.com/images/2020/06/04/ujVMtU.jpg";
 //        String url = "https://httpbin.org/image/png";
         try(CloseableHttpResponse response = httpClient.execute(new HttpGet(url))) {
+            System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             System.out.println(EntityUtils.toString(response.getEntity()));
         }
     }
