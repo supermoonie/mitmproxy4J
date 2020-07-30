@@ -23,6 +23,7 @@ new Vue({
     data: function () {
         return {
             stompClient: undefined,
+            webSocket: undefined,
             loading: false,
             fetchSwitch: false,
             tree: {
@@ -285,7 +286,8 @@ new Vue({
          * 从服务器端拉取Flow数据
          */
         fetchTreeFlow() {
-            this.stompClient.send('/flow/list', {}, JSON.stringify({'host': '', 'method': '', 'start': '', 'end': ''}));
+            this.webSocket.send(JSON.stringify({'host': '', 'method': '', 'start': '', 'end': ''}));
+            // this.stompClient.send('/flow/list', {}, JSON.stringify({'host': '', 'method': '', 'start': '', 'end': ''}));
             // const that = this;
             // that.loading = true;
             // axios({
@@ -900,20 +902,34 @@ new Vue({
             }));
         },
         connect(url) {
-            let that = this;
-            let socket = new SockJS(url + '/ws');
-            this.stompClient = Stomp.over(socket);
-            this.stompClient.connect({}, function (frame) {
-                console.log('Connected: ' + frame);
-                that.stompClient.subscribe('/topic/flow/list', function (greeting) {
-                    console.log(JSON.parse(greeting.body));
-                });
-            });
+            // let that = this;
+            // let socket = new SockJS(url + '/ws');
+            // this.stompClient = Stomp.over(socket);
+            // this.stompClient.connect({}, function (frame) {
+            //     console.log('Connected: ' + frame);
+            //     that.stompClient.subscribe('/topic/flow/list', function (greeting) {
+            //         console.log(JSON.parse(greeting.body));
+            //     });
+            // });
+            this.webSocket = new WebSocket('ws://127.0.1:8866/ws/' + new Date().getTime());
+            this.webSocket.onopen = function() {
+                console.log("websocket已打开");
+            };
+            this.webSocket.onmessage = function(msg) {
+                console.log(msg);
+            };
+            this.webSocket.onclose = function() {
+                console.log("websocket已关闭");
+            };
+            this.webSocket.onerror = function() {
+                console.log("websocket发生了错误");
+            }
         },
         disconnect() {
-            if (this.stompClient !== null) {
-                this.stompClient.disconnect();
-            }
+            this.webSocket.close();
+            // if (this.stompClient !== null) {
+            //     this.stompClient.disconnect();
+            // }
             console.log("Disconnected");
         }
     },

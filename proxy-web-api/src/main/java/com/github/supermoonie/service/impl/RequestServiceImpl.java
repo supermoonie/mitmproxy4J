@@ -13,7 +13,6 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -37,9 +36,6 @@ public class RequestServiceImpl implements RequestService {
 
     @Resource
     private ContentService contentService;
-
-    @Resource
-    private SimpMessagingTemplate template;
 
     @Transactional(rollbackFor = RuntimeException.class)
     @Override

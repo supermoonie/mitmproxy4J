@@ -37,8 +37,8 @@ public class DumpFullResponseIntercept extends BaseFullResIntercept {
     @Resource
     private AsyncService asyncService;
 
-    @Resource
-    private SimpMessagingTemplate simpMessagingTemplate;
+//    @Resource
+//    private SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     public boolean match(HttpRequest httpRequest, HttpResponse httpResponse, HttpProxyInterceptPipeline pipeline) {
@@ -54,17 +54,17 @@ public class DumpFullResponseIntercept extends BaseFullResIntercept {
         simpleRequest.setId(request.getId());
         simpleRequest.setStatus(response.getStatus());
         simpleRequest.setUrl(request.getUri());
-        simpMessagingTemplate.convertAndSend("/topic/flow/list", simpleRequest);
-        asyncService.execute(() -> FilterContext.getAll().forEach((sessionId, filter) -> {
-            if (!StringUtils.isEmpty(filter.getHost()) && !request.getUri().contains(filter.getHost())) {
-                return;
-            }
-            if (!StringUtils.isEmpty(filter.getMethod()) && !request.getMethod().contains(filter.getMethod())) {
-                return;
-            }
-            log.info("sendTo: " + sessionId + " destinationPrefix: " + simpMessagingTemplate.getUserDestinationPrefix());
-            simpMessagingTemplate.convertAndSendToUser(sessionId, "/topic/flow/list", simpleRequest);
-        }));
+//        simpMessagingTemplate.convertAndSend("/topic/flow/list", simpleRequest);
+//        asyncService.execute(() -> FilterContext.getAll().forEach((sessionId, filter) -> {
+//            if (!StringUtils.isEmpty(filter.getHost()) && !request.getUri().contains(filter.getHost())) {
+//                return;
+//            }
+//            if (!StringUtils.isEmpty(filter.getMethod()) && !request.getMethod().contains(filter.getMethod())) {
+//                return;
+//            }
+//            log.info("sendTo: " + sessionId + " destinationPrefix: " + simpMessagingTemplate.getUserDestinationPrefix());
+//            simpMessagingTemplate.convertAndSendToUser(sessionId, "/topic/flow/list", simpleRequest);
+//        }));
     }
 
     @Override
