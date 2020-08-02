@@ -20,6 +20,17 @@ html, body, #main {
 }
 /*video container*/
 
+/*search container*/
+.p-search-container .el-dialog {
+    width: 1500px;
+    height: 673px;
+    overflow: auto;
+}
+.p-search-container .el-dialog__body {
+    padding: 0;
+}
+/*search container*/
+
 /*request edit container*/
 .p-request-edit-container .el-dialog {
     width: 1324px;

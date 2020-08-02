@@ -51,20 +51,10 @@ public class FlowServiceImpl implements FlowService {
 
     @Override
     public List<SimpleRequestDTO> list(String host, String method, Date start, Date end) {
-        if (StringUtils.isEmpty(host)) {
-            host = null;
-        }
-        if (StringUtils.isEmpty(method)) {
-            method = null;
-        }
-        String startTime = null;
-        if (null != start) {
-            startTime = DateUtil.format(start, "yyyy-MM-dd HH:mm:ss");
-        }
-        String endTime = null;
-        if (null != end) {
-            endTime = DateUtil.format(end, "yyyy-MM-dd HH:mm:ss");
-        }
+        host = StringUtils.isEmpty(host) ? null : host;
+        method = StringUtils.isEmpty(method) ? null : method;
+        String startTime = null != start ? DateUtil.format(start, "yyyy-MM-dd HH:mm:ss") : null;
+        String endTime = null != end ? DateUtil.format(end, "yyyy-MM-dd HH:mm:ss") : null;
         List<SimpleRequestDAO> requestList = requestMapper.selectSimple(host, method, startTime, endTime);
         return requestList.stream().map(request -> {
             SimpleRequestDTO dto = new SimpleRequestDTO();
@@ -78,20 +68,10 @@ public class FlowServiceImpl implements FlowService {
     @Override
     public List<FlowNode> tree(String host, String method, Date start, Date end) {
         List<FlowNode> tree = new ArrayList<>();
-        if (StringUtils.isEmpty(host)) {
-            host = null;
-        }
-        if (StringUtils.isEmpty(method)) {
-            method = null;
-        }
-        String startTime = null;
-        if (null != start) {
-            startTime = DateUtil.format(start, "yyyy-MM-dd HH:mm:ss");
-        }
-        String endTime = null;
-        if (null != end) {
-            endTime = DateUtil.format(end, "yyyy-MM-dd HH:mm:ss");
-        }
+        host = StringUtils.isEmpty(host) ? null : host;
+        method = StringUtils.isEmpty(method) ? null : method;
+        String startTime = null != start ? DateUtil.format(start, "yyyy-MM-dd HH:mm:ss") : null;
+        String endTime = null != end ? DateUtil.format(end, "yyyy-MM-dd HH:mm:ss") : null;
         List<SimpleRequestDAO> simpleRequestList = requestMapper.selectSimple(host, method, startTime, endTime);
         for (SimpleRequestDAO request : simpleRequestList) {
             String uri = request.getUri();
@@ -173,11 +153,11 @@ public class FlowServiceImpl implements FlowService {
                 children = new ArrayList<>();
                 currentParent.setChildren(children);
             }
-            FlowNode child;
             if (i == (len - 1)) {
                 addLastPathFlowNode(children, request, part);
                 break;
             }
+            FlowNode child;
             Optional<FlowNode> first = children.stream().filter(flow -> flow.getUrl().equals(part)).findFirst();
             if (!first.isPresent()) {
                 child = new FlowNode();

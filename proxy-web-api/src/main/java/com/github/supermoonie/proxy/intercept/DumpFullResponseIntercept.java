@@ -7,18 +7,14 @@ import com.github.supermoonie.model.Request;
 import com.github.supermoonie.model.Response;
 import com.github.supermoonie.service.ResponseService;
 import com.github.supermoonie.service.support.AsyncService;
-import com.github.supermoonie.util.JSON;
-import com.github.supermoonie.ws.support.Filter;
-import com.github.supermoonie.ws.support.FilterContext;
+import com.github.supermoonie.ws.MessagingTemplate;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 
@@ -37,8 +33,8 @@ public class DumpFullResponseIntercept extends BaseFullResIntercept {
     @Resource
     private AsyncService asyncService;
 
-//    @Resource
-//    private SimpMessagingTemplate simpMessagingTemplate;
+    @Resource
+    private MessagingTemplate messagingTemplate;
 
     @Override
     public boolean match(HttpRequest httpRequest, HttpResponse httpResponse, HttpProxyInterceptPipeline pipeline) {
@@ -54,17 +50,7 @@ public class DumpFullResponseIntercept extends BaseFullResIntercept {
         simpleRequest.setId(request.getId());
         simpleRequest.setStatus(response.getStatus());
         simpleRequest.setUrl(request.getUri());
-//        simpMessagingTemplate.convertAndSend("/topic/flow/list", simpleRequest);
-//        asyncService.execute(() -> FilterContext.getAll().forEach((sessionId, filter) -> {
-//            if (!StringUtils.isEmpty(filter.getHost()) && !request.getUri().contains(filter.getHost())) {
-//                return;
-//            }
-//            if (!StringUtils.isEmpty(filter.getMethod()) && !request.getMethod().contains(filter.getMethod())) {
-//                return;
-//            }
-//            log.info("sendTo: " + sessionId + " destinationPrefix: " + simpMessagingTemplate.getUserDestinationPrefix());
-//            simpMessagingTemplate.convertAndSendToUser(sessionId, "/topic/flow/list", simpleRequest);
-//        }));
+        asyncService.execute(() -> messagingTemplate.sendJson(simpleRequest));
     }
 
     @Override

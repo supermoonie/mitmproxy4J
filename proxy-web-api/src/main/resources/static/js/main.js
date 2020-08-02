@@ -100,6 +100,8 @@ new Vue({
             },
             timer: '',
             search: {
+                dialogVisible: false,
+                flowList: [],
                 host: '',
                 port: '',
                 contentType: ''
@@ -110,6 +112,7 @@ new Vue({
             dp: '',
             videoUrl: '',
             videoDialogVisible: false,
+
             edit: {
                 tabs: ['URL', 'Headers', 'Body'],
                 activeTab: '0',
@@ -163,16 +166,16 @@ new Vue({
         }
     },
     methods: {
+        searchDialogOpened() {
+
+        },
         clearClicked() {
             this.showFlows = [];
             this.currentFlow = undefined;
             this.currentFlowId = undefined;
         },
         searchClicked() {
-            this.currentFlow = undefined;
-            this.currentFlowId = undefined;
-            this.fetchTreeFlow();
-            this.fetchListFlow();
+            this.search.dialogVisible = true;
         },
         executeRequest() {
             const that = this;
@@ -192,10 +195,22 @@ new Vue({
                 if (contentType === 'formData') {
                     this.edit.multipart.data.forEach(part => {
                         if (part.type === 'Text') {
-                            textFormData.push({name: part.name.trim(), value: part.value.trim(), type: 'Text', fileName: '', contentType: part.contentType});
+                            textFormData.push({
+                                name: part.name.trim(),
+                                value: part.value.trim(),
+                                type: 'Text',
+                                fileName: '',
+                                contentType: part.contentType
+                            });
                         } else {
                             if (part.fileType === 'hex') {
-                                textFormData.push({name: part.name.trim(), value: part.file, type: 'File', fileName: part.value.trim(), contentType: part.contentType});
+                                textFormData.push({
+                                    name: part.name.trim(),
+                                    value: part.file,
+                                    type: 'File',
+                                    fileName: part.value.trim(),
+                                    contentType: part.contentType
+                                });
                             } else {
                                 formData.append(part.name.trim(), part.file);
                             }
@@ -209,7 +224,11 @@ new Vue({
                     if (typeof this.edit.binary.data === 'object') {
                         formData.append(this.edit.binary.data.name.trim(), this.edit.binary.data);
                     } else {
-                        textFormData.push({name: '', value: this.edit.binary.data, contentType: this.edit.binary.contentType});
+                        textFormData.push({
+                            name: '',
+                            value: this.edit.binary.data,
+                            contentType: this.edit.binary.contentType
+                        });
                     }
                 } else if (contentType === 'raw') {
                     textFormData.push({name: '', value: codeEditor.getValue()});
@@ -339,11 +358,10 @@ new Vue({
                 that.loading = true;
                 axios.get('/flow/detail/' + data.id)
                     .then(res => {
-                        setTimeout(() => that.loading = false, 300);
                         that.handleUrlClicked(data.id, res.data, null)
+                        that.loading = false;
                     })
                     .catch(error => {
-                        console.error(error);
                         that.loading = false;
                         that.responseErrorHandler(error);
                     });
@@ -360,7 +378,7 @@ new Vue({
         },
         doFilter(data, field) {
             const that = this;
-            this.flow[field].shown = this.flow[field].shown.concat(data.filter(flow => {
+            this.flow[field].shown = [].concat(data.filter(flow => {
                 if (!that.urlFilter.trim()) {
                     return true;
                 }
@@ -901,36 +919,111 @@ new Vue({
                 }
             }));
         },
-        connect(url) {
-            // let that = this;
-            // let socket = new SockJS(url + '/ws');
-            // this.stompClient = Stomp.over(socket);
-            // this.stompClient.connect({}, function (frame) {
-            //     console.log('Connected: ' + frame);
-            //     that.stompClient.subscribe('/topic/flow/list', function (greeting) {
-            //         console.log(JSON.parse(greeting.body));
-            //     });
-            // });
-            this.webSocket = new WebSocket('ws://127.0.1:8866/ws/' + new Date().getTime());
-            this.webSocket.onopen = function() {
-                console.log("websocket已打开");
+        getBaseFlow(tree, url) {
+            const origin = url.origin;
+            let flow = tree.filter(flow => flow.url === origin)[0];
+            if (!flow) {
+                flow = {
+                    id: '0',
+                    url: origin,
+                    type: 'BASE_URL',
+                    children: []
+                };
+                tree.push(flow);
+            }
+            return flow;
+        },
+        setRootPathFlowNode(baseFlow, data) {
+            const flow = {
+                id: data.id,
+                url: '/',
+                type: 'TARGET',
+                status: data.status,
+                children: []
             };
-            this.webSocket.onmessage = function(msg) {
-                console.log(msg);
+            baseFlow.children.push(flow);
+        },
+        setPathFlowNode(baseFlow, data, url) {
+            const params = url.pathname.split('/');
+            const len = params.length;
+            let currentParent = baseFlow;
+            for (let i = 1; i < len; i++) {
+                const param = params[i];
+                const children = currentParent.children;
+                if (i === (len - 1)) {
+                    children.push({
+                        id: data.id,
+                        status: data.status,
+                        type: 'TARGET',
+                        url: param,
+                        children: []
+                    });
+                }
+                let child = children.filter(flow => flow.url === param)[0];
+                if (!child) {
+                    child = {
+                        id: param,
+                        url: param,
+                        status: undefined,
+                        type: 'PATH',
+                        children: []
+                    }
+                    children.push(child);
+                }
+                currentParent = child;
+            }
+        },
+        fetchSwitchClicked() {
+            this.fetchSwitch = !this.fetchSwitch;
+            if (this.fetchSwitch) {
+                this.connect(false);
+            } else {
+                this.disconnect();
+            }
+        },
+        connect(showNotify) {
+            let that = this;
+            this.webSocket = new WebSocket('ws://127.0.1:8866/ws/flow');
+            this.webSocket.onopen = function () {
+                that.fetchSwitch = true;
+                that.webSocket.onclose = function () {
+                    that.fetchSwitch = false;
+                    if (showNotify) {
+                        that.$notify({
+                            title: 'Warning',
+                            duration: 0,
+                            message: 'Connection lost!',
+                            type: 'warning'
+                        });
+                    }
+                };
             };
-            this.webSocket.onclose = function() {
-                console.log("websocket已关闭");
+            this.webSocket.onmessage = function (msg) {
+                if (!that.fetchSwitch) {
+                    return;
+                }
+                const data = JSON.parse(msg.data);
+                that.flow.list.all.push(data);
+                that.flow.list.shown.push(data);
+                const url = new URL(data.url, undefined, undefined);
+                let baseFlow = that.getBaseFlow(that.flow.tree.all, url);
+                if ('/' === url.pathname) {
+                    that.setRootPathFlowNode(baseFlow, data);
+                } else {
+                    that.setPathFlowNode(baseFlow, data, url);
+                }
+                that.filter();
             };
-            this.webSocket.onerror = function() {
-                console.log("websocket发生了错误");
+            this.webSocket.onerror = function (event) {
+                that.$notify.error({
+                    title: 'Error',
+                    duration: 0,
+                    message: 'Connection error!',
+                });
             }
         },
         disconnect() {
             this.webSocket.close();
-            // if (this.stompClient !== null) {
-            //     this.stompClient.disconnect();
-            // }
-            console.log("Disconnected");
         }
     },
     mounted() {
@@ -940,14 +1033,8 @@ new Vue({
             that.dragDivider();
             that.autoAdjustWhenWindowResize();
             axios.defaults.baseURL = 'http://127.0.1:8866';
-            that.connect(axios.defaults.baseURL);
+            that.connect(true);
         }
-        this.timer = setInterval(() => {
-            if (that.fetchSwitch) {
-                that.fetchTreeFlow();
-                that.fetchListFlow();
-            }
-        }, 1000);
     },
     beforeDestroy() {
         this.disconnect();

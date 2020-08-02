@@ -10,7 +10,7 @@
     <script src="third/vue/vue@2.6.11.js"></script>
     <script src="third/element-ui/element-ui@2.13.2.js"></script>
     <script src="third/axios/axios.min.js"></script>
-<!--    <script src="third/highlight/highlight.pack.js"></script>-->
+    <!--    <script src="third/highlight/highlight.pack.js"></script>-->
     <script src="third/crypto-js/crypto-js.js"></script>
     <script src="third/crypto-js/cipher-core.js"></script>
     <script src="third/crypto-js/format-hex.js"></script>
@@ -27,8 +27,6 @@
     <script src="third/ace/mode-xml.min.js"></script>
     <script src="third/ace/mode-plain_text.min.js"></script>
     <script src="third/ace/ext-language_tools.min.js"></script>
-<!--    <script src="/webjars/sockjs-client/sockjs.min.js"></script>-->
-<!--    <script src="/webjars/stomp-websocket/stomp.min.js"></script>-->
     <style>
         [v-cloak] {
             display: none;
@@ -37,6 +35,22 @@
 </head>
 <body>
 <div id="main" class="" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.8)">
+
+    <!--video dialog begin-->
+    <div class="p-search-container">
+        <el-dialog title="Search" top="10vh" :visible.sync="search.dialogVisible" @opened="searchDialogOpened">
+            <el-table :data="search.flowList" height="500">
+                <el-table-column label="#" type="index" align="center"></el-table-column>
+                <el-table-column property="method" label="Method"></el-table-column>
+                <el-table-column property="url" label="Url"></el-table-column>
+                <el-table-column property="status" label="Status"></el-table-column>
+                <el-table-column property="time" label="Time"></el-table-column>
+                <el-table-column label="Operation" width="150"></el-table-column>
+            </el-table>
+        </el-dialog>
+    </div>
+    <!--video dialog end-->
+
     <!--video dialog begin-->
     <div class="p-video-container">
         <el-dialog title="Video" top="10vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
@@ -68,7 +82,8 @@
                         </div>
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" height="450">
-                            <el-table :data="edit.query.data" :empty-text="'No data'" stripe border height="450" style="width: 100%">
+                            <el-table :data="edit.query.data" :empty-text="'No data'" stripe border height="450"
+                                      style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
@@ -82,7 +97,8 @@
                                 <el-table-column prop="value" label="Value">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" clearable @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'query')"
+                                            <el-input size="mini" clearable
+                                                      @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'query')"
                                                       v-model="edit.query.select['value']"></el-input>
                                         </span>
                                         <span v-else>{{scope.row['value']}}</span>
@@ -116,12 +132,14 @@
                     <div v-if="item === 'Headers'">
                         <div class="p-placeholder"></div>
                         <div class="p-url-body" style="height: 500px;">
-                            <el-table :data="edit.headers.data" :empty-text="'No data'" row-key="name" stripe border height="500" style="width: 100%">
+                            <el-table :data="edit.headers.data" :empty-text="'No data'" row-key="name" stripe border
+                                      height="500" style="width: 100%">
                                 <el-table-column label="#" type="index" align="center"></el-table-column>
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-focus v-model="edit.headers.select['name']"></el-input>
+                                            <el-input size="mini" v-focus
+                                                      v-model="edit.headers.select['name']"></el-input>
                                         </span>
                                         <span v-else>{{scope.row['name']}}</span>
                                     </template>
@@ -129,7 +147,8 @@
                                 <el-table-column prop="value" label="Value">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-model="edit.headers.select['value']" @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'headers')"></el-input>
+                                            <el-input size="mini" v-model="edit.headers.select['value']"
+                                                      @keyup.enter.native="rowEditClicked(scope.row, scope.$index, true, 'headers')"></el-input>
                                         </span>
                                         <span v-else>
                                             <sapn v-if="scope.row.editable">{{scope.row['value']}}</sapn>
@@ -141,9 +160,12 @@
                                 <el-table-column label="Operation" align="center" width="150">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editable">
-                                            <el-link type="primary" @click="rowEditClicked(scope.row, scope.$index, true, 'headers')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
-                                            <el-link type="danger" v-if="!scope.row.editing" @click="rowDeleteClicked(scope.row, scope.$index, 'headers')">Delete</el-link>&nbsp;&nbsp;
-                                            <el-link type="info" v-else @click="rowEditClicked(scope.row, scope.$index, false, 'headers')">Cancel</el-link>
+                                            <el-link type="primary"
+                                                     @click="rowEditClicked(scope.row, scope.$index, true, 'headers')">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
+                                            <el-link type="danger" v-if="!scope.row.editing"
+                                                     @click="rowDeleteClicked(scope.row, scope.$index, 'headers')">Delete</el-link>&nbsp;&nbsp;
+                                            <el-link type="info" v-else
+                                                     @click="rowEditClicked(scope.row, scope.$index, false, 'headers')">Cancel</el-link>
                                         </span>
                                     </template>
                                 </el-table-column>
@@ -164,7 +186,8 @@
                             <div class="p-body-type-radio">
                                 <el-radio v-model="edit.request.contentType" label="none">none</el-radio>
                                 <el-radio v-model="edit.request.contentType" label="formData">form-data</el-radio>
-                                <el-radio v-model="edit.request.contentType" label="x-www-form-urlencoded">x-www-form-urlencoded
+                                <el-radio v-model="edit.request.contentType" label="x-www-form-urlencoded">
+                                    x-www-form-urlencoded
                                 </el-radio>
                                 <el-radio v-model="edit.request.contentType" label="binary">binary</el-radio>
                                 <el-radio v-model="edit.request.contentType" label="raw">raw</el-radio>
@@ -192,7 +215,8 @@
                                 <el-table-column prop="name" label="Name">
                                     <template slot-scope="scope">
                                         <span v-if="scope.row.editing">
-                                            <el-input size="mini" v-focus v-model="edit.multipart.select['name']"></el-input>
+                                            <el-input size="mini" v-focus
+                                                      v-model="edit.multipart.select['name']"></el-input>
                                         </span>
                                         <span v-else>{{scope.row['name']}}</span>
                                     </template>
@@ -322,7 +346,9 @@
                         </div>
                         <div v-if="'raw' === edit.request.contentType">
                             <div class="p-url-body" style="height: 502px;">
-                                <div id="editBodyEditor" v-editor="{data: edit.rawBody.data, readOnly: false, mode: edit.rawBody.type.toLowerCase()}" class="p-raw"></div>
+                                <div id="editBodyEditor"
+                                     v-editor="{data: edit.rawBody.data, readOnly: false, mode: edit.rawBody.type.toLowerCase()}"
+                                     class="p-raw"></div>
                             </div>
                         </div>
                     </div>
@@ -340,7 +366,8 @@
     <!--header开始-->
     <div class="p-header">
         <div class="p-menus p-border-bottom">
-            <el-menu v-cloak :default-active="'1'" :unique-opened="true" class="p-menu" menu-trigger="click" mode="horizontal"
+            <el-menu v-cloak :default-active="'1'" :unique-opened="true" class="p-menu" menu-trigger="click"
+                     mode="horizontal"
                      @select="handleSelect">
                 <el-submenu index="1">
                     <template slot="title">File</template>
@@ -373,9 +400,9 @@
             <div class="p-tool">
                 <i class="el-icon-delete p-icon" @click="clearClicked()"></i>
                 <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
+                <i :class="{'el-icon-video-play': !fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}"
+                   @click="fetchSwitchClicked"></i>
                 <i class="el-icon-search p-icon" @click="searchClicked()"></i>
-                <i :class="{'el-icon-video-play': !fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}" @click="fetchSwitch = !fetchSwitch"></i>
-                <i class="el-icon-search p-icon" @click="disconnect()"></i>
             </div>
         </div>
     </div>
@@ -494,7 +521,8 @@
                             <el-tab-pane v-model="activeResponsePanel" v-for="(item, index) in responseTabs" :key="item"
                                          :label="item">
                                 <!-- response.headers 开始-->
-                                <el-table v-if="item === 'Headers'" :data="current.response.headers" :empty-text="'No data'" border="true"
+                                <el-table v-if="item === 'Headers'" :data="current.response.headers"
+                                          :empty-text="'No data'" border="true"
                                           stripe fit="true"
                                           v-if="item === 'Headers'">
                                     <el-table-column prop="name" label="Name" width="200"></el-table-column>
@@ -502,7 +530,8 @@
                                 </el-table>
                                 <!-- response.headers 结束-->
                                 <!-- response.cookies 开始-->
-                                <el-table v-else-if="item === 'Cookies'" :data="current.response.cookies" :empty-text="'No data'" border="true"
+                                <el-table v-else-if="item === 'Cookies'" :data="current.response.cookies"
+                                          :empty-text="'No data'" border="true"
                                           stripe fit="true"
                                           v-if="item === 'Cookies'">
                                     <el-table-column prop="name" label="Name"></el-table-column>
@@ -528,27 +557,37 @@
                                 <div v-else>
                                     <!-- response.json 开始-->
                                     <div v-if="item === 'JSON'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.json, readOnly: true, mode: 'json'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.json, readOnly: true, mode: 'json'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.json 结束-->
                                     <!-- response.xml 开始-->
                                     <div v-else-if="item === 'XML'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.xml, readOnly: true, mode: 'xml'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.xml, readOnly: true, mode: 'xml'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.xml 结束-->
                                     <!-- response.html 开始-->
                                     <div v-else-if="item === 'HTML'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.html, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.html, readOnly: true, mode: 'html'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.html 结束-->
                                     <!-- response.html 开始-->
                                     <div v-else-if="item === 'CSS'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.css, readOnly: true, mode: 'css'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.css, readOnly: true, mode: 'css'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.html 结束-->
                                     <!-- response.html 开始-->
                                     <div v-else-if="item === 'JavaScript'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.js, readOnly: true, mode: 'javascript'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.js, readOnly: true, mode: 'javascript'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.html 结束-->
                                     <!-- response.image 开始-->
@@ -565,12 +604,16 @@
                                     <!-- response.video 结束-->
                                     <!-- response.plain 开始-->
                                     <div v-else-if="item === 'Plain'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.plain, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.plain, readOnly: true, mode: 'html'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.plain 结束-->
                                     <!-- response.hex 开始-->
                                     <div v-else-if="item === 'Hex'">
-                                        <div id="readOnlyEditor" v-read-only-editor="{data: current.response.hex, readOnly: true, mode: 'html'}" class="p-raw"></div>
+                                        <div id="readOnlyEditor"
+                                             v-read-only-editor="{data: current.response.hex, readOnly: true, mode: 'html'}"
+                                             class="p-raw"></div>
                                     </div>
                                     <!-- response.hex 结束-->
                                 </div>
