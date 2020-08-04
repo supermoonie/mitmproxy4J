@@ -100,11 +100,36 @@ new Vue({
             },
             timer: '',
             search: {
-                dialogVisible: false,
-                flowList: [],
+                method: 'ALL',
                 host: '',
-                port: '',
-                contentType: ''
+                time: [new Date(new Date().getTime() - 5 * 60 * 1000), new Date()],
+                pickerOptions: {
+                    shortcuts: [{
+                        text: 'Last Five Minute',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 5 * 60 * 1000);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: 'Last Ten Minute',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 10 * 60 * 1000);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: 'Last One Hour',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 60 * 60 * 1000);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }]
+                }
             },
             baseResponseTabs: ['Headers', 'Cookies', 'Raw'],
             responseTabs: ['Headers', 'Cookies', 'Raw'],
@@ -166,16 +191,18 @@ new Vue({
         }
     },
     methods: {
-        searchDialogOpened() {
-
-        },
         clearClicked() {
-            this.showFlows = [];
+            this.flow.list.shown = [];
+            this.flow.tree.shown = [];
             this.currentFlow = undefined;
             this.currentFlowId = undefined;
         },
         searchClicked() {
-            this.search.dialogVisible = true;
+            console.log(this.search.time);
+            console.log(this.search.host);
+            console.log(this.search.method);
+            this.fetchListFlow();
+            this.fetchTreeFlow();
         },
         executeRequest() {
             const that = this;
@@ -261,86 +288,85 @@ new Vue({
             multipart.fileType = 'binary';
         },
         binaryUploadFileChange(event) {
-            console.log(event);
-            console.log(typeof event.target.files[0]);
             this.edit.binary.target = event.target;
             this.edit.binary.data = event.target.files[0];
             this.edit.binary.text = this.edit.binary.data.name + '  ' + this.edit.binary.data.size + ' bytes';
             this.edit.binary.contentType = this.edit.binary.data.type;
         },
         fetchListFlow() {
-            // const that = this;
-            // that.loading = true;
-            // const start = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 10000));
-            // axios({
-            //     method: 'post',
-            //     url: '/flow/list?start=' + start,
-            //     data: {
-            //         host: '',
-            //         method: '',
-            //         start: start,
-            //         end: ''
-            //     },
-            //     transformRequest: [function (data) {
-            //         let ret = '';
-            //         for (let key in data) {
-            //             if (data.hasOwnProperty(key)) {
-            //                 ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
-            //             }
-            //         }
-            //         return ret;
-            //     }],
-            //     headers: {
-            //         'Content-Type': 'application/x-www-form-urlencoded'
-            //     }
-            // }).then(function (response) {
-            //     that.loading = false;
-            //     that.flowResponseDataHandler(response.data, 'list');
-            // }).catch(error => {
-            //     that.loading = false;
-            //     that.responseErrorHandler(error);
-            // });
+            const that = this;
+            this.flow.list.all = [];
+            this.flow.tree.all = [];
+            this.flow.list.shown = [];
+            this.flow.tree.shown = [];
+            that.loading = true;
+            axios({
+                method: 'post',
+                url: '/flow/list',
+                data: {
+                    host: that.search.host,
+                    method: that.search.method,
+                    start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[0]),
+                    end: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[1])
+                },
+                transformRequest: [function (data) {
+                    let ret = '';
+                    for (let key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
+                        }
+                    }
+                    return ret;
+                }],
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(function (response) {
+                that.loading = false;
+                that.flowResponseDataHandler(response.data, 'list');
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
         },
         /**
          * 从服务器端拉取Flow数据
          */
         fetchTreeFlow() {
-            this.webSocket.send(JSON.stringify({'host': '', 'method': '', 'start': '', 'end': ''}));
-            // this.stompClient.send('/flow/list', {}, JSON.stringify({'host': '', 'method': '', 'start': '', 'end': ''}));
-            // const that = this;
-            // that.loading = true;
-            // axios({
-            //     method: 'post',
-            //     url: '/flow/tree',
-            //     data: {
-            //         host: '',
-            //         method: '',
-            //         start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', new Date(new Date().getTime() - 1000)),
-            //         end: ''
-            //     },
-            //     transformRequest: [function (data) {
-            //         let ret = '';
-            //         for (let key in data) {
-            //             if (data.hasOwnProperty(key)) {
-            //                 ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
-            //             }
-            //         }
-            //         return ret;
-            //     }],
-            //     headers: {
-            //         'Content-Type': 'application/x-www-form-urlencoded'
-            //     }
-            // }).then(function (response) {
-            //     that.loading = false;
-            //     that.flowResponseDataHandler(response.data, 'tree');
-            // }).catch(error => {
-            //     that.loading = false;
-            //     that.responseErrorHandler(error);
-            // });
+            const that = this;
+            that.loading = true;
+            axios({
+                method: 'post',
+                url: '/flow/tree',
+                data: {
+                    host: that.search.host,
+                    method: that.search.method,
+                    start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[0]),
+                    end: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[1])
+                },
+                transformRequest: [function (data) {
+                    let ret = '';
+                    for (let key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
+                        }
+                    }
+                    return ret;
+                }],
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(function (response) {
+                that.loading = false;
+                that.flowResponseDataHandler(response.data, 'tree');
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
         },
         flowResponseDataHandler(data, field) {
-            this.flow[field].all = this.flow[field].all.concat(data);
-            this.doFilter(data, field);
+            this.flow[field].all = this.flow[field].all.concat(this.flow[field].all.concat(data));
+            this.filter(this.flow[field].all, field);
         },
         responseErrorHandler(error) {
             this.$message({
@@ -839,13 +865,14 @@ new Vue({
             controller.onmousedown = function (e) {
                 let main = document.querySelector('#main');
                 main.className = 'p-select-none';
-                const listContainer = document.querySelector('#p-list-container')
-                let urlList = document.querySelectorAll('#p-url-list li a span');
+                const listContainer = document.querySelector('#p-list-container');
                 let startX = e.clientX;
                 let aside = document.querySelector('#p-aside');
                 let header = document.querySelector('#p-main>.el-tabs>.el-tabs__header');
                 let content = document.querySelector('#p-main>.el-tabs>.el-tabs__content');
                 let clientWidth = document.body.clientWidth;
+                let moveLen = 0;
+                let len = 0;
                 document.onmousemove = function (event) {
                     let endX = event.clientX;
                     if (endX <= 300) {
@@ -855,17 +882,16 @@ new Vue({
                         return;
                     }
                     listContainer.style.overflowY = 'hidden';
-                    let moveLen = startX + (endX - startX);
+                    len = endX - startX;
+                    moveLen = startX + (endX - startX);
                     controller.style.left = moveLen + 'px';
+                }
+                document.onmouseup = function () {
                     aside.style.width = moveLen + 'px';
                     header.style.left = moveLen + 'px';
                     content.style.left = moveLen + 'px';
-                    // if (!!urlList && moveLen > 580) {
-                    //     for (let i = 0; i < urlList.length; i++)
-                    //         urlList[i].style.width = moveLen + 'px';
-                    // }
-                }
-                document.onmouseup = function () {
+                    const urlFilter = document.querySelector('.p-search .p-url-filter');
+                    urlFilter.style.width = urlFilter.offsetWidth + len + 'px';
                     document.onmousemove = null;
                     document.onmouseup = null;
                     main.className = null;

@@ -52,7 +52,7 @@ public class FlowServiceImpl implements FlowService {
     @Override
     public List<SimpleRequestDTO> list(String host, String method, Date start, Date end) {
         host = StringUtils.isEmpty(host) ? null : host;
-        method = StringUtils.isEmpty(method) ? null : method;
+        method = StringUtils.isEmpty(method) ? null : "all".equalsIgnoreCase(method) ? null : method;
         String startTime = null != start ? DateUtil.format(start, "yyyy-MM-dd HH:mm:ss") : null;
         String endTime = null != end ? DateUtil.format(end, "yyyy-MM-dd HH:mm:ss") : null;
         List<SimpleRequestDAO> requestList = requestMapper.selectSimple(host, method, startTime, endTime);
@@ -69,7 +69,7 @@ public class FlowServiceImpl implements FlowService {
     public List<FlowNode> tree(String host, String method, Date start, Date end) {
         List<FlowNode> tree = new ArrayList<>();
         host = StringUtils.isEmpty(host) ? null : host;
-        method = StringUtils.isEmpty(method) ? null : method;
+        method = StringUtils.isEmpty(method) ? null : "all".equalsIgnoreCase(method) ? null : method;
         String startTime = null != start ? DateUtil.format(start, "yyyy-MM-dd HH:mm:ss") : null;
         String endTime = null != end ? DateUtil.format(end, "yyyy-MM-dd HH:mm:ss") : null;
         List<SimpleRequestDAO> simpleRequestList = requestMapper.selectSimple(host, method, startTime, endTime);

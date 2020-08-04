@@ -150,10 +150,9 @@ public class HttpProxyServer {
             ChannelFuture f = b.bind(port).sync();
             log.info("mitmproxy4J start listening on {}", port);
             listening = true;
-            f.channel().closeFuture().sync();
+//            f.channel().closeFuture().sync();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-        } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }

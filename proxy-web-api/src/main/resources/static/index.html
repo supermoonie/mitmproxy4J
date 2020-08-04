@@ -37,14 +37,6 @@
 <div id="main" class="" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.8)">
 
     <!--video dialog begin-->
-    <div class="p-search-container">
-        <el-dialog title="Search" top="5vh" :visible.sync="search.dialogVisible" @opened="searchDialogOpened">
-
-        </el-dialog>
-    </div>
-    <!--video dialog end-->
-
-    <!--video dialog begin-->
     <div class="p-video-container">
         <el-dialog title="Video" top="5vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
                    @close="!!dp && dp.pause()">
@@ -396,30 +388,31 @@
                 <i :class="{'el-icon-video-play': !fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}"
                    @click="fetchSwitchClicked"></i>
                 <div style="display: inline;" class="p-search-input-group">
+                    <el-select size="mini" v-model="search.method">
+                        <el-option
+                                v-for="item in ['ALL', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'TRACE']"
+                                :key="item"
+                                :label="item"
+                                :value="item">
+                        </el-option>
+                    </el-select>
                     <el-input
                             size="mini"
-                            placeholder="请输入内容"
-                            suffix-icon="el-icon-date"
+                            placeholder="Host"
+                            clearable="true"
                             v-model="search.host">
                     </el-input>
-                    <el-input
-                            size="mini"
-                            placeholder="请输入内容"
-                            suffix-icon="el-icon-date"
-                            v-model="search.host">
-                    </el-input>
-                    <el-input
-                            size="mini"
-                            placeholder="请输入内容"
-                            suffix-icon="el-icon-date"
-                            v-model="search.host">
-                    </el-input>
-                    <el-input
-                            size="mini"
-                            placeholder="请输入内容"
-                            suffix-icon="el-icon-date"
-                            v-model="search.host">
-                    </el-input>
+                    <div style="display: inline; vertical-align: top;">
+                        <el-date-picker
+                                size="mini"
+                                v-model="search.time"
+                                type="datetimerange"
+                                :picker-options="search.pickerOptions"
+                                range-separator="~"
+                                start-placeholder="Start"
+                                end-placeholder="End">
+                        </el-date-picker>
+                    </div>
                     <i class="el-icon-search p-icon" @click="searchClicked()"></i>
                 </div>
             </div>
