@@ -43,9 +43,33 @@ public class WebSocketServer {
         FILTER_MAP.put(String.format("%s:%d", host, port), new Filter());
     }
 
+    @OnError
+    public void onError(Throwable ignore) {
+        log.error(ignore.getMessage(), ignore);
+        synchronized (SESSION_MAP) {
+            for (String key : SESSION_MAP.keySet()) {
+                List<Session> sessions = SESSION_MAP.get(key);
+                if (!CollectionUtils.isEmpty(sessions)) {
+                    sessions.removeIf(Session::isOpen);
+                }
+            }
+        }
+    }
+
     @OnClose
     public void onClose(Session session) {
         InetSocketAddress remoteAddress = getRemoteAddress(session);
+        if (null == remoteAddress) {
+            synchronized (SESSION_MAP) {
+                for (String key : SESSION_MAP.keySet()) {
+                    List<Session> sessions = SESSION_MAP.get(key);
+                    if (!CollectionUtils.isEmpty(sessions)) {
+                        sessions.removeIf(Session::isOpen);
+                    }
+                }
+            }
+            return;
+        }
         String host = remoteAddress.getHostString();
         int port = remoteAddress.getPort();
         synchronized (SESSION_MAP) {
