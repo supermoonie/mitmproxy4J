@@ -190,6 +190,11 @@ new Vue({
             }
         }
     },
+    watch: {
+        urlFilter(val) {
+            this.$refs.tree.filter(val);
+        }
+    },
     methods: {
         clearClicked() {
             this.flow.list.shown = [];
@@ -198,9 +203,6 @@ new Vue({
             this.currentFlowId = undefined;
         },
         searchClicked() {
-            console.log(this.search.time);
-            console.log(this.search.host);
-            console.log(this.search.method);
             this.fetchListFlow();
             this.fetchTreeFlow();
         },
@@ -416,7 +418,13 @@ new Vue({
          */
         filter() {
             this.doFilter(this.flow.list.all, 'list');
-            this.doFilter(this.flow.tree.all, 'tree');
+            // this.doFilter(this.flow.tree.all, 'tree');
+            this.flow.tree.shown = this.flow.tree.all;
+            this.$refs.tree.filter(this.urlFilter.trim());
+        },
+        filterNode(value, data) {
+            if (!value) return true;
+            return data.url.indexOf(value) !== -1;
         },
         /**
          * 请求方法改变事件处理

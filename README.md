@@ -13,8 +13,8 @@ Netty Socks代理服务器源码分析：https://alwayswithme.github.io/jekyll/u
 生成根证书：https://knowledge.broadcom.com/external/article/166370/how-to-create-a-selfsigned-ssl-certifica.html
 
 ```shell
- openssl genrsa -out ca.key 2048
- openssl pkcs8 -topk8 -nocrypt -inform PEM -outform DER -in ca.key -out ca_private.pem
- openssl req -sha256 -new -x509 -days 365 -key ca.key -out ca.crt \                                                                                            09:21:48
-     -subj "/C=CN/ST=Shanghai/L=Shanghai/O=github/OU=supermoonie/CN=mitmproxy4J"
+openssl genrsa -out ca.key 2048
+openssl pkcs8 -topk8 -nocrypt -inform PEM -outform DER -in ca.key -out ca_private.pem
+openssl req -sha256 -new -x509 -days 365 -key ca.key -out ca.crt -subj "/C=CN/ST=Shanghai/L=Shanghai/O=github/OU=supermoonie/CN=mitmproxy4J"
 ```
+

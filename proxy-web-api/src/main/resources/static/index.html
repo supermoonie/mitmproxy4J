@@ -444,8 +444,10 @@
                                  :show-checkbox="false"
                                  :expand-on-click-node="true"
                                  :highlight-current="true"
+                                 :render-after-expand="false"
+                                 ref="tree"
                                  :props="tree.nodeProps"
-                                 :default-expand-all="true"
+                                 :filter-node-method="filterNode"
                                  @node-click="flowNodeClicked"
                                  node-key="id">
                                 <span class="custom-tree-node" slot-scope="{node, data}">
