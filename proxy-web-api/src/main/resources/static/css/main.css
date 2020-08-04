@@ -6,7 +6,7 @@ html, body, #main {
 
 /*video container*/
 .p-video-container .el-dialog {
-    width: 1500px;
+    width: 90%;
     height: 673px;
     overflow: auto;
     background: black;
@@ -33,7 +33,7 @@ html, body, #main {
 
 /*request edit container*/
 .p-request-edit-container .el-dialog {
-    width: 1324px;
+    width: 90%;
     height: 673px;
     overflow: auto;
 }

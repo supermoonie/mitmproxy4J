@@ -38,7 +38,7 @@
 
     <!--video dialog begin-->
     <div class="p-search-container">
-        <el-dialog title="Search" top="10vh" :visible.sync="search.dialogVisible" @opened="searchDialogOpened">
+        <el-dialog title="Search" top="5vh" :visible.sync="search.dialogVisible" @opened="searchDialogOpened">
             <el-table :data="search.flowList" height="500">
                 <el-table-column label="#" type="index" align="center"></el-table-column>
                 <el-table-column property="method" label="Method"></el-table-column>
@@ -53,7 +53,7 @@
 
     <!--video dialog begin-->
     <div class="p-video-container">
-        <el-dialog title="Video" top="10vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
+        <el-dialog title="Video" top="5vh" :visible.sync="videoDialogVisible" @opened="videoDialogOpened"
                    @close="!!dp && dp.pause()">
             <div id="dPlayer"></div>
         </el-dialog>
@@ -62,7 +62,7 @@
 
     <!--request edit dialog begin-->
     <div class="p-request-edit-container" v-cloak>
-        <el-dialog title="Edit" top="10vh" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.3)"
+        <el-dialog title="Edit" top="5vh" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.3)"
                    :visible.sync="edit.requestDialogVisible" :close-on-click-modal="false" :show-close="true">
             <el-tabs v-model="edit.activeTab">
                 <el-tab-pane v-for="(item, index) in edit.tabs" :key="item" :label="item">

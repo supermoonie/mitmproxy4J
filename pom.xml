@@ -21,7 +21,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <springboot.version>2.1.6.RELEASE</springboot.version>
-        <sqlite.version>3.31.2-SNAPSHOT</sqlite.version>
+        <sqlite.version>3.31.2</sqlite.version>
         <mybatisplus.version>3.1.2</mybatisplus.version>
         <netty.version>4.1.50.Final</netty.version>
         <protostuff.version>1.6.2</protostuff.version>
@@ -44,6 +44,11 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-websocket</artifactId>
                 <version>${springboot.version}</version>
             </dependency>
             <dependency>
