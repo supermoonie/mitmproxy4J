@@ -20,6 +20,13 @@ html, body, #main {
 }
 /*video container*/
 
+.p-search-input-group .el-input {
+    width: 180px;
+    vertical-align: top;
+    margin-top: 4px;
+}
+
+
 /*search container*/
 .p-search-container .el-dialog {
     width: 1500px;

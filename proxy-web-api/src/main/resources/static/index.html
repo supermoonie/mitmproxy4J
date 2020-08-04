@@ -39,14 +39,7 @@
     <!--video dialog begin-->
     <div class="p-search-container">
         <el-dialog title="Search" top="5vh" :visible.sync="search.dialogVisible" @opened="searchDialogOpened">
-            <el-table :data="search.flowList" height="500">
-                <el-table-column label="#" type="index" align="center"></el-table-column>
-                <el-table-column property="method" label="Method"></el-table-column>
-                <el-table-column property="url" label="Url"></el-table-column>
-                <el-table-column property="status" label="Status"></el-table-column>
-                <el-table-column property="time" label="Time"></el-table-column>
-                <el-table-column label="Operation" width="150"></el-table-column>
-            </el-table>
+
         </el-dialog>
     </div>
     <!--video dialog end-->
@@ -402,7 +395,33 @@
                 <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
                 <i :class="{'el-icon-video-play': !fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}"
                    @click="fetchSwitchClicked"></i>
-                <i class="el-icon-search p-icon" @click="searchClicked()"></i>
+                <div style="display: inline;" class="p-search-input-group">
+                    <el-input
+                            size="mini"
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="search.host">
+                    </el-input>
+                    <el-input
+                            size="mini"
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="search.host">
+                    </el-input>
+                    <el-input
+                            size="mini"
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="search.host">
+                    </el-input>
+                    <el-input
+                            size="mini"
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="search.host">
+                    </el-input>
+                    <i class="el-icon-search p-icon" @click="searchClicked()"></i>
+                </div>
             </div>
         </div>
     </div>
