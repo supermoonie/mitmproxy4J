@@ -210,6 +210,8 @@
                             cookie['path'] = value;
                         } else if (field === 'samesite') {
                             cookie['SameSite'] = value;
+                        } else if (field === 'domain') {
+                            cookie['domain'] = value;
                         } else {
                             cookie['name'] = cookieFieldList[i].split('=')[0];
                             cookie['value'] = value;

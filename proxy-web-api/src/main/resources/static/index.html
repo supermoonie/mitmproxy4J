@@ -356,8 +356,8 @@
                      @select="handleSelect">
                 <el-submenu index="1">
                     <template slot="title">File</template>
-                    <el-menu-item index="1-1">Open...</el-menu-item>
-                    <el-menu-item index="1-2">Save...</el-menu-item>
+                    <el-menu-item index="Open">Open...</el-menu-item>
+                    <el-menu-item index="Save" :disabled="!currentFlowId">Save</el-menu-item>
                 </el-submenu>
                 <el-submenu index="2">
                     <template slot="title">Proxy</template>
@@ -550,12 +550,13 @@
                                           v-if="item === 'Cookies'">
                                     <el-table-column prop="name" label="Name"></el-table-column>
                                     <el-table-column prop="value" label="Value"></el-table-column>
+                                    <el-table-column prop="domain" label="Domain"></el-table-column>
                                     <el-table-column prop="path" label="Path"></el-table-column>
-                                    <el-table-column prop="Max-Age" label="Max-Age" width="90"></el-table-column>
-                                    <el-table-column prop="expires" label="expires" width="180"></el-table-column>
-                                    <el-table-column prop="SameSite" label="SameSite" width="90"></el-table-column>
-                                    <el-table-column prop="HTTPOnly" label="HttpOnly" width="80"></el-table-column>
-                                    <el-table-column prop="secure" label="Secure" width="80"></el-table-column>
+                                    <el-table-column prop="Max-Age" label="Max-Age"></el-table-column>
+                                    <el-table-column prop="expires" label="expires"></el-table-column>
+                                    <el-table-column prop="SameSite" label="SameSite"></el-table-column>
+                                    <el-table-column prop="HTTPOnly" label="HttpOnly"></el-table-column>
+                                    <el-table-column prop="secure" label="Secure"></el-table-column>
                                 </el-table>
                                 <!-- response.cookies 结束-->
                                 <!-- response.raw 开始-->

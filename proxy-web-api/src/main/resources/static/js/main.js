@@ -402,7 +402,14 @@ new Vue({
          * @param keyPath   菜单的路径
          */
         handleSelect(key, keyPath) {
-            console.log(key, keyPath);
+            if ('Save' === key) {
+                this.doSave();
+            }
+        },
+        doSave() {
+            if (!!this.currentFlowId) {
+                window.location.href = '/flow/save/' + this.currentFlowId;
+            }
         },
         doFilter(data, field) {
             const that = this;

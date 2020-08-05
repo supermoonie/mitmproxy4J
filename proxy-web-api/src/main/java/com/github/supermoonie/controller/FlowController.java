@@ -4,16 +4,22 @@ import com.github.supermoonie.dto.FlowDTO;
 import com.github.supermoonie.dto.FlowNode;
 import com.github.supermoonie.dto.SimpleRequestDTO;
 import com.github.supermoonie.service.FlowService;
+import com.github.supermoonie.util.JSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
@@ -25,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/flow")
 @CrossOrigin
+@Slf4j
 public class FlowController {
 
     @Resource
@@ -68,5 +75,22 @@ public class FlowController {
     public ResponseEntity<FlowDTO> detail(@PathVariable("requestId") String requestId) {
         FlowDTO detail = flowService.detail(requestId);
         return ResponseEntity.ok(detail);
+    }
+
+    @ApiOperation(value = "根据requestId获取flow")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "requestId", value = "requestId", paramType = "path"),
+    })
+    @GetMapping(value = "/save/{requestId}")
+    public void save(@PathVariable("requestId") String requestId, HttpServletResponse response) {
+        String detail = JSON.toJsonString(flowService.detail(requestId));
+        log.info(detail);
+        response.addHeader("Content-Disposition", "attachment; fileName=" + requestId + ".json");
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        try {
+            IOUtils.write(detail, response.getOutputStream(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 }
