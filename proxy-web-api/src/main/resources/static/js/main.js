@@ -386,7 +386,7 @@ new Vue({
                 that.loading = true;
                 axios.get('/flow/detail/' + data.id)
                     .then(res => {
-                        that.handleUrlClicked(data.id, res.data, null)
+                        that.handleUrlClicked(data.id, res.data, null);
                         that.loading = false;
                     })
                     .catch(error => {
@@ -410,6 +410,9 @@ new Vue({
             if (!!this.currentFlowId) {
                 window.location.href = '/flow/save/' + this.currentFlowId;
             }
+        },
+        uploadFlow(e) {
+            console.log(e);
         },
         doFilter(data, field) {
             const that = this;

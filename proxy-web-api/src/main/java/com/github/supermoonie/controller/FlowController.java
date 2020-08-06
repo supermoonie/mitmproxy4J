@@ -15,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -77,14 +78,13 @@ public class FlowController {
         return ResponseEntity.ok(detail);
     }
 
-    @ApiOperation(value = "根据requestId获取flow")
+    @ApiOperation(value = "根据requestId下载flow")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "requestId", value = "requestId", paramType = "path"),
     })
     @GetMapping(value = "/save/{requestId}")
     public void save(@PathVariable("requestId") String requestId, HttpServletResponse response) {
-        String detail = JSON.toJsonString(flowService.detail(requestId));
-        log.info(detail);
+        String detail = JSON.toJsonString(flowService.detail(requestId), true);
         response.addHeader("Content-Disposition", "attachment; fileName=" + requestId + ".json");
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         try {
@@ -92,5 +92,21 @@ public class FlowController {
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    @ApiOperation(value = "根据requestId下载flow")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "requestId", value = "requestId", paramType = "path"),
+    })
+    @GetMapping(value = "/read")
+    public ResponseEntity<SimpleRequestDTO> read(@RequestParam("flow") MultipartFile flow) {
+        String fileName = flow.getOriginalFilename();
+        try {
+            byte[] bytes = IOUtils.readFully(flow.getInputStream(), (int) flow.getSize());
+            FlowDTO flowDTO = JSON.parse(new String(bytes, StandardCharsets.UTF_8), FlowDTO.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.of(null);
     }
 }

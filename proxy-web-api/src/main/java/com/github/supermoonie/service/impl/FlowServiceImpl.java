@@ -18,15 +18,13 @@ import com.github.supermoonie.service.FlowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -198,6 +196,17 @@ public class FlowServiceImpl implements FlowService {
             return null;
         }
         return from(request);
+    }
+
+    @Transactional(rollbackFor = RuntimeException.class)
+    @Override
+    public SimpleRequestDTO save(FlowDTO flow) {
+        RequestDTO request = flow.getRequest();
+        Request req = new Request();
+        BeanUtils.copyProperties(request, req);
+        req.setId(UUID.randomUUID().toString());
+        requestMapper.insert(req);
+        return null;
     }
 
     private FlowDTO from(Request request) {

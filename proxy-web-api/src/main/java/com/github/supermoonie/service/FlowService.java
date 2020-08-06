@@ -44,4 +44,12 @@ public interface FlowService {
      * @return flow {@link FlowDTO}
      */
     FlowDTO detail(String requestId);
+
+    /**
+     * 将客户端上传的Flow 保存至数据库
+     *
+     * @param flow  {@link FlowDTO}
+     * @return {@link SimpleRequestDTO}
+     */
+    SimpleRequestDTO save(FlowDTO flow);
 }

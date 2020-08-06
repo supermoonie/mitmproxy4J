@@ -356,7 +356,11 @@
                      @select="handleSelect">
                 <el-submenu index="1">
                     <template slot="title">File</template>
-                    <el-menu-item index="Open">Open...</el-menu-item>
+                    <el-menu-item index="Open" @click="!!event.target.children[0] && event.target.children[0].click()">
+                        <input style="visibility: hidden;width: 0;height: 0;" type="file"
+                               @change="uploadFlow(event)">
+                        Open...
+                    </el-menu-item>
                     <el-menu-item index="Save" :disabled="!currentFlowId">Save</el-menu-item>
                 </el-submenu>
                 <el-submenu index="2">
