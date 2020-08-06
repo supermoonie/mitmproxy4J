@@ -16,6 +16,7 @@ import com.github.supermoonie.model.Request;
 import com.github.supermoonie.model.Response;
 import com.github.supermoonie.service.FlowService;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -204,9 +205,60 @@ public class FlowServiceImpl implements FlowService {
         RequestDTO request = flow.getRequest();
         Request req = new Request();
         BeanUtils.copyProperties(request, req);
-        req.setId(UUID.randomUUID().toString());
+        String requestId = UUID.randomUUID().toString();
+        req.setId(requestId);
         requestMapper.insert(req);
-        return null;
+        flow.getRequestHeaders().forEach(h -> {
+            Header header = new Header();
+            header.setId(UUID.randomUUID().toString());
+            header.setName(h.getName());
+            header.setValue(h.getValue());
+            header.setRequestId(requestId);
+            header.setTimeCreated(new Date());
+            headerMapper.insert(header);
+        });
+        String requestContent = flow.getRequestContent();
+        if (!StringUtils.isEmpty(requestContent)) {
+            Content reqContent = new Content();
+            reqContent.setContent(Hex.decode(requestContent));
+            reqContent.setId(UUID.randomUUID().toString());
+            reqContent.setTimeCreated(new Date());
+            contentMapper.insert(reqContent);
+        }
+        ResponseDTO response = flow.getResponse();
+        Response res = new Response();
+        BeanUtils.copyProperties(response, res);
+        String responseId = UUID.randomUUID().toString();
+        res.setId(responseId);
+        res.setRequestId(requestId);
+        responseMapper.insert(res);
+        int status = -1;
+        for (int i = 0; i < flow.getRequestHeaders().size(); i++) {
+            HeaderDTO h = flow.getRequestHeaders().get(i);
+            if ("status".equalsIgnoreCase(h.getName())) {
+                status = Integer.parseInt(h.getValue());
+            }
+            Header header = new Header();
+            header.setId(UUID.randomUUID().toString());
+            header.setName(h.getName());
+            header.setValue(h.getValue());
+            header.setResponseId(responseId);
+            header.setTimeCreated(new Date());
+            headerMapper.insert(header);
+        }
+        String responseContent = flow.getResponseContent();
+        if (!StringUtils.isEmpty(responseContent)) {
+            Content resContent = new Content();
+            resContent.setContent(Hex.decode(responseContent));
+            resContent.setId(UUID.randomUUID().toString());
+            resContent.setTimeCreated(new Date());
+            contentMapper.insert(resContent);
+        }
+        SimpleRequestDTO simpleRequest = new SimpleRequestDTO();
+        simpleRequest.setId(requestId);
+        simpleRequest.setStatus(status);
+        simpleRequest.setUrl(request.getUri());
+        return simpleRequest;
     }
 
     private FlowDTO from(Request request) {

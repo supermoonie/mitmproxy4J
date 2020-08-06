@@ -412,7 +412,26 @@ new Vue({
             }
         },
         uploadFlow(e) {
-            console.log(e);
+            let formData = new FormData();
+            formData.append("flow", e.target.files[0]);
+            const that = this;
+            that.loading = true;
+            axios({
+                method: 'post',
+                url: '/flow/read',
+                data: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then(function (response) {
+                console.log(response);
+                e.target.value = '';
+                that.loading = false;
+            }).catch(error => {
+                e.target.value = '';
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
         },
         doFilter(data, field) {
             const that = this;
@@ -679,7 +698,7 @@ new Vue({
             let raw = '';
             const that = this;
             if (!data.response) {
-                return;
+                return raw;
             }
             raw = '<p>' + data.response.httpVersion + ' ' + data.response.status + '</p>';
             for (let i = 0; i < data.responseHeaders.length; i++) {

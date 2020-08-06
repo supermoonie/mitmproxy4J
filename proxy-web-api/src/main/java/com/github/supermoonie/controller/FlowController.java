@@ -5,6 +5,7 @@ import com.github.supermoonie.dto.FlowNode;
 import com.github.supermoonie.dto.SimpleRequestDTO;
 import com.github.supermoonie.service.FlowService;
 import com.github.supermoonie.util.JSON;
+import com.github.supermoonie.ws.MessagingTemplate;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,9 @@ public class FlowController {
 
     @Resource
     private FlowService flowService;
+
+    @Resource
+    private MessagingTemplate messagingTemplate;
 
     @ApiOperation(value = "根据条件获取list", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiImplicitParams({
@@ -98,15 +103,17 @@ public class FlowController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "requestId", value = "requestId", paramType = "path"),
     })
-    @GetMapping(value = "/read")
+    @PostMapping(value = "/read")
     public ResponseEntity<SimpleRequestDTO> read(@RequestParam("flow") MultipartFile flow) {
-        String fileName = flow.getOriginalFilename();
         try {
             byte[] bytes = IOUtils.readFully(flow.getInputStream(), (int) flow.getSize());
             FlowDTO flowDTO = JSON.parse(new String(bytes, StandardCharsets.UTF_8), FlowDTO.class);
+            SimpleRequestDTO simpleRequest = flowService.save(flowDTO);
+            messagingTemplate.sendJson(simpleRequest);
+            return ResponseEntity.ok(simpleRequest);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        return ResponseEntity.of(null);
     }
 }
