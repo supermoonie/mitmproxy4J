@@ -64,6 +64,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
+        log.info("class: {}, msg: {}", msg.getClass().getName(), msg);
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
             // 第一次建立连接取host和端口号和处理代理握手

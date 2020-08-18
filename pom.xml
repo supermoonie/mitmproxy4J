@@ -11,6 +11,7 @@
     <modules>
         <module>proxy</module>
         <module>proxy-web-api</module>
+        <module>internal-proxy</module>
     </modules>
 
     <name>mitmproxy4J</name>

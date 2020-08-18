@@ -1,25 +1,33 @@
 package com.github.supermoonie.crt;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMWriter;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import sun.security.provider.X509Factory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -27,7 +35,9 @@ import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -212,20 +222,66 @@ public class CertUtil {
         return new JcaX509CertificateConverter().getCertificate(jv3Builder.build(signer));
     }
 
+    private static final Provider PROVIDER = new BouncyCastleProvider();
+
     /**
      * 生成CA服务器证书
      */
     public static X509Certificate genCaCert(String subject, Date caNotBefore, Date caNotAfter,
                                             KeyPair keyPair) throws Exception {
-        JcaX509v3CertificateBuilder jv3Builder = new JcaX509v3CertificateBuilder(new X500Name(subject),
-                BigInteger.valueOf(System.currentTimeMillis() + (long) (Math.random() * 10000) + 1000),
-                caNotBefore,
-                caNotAfter,
-                new X500Name(subject),
-                keyPair.getPublic());
-        jv3Builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(0));
-        ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
-                .build(keyPair.getPrivate());
-        return new JcaX509CertificateConverter().getCertificate(jv3Builder.build(signer));
+
+        // Prepare the information required for generating an X.509 certificate.
+        X500Name owner = new X500Name(subject);
+        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
+                owner, new BigInteger(64, new SecureRandom()), caNotBefore, caNotAfter, owner, keyPair.getPublic());
+
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
+        X509CertificateHolder certHolder = builder.build(signer);
+        X509Certificate cert = new JcaX509CertificateConverter().setProvider(PROVIDER).getCertificate(certHolder);
+        cert.verify(keyPair.getPublic());
+        return cert;
+//        JcaX509v3CertificateBuilder jv3Builder = new JcaX509v3CertificateBuilder(new X500Name(subject),
+//                BigInteger.valueOf(System.currentTimeMillis() + (long) (Math.random() * 10000) + 1000),
+//                caNotBefore,
+//                caNotAfter,
+//                new X500Name(subject),
+//                keyPair.getPublic());
+//        jv3Builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(0));
+//        ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+//                .build(keyPair.getPrivate());
+//        return new JcaX509CertificateConverter().getCertificate(jv3Builder.build(signer));
+    }
+
+    public static boolean savePemX509Certificate(X509Certificate cert, PrivateKey key, Writer writer) throws Exception
+    {
+        if(cert!=null && key!=null && writer!=null)
+        {
+            JcaPEMWriter pemWriter = new JcaPEMWriter(writer);
+            pemWriter.writeObject(cert);
+            pemWriter.flush();
+            pemWriter.writeObject(key);
+            pemWriter.flush();
+            pemWriter.close();
+            return true;
+        }
+        return false;
+    }
+
+    public static void main(String[] args) throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048, new SecureRandom());
+        KeyPair keypair = keyGen.generateKeyPair();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        X509Certificate certificate = CertUtil.genCaCert("CN=InternalProxy", new Date(System.currentTimeMillis() - 1000000), dateFormat.parse("2020-12-01 00:00:00"), keypair);
+        System.out.println(X509Factory.BEGIN_CERT);
+        System.out.println(Base64.getEncoder().encodeToString(certificate.getEncoded()));
+        System.out.println(X509Factory.END_CERT);
+        ByteBuf wrappedBuf = Unpooled.wrappedBuffer(certificate.getEncoded());
+        ByteBuf encodedBuf = io.netty.handler.codec.base64.Base64.encode(wrappedBuf, true);
+        String content = X509Factory.BEGIN_CERT + "\n" + encodedBuf.toString(CharsetUtil.US_ASCII) + "\n" + X509Factory.END_CERT + "\n";
+        try (OutputStream certOut = new FileOutputStream(new File("/Users/moonie/Desktop/test1.crt"))) {
+            certOut.write(content.getBytes(CharsetUtil.US_ASCII));
+        }
+//        IOUtils.write(content.getBytes(StandardCharsets.US_ASCII), new FileOutputStream(new File("/Users/moonie/Desktop/test.crt")));
     }
 }

@@ -23,24 +23,6 @@ import java.util.Map;
  */
 public class HttpClientUtils {
 
-    public static <T> void executeWithoutEntity(HttpClientBuilder clientBuilder, HttpMethod method, String url, Map<String, Object> query, List<BasicHeader> headers, ResponseHandler<T> responseHandler) throws IOException {
-        url = addQuery(url, query);
-        HttpUriRequest request;
-        if (method.equals("GET")) {
-            request = new HttpGet(url);
-        } else if (method.equals("HEAD")) {
-            request = new HttpHead(url);
-        } else {
-            throw new IllegalArgumentException("Method " + method + " not support!");
-        }
-        try (CloseableHttpClient httpClient = clientBuilder.build()) {
-            for (BasicHeader header : headers) {
-                request.addHeader(header);
-            }
-            httpClient.execute(request, responseHandler);
-        }
-    }
-
     public static <T> void get(HttpClientBuilder clientBuilder, String url, List<BasicHeader> headers, ResponseHandler<T> responseHandler) throws IOException {
         get(clientBuilder, url, null, headers, responseHandler);
     }

@@ -52,7 +52,7 @@ public class HttpProxyTest {
     @Before
     public void before() throws Exception {
         httpClient = createTrustAllHttpClientBuilder()
-                .setProxy(new HttpHost("127.0.0.1", 10801))
+                .setProxy(new HttpHost("127.0.0.1", 10800))
                 .build();
     }
 
@@ -167,7 +167,7 @@ public class HttpProxyTest {
     public void test_post_image() throws Exception {
         String url = "https://httpbin.org/post";
         HttpPost httpPost = new HttpPost(url);
-        byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/supermoonie/IdeaProjects/mitmproxy4J/proxy/src/test/resources/test.jpg"));
+        byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/moonie/java/mitmproxy4J/proxy/src/test/resources/test.jpg"));
         httpPost.setEntity(new ByteArrayEntity(bytes, ContentType.IMAGE_JPEG));
         try(CloseableHttpResponse response = httpClient.execute(httpPost)) {
             System.out.println(EntityUtils.toString(response.getEntity()));
@@ -194,9 +194,9 @@ public class HttpProxyTest {
     public void test_post_form_data() throws Exception {
 //        HttpPost httpPost = new HttpPost("http://127.0.0.1:8866/post");
         HttpPost httpPost = new HttpPost("https://httpbin.org/post?query=string");
-        InputStream in = HttpProxyTest.class.getClassLoader().getResourceAsStream("test.jpg");
-        assert in != null;
-        byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/supermoonie/IdeaProjects/mitmproxy4J/proxy/src/test/resources/test.jpg"));
+//        InputStream in = HttpProxyTest.class.getClassLoader().getResourceAsStream("test.jpg");
+//        assert in != null;
+        byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/moonie/java/mitmproxy4J/proxy/src/test/resources/test.jpg"));
         HttpEntity httpEntity = MultipartEntityBuilder.create()
                 .addTextBody("foo", "bar", ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8))
                 .addBinaryBody("test\"abc.png", bytes, ContentType.APPLICATION_OCTET_STREAM, "test.jpg")
