@@ -14,6 +14,7 @@ import com.github.supermoonie.util.ProtoUtil.RequestProto;
 import com.github.supermoonie.util.ResponseUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -118,6 +120,9 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
             // ssl和websocket的握手处理
             if (serverConfig.isHandleSsl()) {
                 ByteBuf byteBuf = (ByteBuf) msg;
+                byte[] copy = new byte[byteBuf.readableBytes()];
+                byteBuf.readBytes(copy);
+                log.info("copy: {}", Arrays.toString(copy));
                 int sslHandshakeFlag = 22;
                 // ssl握手
                 if (byteBuf.getByte(0) == sslHandshakeFlag) {
@@ -128,7 +133,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                     ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
                     ctx.pipeline().addFirst("sslHandle", sslCtx.newHandler(ctx.alloc()));
                     // 重新过一遍pipeline，拿到解密后的的http报文
-                    ctx.pipeline().fireChannelRead(msg);
+                    ctx.pipeline().fireChannelRead(copy);
                     return;
                 }
             }

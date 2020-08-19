@@ -3,12 +3,16 @@ package com.github.supermoonie.proxy;
 import com.github.supermoonie.ex.InternalProxyCloseException;
 import com.github.supermoonie.ex.InternalProxyStartException;
 import com.github.supermoonie.proxy.handler.InternalProxyHandler;
+import com.github.supermoonie.proxy.handler.InternalProxyHandlerInitializer;
+import com.github.supermoonie.proxy.intercept.InterceptPipeline;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpContentDecompressor;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -33,10 +37,6 @@ public class InternalProxy {
         this.port = port;
     }
 
-    public static void main(String[] args) {
-        new InternalProxy(1, 5, 10800).start();
-    }
-
     public InternalProxy start() {
         ServerBootstrap b = new ServerBootstrap();
         try {
@@ -47,8 +47,11 @@ public class InternalProxy {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             ch.pipeline().addLast("httpServerCodec", new HttpServerCodec());
-//                            ch.pipeline().addLast(new HttpObjectAggregator(512 * 1024));
-                            ch.pipeline().addLast(InternalProxyHandler.class.getSimpleName(), new InternalProxyHandler());
+                            ch.pipeline().addLast(new HttpContentDecompressor());
+                            ch.pipeline().addLast(new HttpObjectAggregator(512 * 1024));
+                            ch.pipeline().addLast(InternalProxyHandler.class.getSimpleName(), new InternalProxyHandler("self.crt", "self.key", pipeline -> {
+
+                            }));
                         }
                     }).bind(port).sync();
             return this;

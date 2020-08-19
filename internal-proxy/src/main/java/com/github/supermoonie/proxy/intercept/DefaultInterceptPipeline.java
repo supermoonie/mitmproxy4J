@@ -1,5 +1,8 @@
 package com.github.supermoonie.proxy.intercept;
 
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+
 /**
  * @author supermoonie
  * @since 2020/8/15
@@ -50,10 +53,10 @@ public class DefaultInterceptPipeline implements InterceptPipeline {
     }
 
     @Override
-    public boolean onRequest(InterceptContext ctx, Object msg) {
+    public boolean onRequest(InterceptContext ctx, FullHttpRequest request) {
         AbstractIntercept intercept = head;
         while (null != intercept) {
-            boolean flag = intercept.onRequest(ctx, msg);
+            boolean flag = intercept.onRequest(ctx, request);
             if (!flag) {
                 return false;
             }
@@ -63,19 +66,19 @@ public class DefaultInterceptPipeline implements InterceptPipeline {
     }
 
     @Override
-    public void onResponse(InterceptContext ctx, Object msg) {
+    public void onResponse(InterceptContext ctx, FullHttpResponse response) {
         AbstractIntercept intercept = head;
         while (null != intercept) {
-            intercept.onResponse(ctx, msg);
+            intercept.onResponse(ctx, response);
             intercept = head.next;
         }
     }
 
     @Override
-    public void onException(InterceptContext ctx, Throwable cause) throws Throwable {
+    public void onException(InterceptContext ctx, Exception ex) throws Exception {
         AbstractIntercept intercept = head;
         while (null != intercept) {
-            intercept.onException(ctx, cause);
+            intercept.onException(ctx, ex);
             intercept = head.next;
         }
     }

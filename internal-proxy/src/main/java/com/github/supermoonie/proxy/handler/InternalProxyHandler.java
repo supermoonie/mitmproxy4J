@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.handler;
 
 import com.github.supermoonie.constant.ConnectionState;
+import com.github.supermoonie.ex.BadRequestException;
 import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.intercept.DefaultInterceptPipeline;
 import com.github.supermoonie.proxy.intercept.InterceptContext;
@@ -15,15 +16,25 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLSession;
 import java.net.InetSocketAddress;
+import java.security.cert.Certificate;
+import java.util.Base64;
 
 /**
  * @author supermoonie
  * @date 2020-08-08
  */
 public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
+
+    private static Logger logger = LoggerFactory.getLogger(InternalProxyHandler.class);
 
     private static final int SSL_FLAG = 22;
 
@@ -32,6 +43,18 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     private final InterceptContext interceptContext = new InterceptContext(interceptPipeline);
 
     private ConnectionState state = ConnectionState.NOT_CONNECTION;
+
+    private final String caFileName;
+
+    private final String keyFileName;
+
+    public InternalProxyHandler(String caFileName, String keyFileName, InternalProxyHandlerInitializer initializer) {
+        this.caFileName = caFileName;
+        this.keyFileName = keyFileName;
+        if (null != initializer) {
+            initializer.initInterceptPipeline(interceptPipeline);
+        }
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -50,12 +73,14 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        System.out.println("class: " + msg.getClass().getName() + ", msg: " + msg);
+        logger.debug("class: {}, msg: {}", msg.getClass().getName(), msg);
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
             ConnectionInfo connectionInfo = RequestUtils.parseRemoteInfo(request, interceptContext.getConnectionInfo());
             if (null == connectionInfo) {
+                logger.warn("msg: {}, bad request", msg);
                 ctx.channel().close();
+                interceptPipeline.onException(interceptContext, new BadRequestException());
                 return;
             }
             if (state == ConnectionState.NOT_CONNECTION) {
@@ -64,9 +89,10 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 if (HttpMethod.CONNECT.equals(request.method())) {
                     HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                     ctx.writeAndFlush(response);
+                    // 暂时移除 httpServerCodec，处理 https 握手
                     ctx.channel().pipeline().remove("httpServerCodec");
                     ReferenceCountUtil.release(msg);
-                    state = ConnectionState.ALREADY_HANDSHAKE_WITH_CLIENT;
+                    state = ConnectionState.CONNECTED_WITH_CLIENT;
                     return;
                 }
             }
@@ -75,15 +101,13 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 request.setUri((connectionInfo.isHttps() ? "https://" : "http://") + connectionInfo.getHostHeader() + request.uri());
             }
             System.out.println("uri: " + request.uri());
-            interceptPipeline.onRequest(interceptContext, msg);
-            state = ConnectionState.CONNECTED;
-        } else if (msg instanceof HttpContent) {
-            if (state == ConnectionState.CONNECTED) {
-                interceptPipeline.onRequest(interceptContext, msg);
-            } else {
-                ReferenceCountUtil.release(msg);
-                state = ConnectionState.ALREADY_HANDSHAKE_WITH_CLIENT;
+            if (msg instanceof FullHttpRequest) {
+                SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
+                SSLSession session = sslHandler.engine().getSession();
+                logger.info("session: {}, {}", session.getProtocol(), session.getCipherSuite());
+                interceptPipeline.onRequest(interceptContext, (FullHttpRequest) msg);
             }
+            state = ConnectionState.CONNECTED_WITH_REMOTE;
         } else {
             ByteBuf byteBuf = (ByteBuf) msg;
             if (SSL_FLAG == byteBuf.getByte(0)) {
@@ -95,16 +119,15 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         .forServer(CertificateUtil.getServerPrivateKey(), CertificateUtil.getCert(
                                 port,
                                 host,
-                                CertificateUtil.loadCa("self.crt"),
-                                CertificateUtil.loadCaPrivateKey("self.key"))
+                                CertificateUtil.loadCa(caFileName),
+                                CertificateUtil.loadCaPrivateKey(keyFileName))
                         ).build();
-                ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
-                ctx.pipeline().addFirst("sslHandle", sslCtx.newHandler(ctx.alloc()));
+                ctx.pipeline().addFirst("httpServerCodec", new HttpServerCodec());
+                SslHandler sslHandler = sslCtx.newHandler(ctx.alloc());
+                ctx.pipeline().addFirst("sslHandler", sslHandler);
                 // 重新过一遍pipeline，拿到解密后的的http报文
                 ctx.pipeline().fireChannelRead(msg);
-                return;
             }
-            interceptPipeline.onRequest(interceptContext, msg);
         }
     }
 

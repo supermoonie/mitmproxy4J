@@ -1,5 +1,8 @@
 package com.github.supermoonie.proxy.intercept;
 
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+
 /**
  * @author supermoonie
  * @since 2020/8/11
@@ -16,26 +19,26 @@ public interface Intercept {
     /**
      * on request
      *
-     * @param ctx {@link InterceptContext}
-     * @param msg request msg
+     * @param ctx     {@link InterceptContext}
+     * @param request request msg
      * @return true continue, false break
      */
-    boolean onRequest(InterceptContext ctx, Object msg);
+    boolean onRequest(InterceptContext ctx, FullHttpRequest request);
 
     /**
      * on response
      *
-     * @param ctx {@link InterceptContext}
-     * @param msg response msg
+     * @param ctx      {@link InterceptContext}
+     * @param response response msg
      */
-    void onResponse(InterceptContext ctx, Object msg);
+    void onResponse(InterceptContext ctx, FullHttpResponse response);
 
     /**
      * on exception
      *
-     * @param ctx   {@link InterceptContext}
-     * @param cause {@link Throwable}
-     * @throws Throwable t
+     * @param ctx {@link InterceptContext}
+     * @param ex  {@link Exception}
+     * @throws Exception t
      */
-    void onException(InterceptContext ctx, Throwable cause) throws Throwable;
+    void onException(InterceptContext ctx, Exception ex) throws Exception;
 }

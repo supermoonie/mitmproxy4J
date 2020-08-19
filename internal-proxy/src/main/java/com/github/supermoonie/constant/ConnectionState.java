@@ -15,13 +15,13 @@ public enum ConnectionState {
      */
     CONNECTING(1),
     /**
-     * already handshake with client
+     * already connect with client
      */
-    ALREADY_HANDSHAKE_WITH_CLIENT(2),
+    CONNECTED_WITH_CLIENT(2),
     /**
-     * connected
+     * already connect with remote
      */
-    CONNECTED(3)
+    CONNECTED_WITH_REMOTE(3)
     ;
 
     private final int code;
