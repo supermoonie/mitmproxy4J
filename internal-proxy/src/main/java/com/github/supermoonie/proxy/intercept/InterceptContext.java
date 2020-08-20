@@ -1,6 +1,8 @@
 package com.github.supermoonie.proxy.intercept;
 
 import com.github.supermoonie.proxy.ConnectionInfo;
+import com.github.supermoonie.proxy.intercept.req.RequestInterceptPipeline;
+import com.github.supermoonie.proxy.intercept.res.ResponseInterceptPipeline;
 import io.netty.channel.Channel;
 
 /**
@@ -9,20 +11,27 @@ import io.netty.channel.Channel;
  */
 public class InterceptContext {
 
-    public InterceptContext(InterceptPipeline pipeline) {
-        this.pipeline = pipeline;
-    }
-
     private Channel clientChannel;
 
     private Channel remoteChannel;
 
     private ConnectionInfo connectionInfo;
 
-    private InterceptPipeline pipeline;
+    private final RequestInterceptPipeline requestInterceptPipeline;
 
-    public InterceptPipeline getPipeline() {
-        return pipeline;
+    private final ResponseInterceptPipeline responseInterceptPipeline;
+
+    public InterceptContext(RequestInterceptPipeline requestInterceptPipeline, ResponseInterceptPipeline responseInterceptPipeline) {
+        this.requestInterceptPipeline = requestInterceptPipeline;
+        this.responseInterceptPipeline = responseInterceptPipeline;
+    }
+
+    public RequestInterceptPipeline getRequestInterceptPipeline() {
+        return requestInterceptPipeline;
+    }
+
+    public ResponseInterceptPipeline getResponseInterceptPipeline() {
+        return responseInterceptPipeline;
     }
 
     public Channel getClientChannel() {

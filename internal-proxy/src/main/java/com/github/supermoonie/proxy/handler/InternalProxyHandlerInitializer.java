@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.handler;
 
-import com.github.supermoonie.proxy.intercept.InterceptPipeline;
+import com.github.supermoonie.proxy.intercept.req.RequestInterceptPipeline;
+import com.github.supermoonie.proxy.intercept.res.ResponseInterceptPipeline;
 
 /**
  * @author supermoonie
@@ -11,7 +12,9 @@ public interface InternalProxyHandlerInitializer {
     /**
      * initial intercept pipeline
      *
-     * @param pipeline  {@link InterceptPipeline}
+     * @param requestInterceptPipeline  {@link RequestInterceptPipeline}
+     * @param responseInterceptPipeline {@link ResponseInterceptPipeline}
      */
-    void initInterceptPipeline(InterceptPipeline pipeline);
+    void initInterceptPipeline(RequestInterceptPipeline requestInterceptPipeline,
+                               ResponseInterceptPipeline responseInterceptPipeline);
 }

@@ -3,10 +3,10 @@ package com.github.supermoonie.proxy.handler;
 import com.github.supermoonie.constant.ConnectionState;
 import com.github.supermoonie.ex.BadRequestException;
 import com.github.supermoonie.proxy.ConnectionInfo;
-import com.github.supermoonie.proxy.intercept.DefaultInterceptPipeline;
 import com.github.supermoonie.proxy.intercept.InterceptContext;
-import com.github.supermoonie.proxy.intercept.InterceptPipeline;
-import com.github.supermoonie.proxy.intercept.RealProxyIntercept;
+import com.github.supermoonie.proxy.intercept.req.LastRequestIntercept;
+import com.github.supermoonie.proxy.intercept.req.RequestInterceptPipeline;
+import com.github.supermoonie.proxy.intercept.res.ResponseInterceptPipeline;
 import com.github.supermoonie.util.CertificateUtil;
 import com.github.supermoonie.util.RequestUtils;
 import io.netty.buffer.ByteBuf;
@@ -18,15 +18,11 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSession;
 import java.net.InetSocketAddress;
-import java.security.cert.Certificate;
-import java.util.Base64;
 
 /**
  * @author supermoonie
@@ -34,13 +30,15 @@ import java.util.Base64;
  */
 public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
-    private static Logger logger = LoggerFactory.getLogger(InternalProxyHandler.class);
+    private final static Logger logger = LoggerFactory.getLogger(InternalProxyHandler.class);
 
     private static final int SSL_FLAG = 22;
 
-    private final InterceptPipeline interceptPipeline = new DefaultInterceptPipeline();
+    private final RequestInterceptPipeline requestInterceptPipeline = new RequestInterceptPipeline();
 
-    private final InterceptContext interceptContext = new InterceptContext(interceptPipeline);
+    private final ResponseInterceptPipeline responseInterceptPipeline = new ResponseInterceptPipeline();
+
+    private final InterceptContext interceptContext = new InterceptContext(requestInterceptPipeline, responseInterceptPipeline);
 
     private ConnectionState state = ConnectionState.NOT_CONNECTION;
 
@@ -52,7 +50,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         this.caFileName = caFileName;
         this.keyFileName = keyFileName;
         if (null != initializer) {
-            initializer.initInterceptPipeline(interceptPipeline);
+            initializer.initInterceptPipeline(requestInterceptPipeline, responseInterceptPipeline);
         }
     }
 
@@ -67,8 +65,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         connectionInfo.setClientPort(clientPort);
         interceptContext.setConnectionInfo(connectionInfo);
         interceptContext.setClientChannel(clientChannel);
-        interceptPipeline.addFirst(new RealProxyIntercept());
-        interceptPipeline.onActive(interceptContext);
+        requestInterceptPipeline.addFirst(new LastRequestIntercept(responseInterceptPipeline));
     }
 
     @Override
@@ -78,9 +75,9 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             HttpRequest request = (HttpRequest) msg;
             ConnectionInfo connectionInfo = RequestUtils.parseRemoteInfo(request, interceptContext.getConnectionInfo());
             if (null == connectionInfo) {
-                logger.warn("msg: {}, bad request", msg);
+                logger.warn("bad request, msg: {}", msg);
                 ctx.channel().close();
-                interceptPipeline.onException(interceptContext, new BadRequestException());
+                requestInterceptPipeline.onException(interceptContext, null, new BadRequestException(msg.toString()));
                 return;
             }
             if (state == ConnectionState.NOT_CONNECTION) {
@@ -105,7 +102,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                 SSLSession session = sslHandler.engine().getSession();
                 logger.info("session: {}, {}", session.getProtocol(), session.getCipherSuite());
-                interceptPipeline.onRequest(interceptContext, (FullHttpRequest) msg);
+                requestInterceptPipeline.onRequest(interceptContext, (FullHttpRequest) msg);
             }
             state = ConnectionState.CONNECTED_WITH_REMOTE;
         } else {
@@ -125,7 +122,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 ctx.pipeline().addFirst("httpServerCodec", new HttpServerCodec());
                 SslHandler sslHandler = sslCtx.newHandler(ctx.alloc());
                 ctx.pipeline().addFirst("sslHandler", sslHandler);
-                // 重新过一遍pipeline，拿到解密后的的http报文
                 ctx.pipeline().fireChannelRead(msg);
             }
         }
@@ -133,11 +129,12 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        logger.info(ctx.channel().remoteAddress().toString() + " inactive");
         super.channelInactive(ctx);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+        logger.error(cause.getMessage(), cause);
     }
 }

@@ -1,24 +1,25 @@
 package com.github.supermoonie.proxy.intercept;
 
+import com.github.supermoonie.proxy.intercept.req.RequestIntercept;
+import com.github.supermoonie.proxy.intercept.res.ResponseIntercept;
+
 /**
  * @author supermoonie
  * @since 2020/8/15
  */
-public interface InterceptPipeline extends Intercept {
+public interface InterceptPipeline<T> {
 
     /**
      * add first
      *
-     * @param intercept {@link AbstractIntercept}
-     * @return  {@link InterceptPipeline}
+     * @param t {@link RequestIntercept} or {@link ResponseIntercept}
      */
-    InterceptPipeline addFirst(AbstractIntercept intercept);
+    void addFirst(T t);
 
     /**
      * add last
      *
-     * @param intercept {@link AbstractIntercept}
-     * @return  {@link InterceptPipeline}
+     * @param t {@link RequestIntercept} or {@link ResponseIntercept}
      */
-    InterceptPipeline addLast(AbstractIntercept intercept);
+    void addLast(T t);
 }

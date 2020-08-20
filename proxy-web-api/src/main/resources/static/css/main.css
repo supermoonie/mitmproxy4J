@@ -343,8 +343,15 @@ html, body, #main {
     width: 100%;
 }
 
+.p-list li {
+    height: 28px;
+    line-height: 28px;
+}
+
 .p-list a {
-    width: 100%;
+    min-width: 284px;
+    max-width: 2840px;
+    /*width: 100%;*/
 }
 
 .p-list a:hover {

@@ -1,6 +1,9 @@
-package com.github.supermoonie.proxy.intercept;
+package com.github.supermoonie.proxy.intercept.req;
 
 import com.github.supermoonie.proxy.ConnectionInfo;
+import com.github.supermoonie.proxy.intercept.InterceptContext;
+import com.github.supermoonie.proxy.intercept.res.LastResponseIntercept;
+import com.github.supermoonie.proxy.intercept.res.ResponseInterceptPipeline;
 import com.github.supermoonie.util.CertificateUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -8,6 +11,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -16,11 +21,24 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @author supermoonie
  * @since 2020/8/11
  */
-public class RealProxyIntercept extends AbstractIntercept {
+public class LastRequestIntercept extends AbstractRequestIntercept {
+
+    private static final Logger logger = LoggerFactory.getLogger(LastRequestIntercept.class);
 
     private final Queue<Object> requestQueue = new LinkedBlockingDeque<>();
 
     private boolean connectionFlag = false;
+
+    private final ResponseInterceptPipeline responseInterceptPipeline;
+
+    public LastRequestIntercept() {
+        this(new ResponseInterceptPipeline());
+    }
+
+    public LastRequestIntercept(ResponseInterceptPipeline responseInterceptPipeline) {
+        this.responseInterceptPipeline = responseInterceptPipeline;
+        this.responseInterceptPipeline.addLast(new LastResponseIntercept());
+    }
 
     @Override
     public boolean onRequest(InterceptContext context, FullHttpRequest request) {
@@ -49,7 +67,7 @@ public class RealProxyIntercept extends AbstractIntercept {
                                     if (response instanceof FullHttpResponse) {
                                         FullHttpResponse res = (FullHttpResponse) response;
                                         System.out.println("uri: " + request.uri() + ", response content: " + res.content().toString(CharsetUtil.UTF_8));
-                                        onResponse(context, res);
+                                        responseInterceptPipeline.onResponse(context, res);
                                     }
                                     if (!context.getClientChannel().isOpen()) {
                                         ReferenceCountUtil.release(response);
@@ -91,7 +109,7 @@ public class RealProxyIntercept extends AbstractIntercept {
     }
 
     @Override
-    public void onResponse(InterceptContext ctx, FullHttpResponse response) {
-        ctx.getClientChannel().writeAndFlush(response);
+    public boolean onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception {
+        return true;
     }
 }
