@@ -2,6 +2,7 @@ package com.github.supermoonie.proxy.intercept.req;
 
 import com.github.supermoonie.proxy.intercept.InterceptContext;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 
 /**
  * @author supermoonie
@@ -16,7 +17,7 @@ public interface RequestIntercept {
      * @param request request msg
      * @return true continue, false break
      */
-    boolean onRequest(InterceptContext ctx, FullHttpRequest request);
+    FullHttpResponse onRequest(InterceptContext ctx, FullHttpRequest request);
 
     /**
      * on exception
@@ -27,5 +28,5 @@ public interface RequestIntercept {
      * @return true continue, false stop
      * @throws Exception t
      */
-    boolean onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception;
+    FullHttpResponse onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception;
 }

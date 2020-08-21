@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.intercept.InterceptContext;
 import com.github.supermoonie.proxy.intercept.res.LastResponseIntercept;
 import com.github.supermoonie.proxy.intercept.res.ResponseInterceptPipeline;
 import com.github.supermoonie.util.CertificateUtil;
+import com.github.supermoonie.util.ResponseUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -41,7 +42,7 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
     }
 
     @Override
-    public boolean onRequest(InterceptContext context, FullHttpRequest request) {
+    public FullHttpResponse onRequest(InterceptContext context, FullHttpRequest request) {
         logger.debug("onRequest: " + request);
         if (null == context.getRemoteChannel()) {
             Bootstrap b = new Bootstrap();
@@ -98,11 +99,11 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
                 requestQueue.add(request);
             }
         }
-        return true;
+        return null;
     }
 
     @Override
-    public boolean onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception {
-        return true;
+    public FullHttpResponse onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception {
+        return ResponseUtils.htmlResponse(ex.getMessage(), HttpResponseStatus.OK);
     }
 }

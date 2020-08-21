@@ -65,7 +65,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         connectionInfo.setClientPort(clientPort);
         interceptContext.setConnectionInfo(connectionInfo);
         interceptContext.setClientChannel(clientChannel);
-        requestInterceptPipeline.addFirst(new LastRequestIntercept(responseInterceptPipeline));
+        requestInterceptPipeline.addLast(new LastRequestIntercept(responseInterceptPipeline));
     }
 
     @Override

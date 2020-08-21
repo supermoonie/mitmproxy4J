@@ -6,7 +6,10 @@ import com.github.supermoonie.proxy.intercept.InterceptContext;
 import com.github.supermoonie.proxy.intercept.req.AbstractRequestIntercept;
 import com.github.supermoonie.proxy.intercept.req.RequestInterceptPipeline;
 import com.github.supermoonie.proxy.intercept.res.ResponseInterceptPipeline;
+import com.github.supermoonie.util.ResponseUtils;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 /**
  * @author supermoonie
@@ -20,14 +23,9 @@ public class Demo {
             public void initInterceptPipeline(RequestInterceptPipeline requestInterceptPipeline, ResponseInterceptPipeline responseInterceptPipeline) {
                 requestInterceptPipeline.addFirst(new AbstractRequestIntercept() {
                     @Override
-                    public boolean onRequest(InterceptContext ctx, FullHttpRequest request) {
-                        request.headers().add("foo", "bar");
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception {
-                        return false;
+                    public FullHttpResponse onRequest(InterceptContext ctx, FullHttpRequest request) {
+//                        request.headers().add("foo", "bar");
+                        return ResponseUtils.htmlResponse("Intercept by mitmproxy4J", HttpResponseStatus.OK);
                     }
                 });
             }

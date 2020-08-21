@@ -2,7 +2,10 @@ package com.github.supermoonie.proxy.intercept.req;
 
 import com.github.supermoonie.proxy.intercept.AbstractInterceptPipeline;
 import com.github.supermoonie.proxy.intercept.InterceptContext;
+import com.github.supermoonie.util.ResponseUtils;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 
 /**
  * @author supermoonie
@@ -47,26 +50,30 @@ public class RequestInterceptPipeline extends AbstractInterceptPipeline<Abstract
     }
 
     @Override
-    public boolean onRequest(InterceptContext ctx, FullHttpRequest request) {
+    public FullHttpResponse onRequest(InterceptContext ctx, FullHttpRequest request) {
         AbstractRequestIntercept current = head;
         while (null != current) {
-            if (!current.onRequest(ctx, request)) {
-                return false;
+            FullHttpResponse response = current.onRequest(ctx, request);
+            if (null != response) {
+                ctx.getClientChannel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                return null;
             }
             current = current.next;
         }
-        return true;
+        return null;
     }
 
     @Override
-    public boolean onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception {
+    public FullHttpResponse onException(InterceptContext ctx, FullHttpRequest request, Exception ex) throws Exception {
         AbstractRequestIntercept current = head;
         while (null != current) {
-            if (!current.onException(ctx, request, ex)) {
-                return false;
+            FullHttpResponse response = current.onException(ctx, request, ex);
+            if (null != response) {
+                ctx.getClientChannel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                return null;
             }
             current = current.next;
         }
-        return true;
+        return null;
     }
 }

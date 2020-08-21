@@ -6,8 +6,8 @@ package com.github.supermoonie.proxy.intercept;
  */
 public abstract class AbstractInterceptPipeline<T> implements InterceptPipeline<T> {
 
-    protected T head;
+    protected T head = null;
 
-    protected T tail;
+    protected T tail = null;
 
 }
