@@ -10,7 +10,6 @@ public class InternalProxyTest {
 
     @Test
     public void start() throws InterruptedException {
-        new InternalProxy(1, 5, 10800).start();
-        Thread.sleep(Integer.MAX_VALUE);
+
     }
 }

@@ -97,7 +97,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (request.uri().startsWith(separator)) {
                 request.setUri((connectionInfo.isHttps() ? "https://" : "http://") + connectionInfo.getHostHeader() + request.uri());
             }
-            System.out.println("uri: " + request.uri());
             if (msg instanceof FullHttpRequest) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                 SSLSession session = sslHandler.engine().getSession();

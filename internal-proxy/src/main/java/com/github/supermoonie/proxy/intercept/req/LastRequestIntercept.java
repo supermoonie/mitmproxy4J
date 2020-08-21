@@ -42,7 +42,7 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
 
     @Override
     public boolean onRequest(InterceptContext context, FullHttpRequest request) {
-        System.out.println("onRequest class: " + request.getClass().getName() + ", msg: " + request);
+        logger.debug("onRequest: " + request);
         if (null == context.getRemoteChannel()) {
             Bootstrap b = new Bootstrap();
             b.group(context.getClientChannel().eventLoop())
@@ -51,7 +51,6 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             ConnectionInfo connectionInfo = context.getConnectionInfo();
-                            System.out.println("remoteHost: " + connectionInfo.getRemoteHost() + ", remotePort: " + connectionInfo.getRemotePort());
                             ch.pipeline().addLast(CertificateUtil.getClientSslContext().newHandler(
                                     ch.alloc(),
                                     connectionInfo.getRemoteHost(),
@@ -63,10 +62,8 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
                             ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                                 @Override
                                 public void channelRead(ChannelHandlerContext ctx, Object response) throws Exception {
-                                    System.out.println("response class: " + response.getClass().getName() + ", msg: " + response);
                                     if (response instanceof FullHttpResponse) {
                                         FullHttpResponse res = (FullHttpResponse) response;
-                                        System.out.println("uri: " + request.uri() + ", response content: " + res.content().toString(CharsetUtil.UTF_8));
                                         responseInterceptPipeline.onResponse(context, res);
                                     }
                                     if (!context.getClientChannel().isOpen()) {
@@ -83,11 +80,9 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
             context.setRemoteChannel(remoteChannel);
             f.addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
-                    System.out.println("send class: " + request.getClass().getName() + ", msg: " + request);
                     future.channel().writeAndFlush(request);
                     Object obj = requestQueue.poll();
                     while (null != obj) {
-                        System.out.println("send from requestQueue obj: " + obj.getClass().getName() + ", obj: " + obj);
                         future.channel().writeAndFlush(obj);
                         obj = requestQueue.poll();
                     }
@@ -98,10 +93,8 @@ public class LastRequestIntercept extends AbstractRequestIntercept {
             });
         } else {
             if (connectionFlag) {
-                System.out.println("send from requestQueue... class: " + request.getClass().getName() + ", msg: " + request);
                 context.getRemoteChannel().writeAndFlush(request);
             } else {
-                System.out.println("add to requestQueue... class: " + request.getClass().getName() + ", msg: " + request);
                 requestQueue.add(request);
             }
         }
