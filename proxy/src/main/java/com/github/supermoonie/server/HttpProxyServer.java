@@ -1,6 +1,5 @@
 package com.github.supermoonie.server;
 
-import com.github.supermoonie.crt.CertPool;
 import com.github.supermoonie.crt.CertUtil;
 import com.github.supermoonie.exception.HttpProxyExceptionHandle;
 import com.github.supermoonie.handler.HttpProxyServerHandle;
@@ -14,7 +13,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -59,8 +57,8 @@ public class HttpProxyServer {
                 X509Certificate caCert;
                 PrivateKey caPriKey;
                 if (caCertFactory == null) {
-                    caCert = CertUtil.loadCert(classLoader.getResourceAsStream("ca.crt"));
-                    caPriKey = CertUtil.loadPriKey(classLoader.getResourceAsStream("ca_private.pem"));
+                    caCert = CertUtil.loadCert(classLoader.getResourceAsStream("private.crt"));
+                    caPriKey = CertUtil.loadPriKey(classLoader.getResourceAsStream("private.der"));
                 } else {
                     caCert = caCertFactory.getCACert();
                     caPriKey = caCertFactory.getCAPriKey();

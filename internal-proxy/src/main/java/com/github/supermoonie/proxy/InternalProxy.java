@@ -49,9 +49,9 @@ public class InternalProxy {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             ch.pipeline().addLast("httpServerCodec", new HttpServerCodec());
-                            ch.pipeline().addLast(new HttpContentDecompressor());
-                            ch.pipeline().addLast(new HttpObjectAggregator(512 * 1024));
-                            ch.pipeline().addLast(InternalProxyHandler.class.getSimpleName(), new InternalProxyHandler("self.crt", "self.key", initializer));
+//                            ch.pipeline().addLast(new HttpContentDecompressor());
+//                            ch.pipeline().addLast(new HttpObjectAggregator(512 * 1024));
+                            ch.pipeline().addLast(InternalProxyHandler.class.getSimpleName(), new InternalProxyHandler("ca.crt", "ca_private.pem", initializer));
                         }
                     }).bind(port).sync();
             return this;

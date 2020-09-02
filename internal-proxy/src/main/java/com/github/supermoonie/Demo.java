@@ -1,4 +1,4 @@
-package com.github.supermoonie.samples;
+package com.github.supermoonie;
 
 import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.handler.InternalProxyHandlerInitializer;

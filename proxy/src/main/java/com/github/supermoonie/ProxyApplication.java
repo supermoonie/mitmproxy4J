@@ -20,7 +20,7 @@ import io.netty.handler.codec.http.HttpResponse;
 public class ProxyApplication
 {
     public static void main(String[] args) {
-        int port = 10801;
+        int port = 10800;
         HttpProxyServerConfig serverConfig = new HttpProxyServerConfig();
         serverConfig.setHandleSsl(true);
         new HttpProxyServer()
@@ -46,7 +46,7 @@ public class ProxyApplication
 
                         @Override
                         public void handelRequest(FullHttpRequest httpRequest, HttpProxyInterceptPipeline pipeline) {
-
+                            System.out.println(httpRequest.uri());
                         }
                     });
                     pipeline.addLast(new BaseFullResIntercept() {

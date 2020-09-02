@@ -120,9 +120,9 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
             // ssl和websocket的握手处理
             if (serverConfig.isHandleSsl()) {
                 ByteBuf byteBuf = (ByteBuf) msg;
-                byte[] copy = new byte[byteBuf.readableBytes()];
-                byteBuf.readBytes(copy);
-                log.info("copy: {}", Arrays.toString(copy));
+//                byte[] copy = new byte[byteBuf.readableBytes()];
+//                byteBuf.readBytes(copy);
+//                log.info("copy: {}", Arrays.toString(copy));
                 int sslHandshakeFlag = 22;
                 // ssl握手
                 if (byteBuf.getByte(0) == sslHandshakeFlag) {
@@ -133,7 +133,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                     ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
                     ctx.pipeline().addFirst("sslHandle", sslCtx.newHandler(ctx.alloc()));
                     // 重新过一遍pipeline，拿到解密后的的http报文
-                    ctx.pipeline().fireChannelRead(copy);
+                    ctx.pipeline().fireChannelRead(msg);
                     return;
                 }
             }

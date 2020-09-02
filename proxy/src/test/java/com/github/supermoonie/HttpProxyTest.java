@@ -52,7 +52,7 @@ public class HttpProxyTest {
     @Before
     public void before() throws Exception {
         httpClient = createTrustAllHttpClientBuilder()
-                .setProxy(new HttpHost("127.0.0.1", 10800))
+                .setProxy(new HttpHost("127.0.0.1", 10801))
                 .build();
     }
 

@@ -3,6 +3,7 @@ package com.github.supermoonie.util;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Extension;
@@ -15,11 +16,13 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
@@ -38,7 +41,9 @@ public class CertificateUtil {
 
     private static final Map<Integer, Map<String, X509Certificate>> CERT_CACHE = new WeakHashMap<>();
 
-    private static KeyPair serverKeyPair;
+    private static PrivateKey serverPrivateKey;
+
+    private static PublicKey serverPublicKey;
 
     private static X509Certificate ca;
 
@@ -51,8 +56,11 @@ public class CertificateUtil {
         try {
             KeyPairGenerator serverKeyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
             serverKeyPairGenerator.initialize(2048, new SecureRandom());
-            serverKeyPair = serverKeyPairGenerator.generateKeyPair();
-            clientSslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE)
+            KeyPair serverKeyPair = serverKeyPairGenerator.generateKeyPair();
+            serverPrivateKey = serverKeyPair.getPrivate();
+            serverPublicKey = serverKeyPair.getPublic();
+            clientSslContext = SslContextBuilder.forClient()
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
                     .build();
         } catch (Exception e) {
             e.printStackTrace();
@@ -67,7 +75,11 @@ public class CertificateUtil {
     }
 
     public static PrivateKey getServerPrivateKey() {
-        return serverKeyPair.getPrivate();
+        return serverPrivateKey;
+    }
+
+    public static PublicKey getServerPublicKey() {
+        return serverPublicKey;
     }
 
     public static X509Certificate loadCa(String fileName) throws CertificateException {
@@ -83,15 +95,30 @@ public class CertificateUtil {
         if (null != caPrivateKey) {
             return caPrivateKey;
         }
-        String content = String.join("", IOUtils.readLines(Objects.requireNonNull(CertificateUtil.class.getClassLoader().getResourceAsStream(fileName)), "UTF-8"));
-        content = content.replace(BEGIN_PRIVATE_KEY, "")
-                .replace(END_PRIVATE_KEY, "")
-                .replaceAll("\\s", "");
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(content));
+        InputStream resourceAsStream = CertificateUtil.class.getClassLoader().getResourceAsStream(fileName);
+        byte[] bytes = IOUtils.readFully(resourceAsStream, resourceAsStream.available());
+        EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(bytes);
+//        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(content));
         KeyFactory kf = KeyFactory.getInstance("RSA");
-        caPrivateKey = kf.generatePrivate(spec);
+        caPrivateKey = kf.generatePrivate(privateKeySpec);
         return caPrivateKey;
     }
+
+//    public static PrivateKey loadCaPrivateKey(String fileName) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+//        if (null != caPrivateKey) {
+//            return caPrivateKey;
+//        }
+//        String content = String.join("", IOUtils.readLines(Objects.requireNonNull(CertificateUtil.class.getClassLoader().getResourceAsStream(fileName)), "UTF-8"));
+//        System.out.println(content);
+//        content = content.replace("-----BEGIN PRIVATE KEY-----", "")
+//                .replace("-----END PRIVATE KEY-----", "")
+//                .replaceAll("\\s", "");
+//        System.out.println(content);
+//        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(content));
+//        KeyFactory kf = KeyFactory.getInstance("RSA");
+//        caPrivateKey = kf.generatePrivate(spec);
+//        return caPrivateKey;
+//    }
 
     public static X509Certificate getCert(Integer port, String host, X509Certificate ca, PrivateKey privateKey)
             throws Exception {
@@ -103,7 +130,7 @@ public class CertificateUtil {
                 return portCertCache.get(key);
             } else {
                 cert = genCert(ca.getIssuerDN().toString(), privateKey,
-                        ca.getNotBefore(), ca.getNotAfter(), serverKeyPair.getPublic(), key);
+                        ca.getNotBefore(), ca.getNotAfter(), serverPublicKey, key);
                 portCertCache.put(key, cert);
             }
         }
