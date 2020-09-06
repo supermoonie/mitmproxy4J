@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy;
 
+import com.github.supermoonie.ex.BadRequestException;
 import com.github.supermoonie.util.RequestUtils;
 import com.github.supermoonie.util.ResponseUtils;
 import io.netty.bootstrap.Bootstrap;
@@ -11,6 +12,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.FutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +67,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (status.equals(ConnectionStatus.NOT_CONNECTION)) {
                 ConnectionInfo info = RequestUtils.parseRemoteInfo(request, this.connectionInfo);
                 if (null == info) {
-                    logger.warn("bad request, msg: {}", msg);
-                    ctx.channel().close();
-                    return;
+                    throw new BadRequestException("Bad Request");
                 }
                 status = ConnectionStatus.CONNECTING;
                 this.connectionInfo.setHostHeader(request.headers().get(HttpHeaderNames.HOST));
@@ -138,6 +138,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         FullHttpResponse response = interceptContext.onRequestException(cause);
         if (null == response) {
             ResponseUtils.sendError(ctx.channel(), cause.getMessage());
+        } else {
+            ctx.channel().writeAndFlush(response).addListener((ChannelFutureListener) f -> ctx.channel().close());
         }
     }
 
@@ -188,9 +190,14 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                         @Override
                         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                            if (remoteChannelFuture.channel().isOpen()) {
+                                remoteChannelFuture.channel().close();
+                            }
                             FullHttpResponse response = interceptContext.onResponseException(cause);
                             if (null == response) {
                                 ResponseUtils.sendError(clientChannel, cause.getMessage());
+                            } else {
+                                clientChannel.writeAndFlush(response).addListener((ChannelFutureListener) f -> clientChannel.close());
                             }
                         }
                     });
@@ -209,8 +216,15 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     }
                     status = ConnectionStatus.CONNECTED_WITH_REMOTE;
                 } else {
-                    logger.error(future.cause().getMessage(), future.cause());
-                    clientChannel.close();
+                    if (remoteChannelFuture.channel().isOpen()) {
+                        remoteChannelFuture.channel().close();
+                    }
+                    FullHttpResponse response = interceptContext.onResponseException(future.cause());
+                    if (null == response) {
+                        ResponseUtils.sendError(clientChannel, future.cause().getMessage());
+                    } else {
+                        clientChannel.writeAndFlush(response).addListener((ChannelFutureListener) f -> clientChannel.close());
+                    }
                 }
             });
         } else {
