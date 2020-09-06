@@ -1,5 +1,6 @@
 package com.github.supermoonie.util;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -60,7 +61,7 @@ public class ResponseUtils {
         HttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
         // Close the connection as soon as the error message is sent.
         channel.writeAndFlush(response)
-                .addListener((ChannelFutureListener) future -> channel.close())
+                .addListener(ChannelFutureListener.CLOSE)
         ;
     }
 
@@ -72,9 +73,11 @@ public class ResponseUtils {
         buf.append("</title></head><body>\r\n");
         buf.append(body);
         buf.append("\r\n</body></html>\r\n");
+        ByteBuf content = Unpooled.copiedBuffer(buf, CharsetUtil.UTF_8);
         FullHttpResponse response =
-                new DefaultFullHttpResponse(HTTP_1_1, status, Unpooled.copiedBuffer(buf, CharsetUtil.UTF_8));
+                new DefaultFullHttpResponse(HTTP_1_1, status, content);
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html;charset=UTF-8");
+        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
         return response;
     }
 }

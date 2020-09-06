@@ -56,7 +56,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         if (null != auth) {
             String authorization = request.headers().get(HttpHeaderNames.PROXY_AUTHORIZATION);
             if (null == authorization || !authorization.equals(auth)) {
-                throw new AuthorizationFailedException("Authorization Failed");
+                throw new AuthorizationFailedException("Authorization Failed!");
             }
         }
     }
@@ -83,9 +83,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (status.equals(ConnectionStatus.NOT_CONNECTION)) {
                 ConnectionInfo info = RequestUtils.parseRemoteInfo(request, this.connectionInfo);
                 if (null == info) {
-                    throw new BadRequestException("Bad Request");
+                    throw new BadRequestException("Bad Request!");
                 }
-                verifyAuth(request);
                 status = ConnectionStatus.CONNECTING;
                 this.connectionInfo.setHostHeader(request.headers().get(HttpHeaderNames.HOST));
                 if (HttpMethod.CONNECT.equals(request.method())) {
@@ -100,6 +99,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     return;
                 }
             }
+            verifyAuth(request);
             String separator = "/";
             if (request.uri().startsWith(separator)) {
                 request.setUri((connectionInfo.isHttps() ? "https://" : "http://") + request.headers().get(HttpHeaderNames.HOST) + request.uri());
@@ -154,7 +154,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         FullHttpResponse response = interceptContext.onRequestException(cause);
         if (null == response) {
-            logger.info("send response");
             ResponseUtils.sendError(ctx.channel(), cause.getMessage());
         } else {
             ctx.channel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
