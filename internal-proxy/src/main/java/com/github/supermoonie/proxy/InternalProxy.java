@@ -41,6 +41,8 @@ public class InternalProxy {
     private NioEventLoopGroup boss;
     private NioEventLoopGroup worker;
     private int port = DEFAULT_PORT;
+    private String username;
+    private String password;
     private String caPath;
     private String privateKeyPath;
     private CertificateConfig certificateConfig;
@@ -220,5 +222,21 @@ public class InternalProxy {
 
     public void setExceptionHandler(ExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

@@ -59,7 +59,9 @@ public class ResponseUtils {
         error = "<h1>Error: " + error + "</h1>";
         HttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
         // Close the connection as soon as the error message is sent.
-        channel.writeAndFlush(response).addListener((ChannelFutureListener) future -> channel.close());
+        channel.writeAndFlush(response)
+                .addListener((ChannelFutureListener) future -> channel.close())
+        ;
     }
 
     public static FullHttpResponse htmlResponse(String body, HttpResponseStatus status) {

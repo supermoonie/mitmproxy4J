@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy;
 
+import com.github.supermoonie.ex.AuthorizationFailedException;
 import com.github.supermoonie.ex.BadRequestException;
 import com.github.supermoonie.util.RequestUtils;
 import com.github.supermoonie.util.ResponseUtils;
@@ -12,12 +13,13 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.FutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSession;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -36,12 +38,26 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     private ChannelFuture remoteChannelFuture;
     private final InternalProxy internalProxy;
     private ConnectionInfo connectionInfo;
+    private String auth;
 
     public InternalProxyHandler(InternalProxy internalProxy,
                                 InterceptInitializer initializer) {
         this.internalProxy = internalProxy;
+        if (null != this.internalProxy.getUsername() && null != this.internalProxy.getPassword()) {
+            auth = "Basic " + Base64.getEncoder().encodeToString((this.internalProxy.getUsername() + ":" + this.internalProxy.getPassword()).getBytes(StandardCharsets.UTF_8));
+            logger.debug("auth: {}", auth);
+        }
         if (null != initializer) {
             initializer.initIntercept(interceptContext.getRequestIntercepts(), interceptContext.getResponseIntercepts());
+        }
+    }
+
+    private void verifyAuth(HttpRequest request) {
+        if (null != auth) {
+            String authorization = request.headers().get(HttpHeaderNames.PROXY_AUTHORIZATION);
+            if (null == authorization || !authorization.equals(auth)) {
+                throw new AuthorizationFailedException("Authorization Failed");
+            }
         }
     }
 
@@ -69,6 +85,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 if (null == info) {
                     throw new BadRequestException("Bad Request");
                 }
+                verifyAuth(request);
                 status = ConnectionStatus.CONNECTING;
                 this.connectionInfo.setHostHeader(request.headers().get(HttpHeaderNames.HOST));
                 if (HttpMethod.CONNECT.equals(request.method())) {
@@ -137,9 +154,10 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         FullHttpResponse response = interceptContext.onRequestException(cause);
         if (null == response) {
+            logger.info("send response");
             ResponseUtils.sendError(ctx.channel(), cause.getMessage());
         } else {
-            ctx.channel().writeAndFlush(response).addListener((ChannelFutureListener) f -> ctx.channel().close());
+            ctx.channel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
