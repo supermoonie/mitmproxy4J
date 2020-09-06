@@ -28,6 +28,26 @@ public final class RequestUtils {
     private RequestUtils() {
     }
 
+    public static ConnectionInfo parseUri(String uri) {
+        Matcher matcher = HOST_PORT_PATTERN.matcher(uri);
+        if (matcher.find()) {
+            ConnectionInfo info = new ConnectionInfo();
+            String host = matcher.group("host");
+            String portStr = matcher.group("port");
+            int port;
+            if (null == portStr) {
+                port = uri.startsWith("https://") ? 443 : 80;
+            } else {
+             port = Integer.parseInt(portStr);
+            }
+            info.setRemoteHost(host);
+            info.setRemotePort(port);
+            return info;
+        } else {
+            return null;
+        }
+    }
+
     public static ConnectionInfo parseRemoteInfo(HttpRequest request, ConnectionInfo info) {
         if (null == info) {
             info = new ConnectionInfo();

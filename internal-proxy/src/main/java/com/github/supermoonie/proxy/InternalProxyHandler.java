@@ -34,7 +34,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     private final InterceptContext interceptContext = new InterceptContext();
     private final Queue<Object> requestQueue = new LinkedBlockingDeque<>();
-    private ConnectionStatus status = ConnectionStatus.NOT_CONNECTION;
+    private ConnectionStatus status = ConnectionStatus.NOT_CONNECTED;
     private ChannelFuture remoteChannelFuture;
     private final InternalProxy internalProxy;
     private ConnectionInfo connectionInfo;
@@ -80,7 +80,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         logger.debug("msg: {} \n", msg);
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
-            if (status.equals(ConnectionStatus.NOT_CONNECTION)) {
+            if (status.equals(ConnectionStatus.NOT_CONNECTED)) {
                 ConnectionInfo info = RequestUtils.parseRemoteInfo(request, this.connectionInfo);
                 if (null == info) {
                     throw new BadRequestException("Bad Request!");
@@ -114,7 +114,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (!flag) {
                 return;
             }
-            connectRemote(ctx.channel(), msg);
+            logger.info(connectionInfo.toString());
+            connectRemote(ctx.channel(), request);
         } else if (msg instanceof HttpContent) {
             if (status.equals(ConnectionStatus.CONNECTED_WITH_CLIENT)) {
                 connectRemote(ctx.channel(), msg);
@@ -207,14 +208,11 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                         @Override
                         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                            if (remoteChannelFuture.channel().isOpen()) {
-                                remoteChannelFuture.channel().close();
-                            }
                             FullHttpResponse response = interceptContext.onResponseException(cause);
                             if (null == response) {
                                 ResponseUtils.sendError(clientChannel, cause.getMessage());
                             } else {
-                                clientChannel.writeAndFlush(response).addListener((ChannelFutureListener) f -> clientChannel.close());
+                                clientChannel.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                             }
                         }
                     });
@@ -261,7 +259,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         /**
          * not connection
          */
-        NOT_CONNECTION(0),
+        NOT_CONNECTED(0),
         /**
          * connecting
          */

@@ -1,10 +1,17 @@
 package com.github.supermoonie.proxy.intercept;
 
 
+import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.InterceptContext;
+import com.github.supermoonie.util.RequestUtils;
+import com.github.supermoonie.util.ResponseUtils;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,20 +21,39 @@ import java.util.Map;
  */
 public class ConfigurableIntercept implements RequestIntercept, ResponseIntercept {
 
-    private List<String> blackList;
-
-    private List<String> whiteList;
-
-    private Map<String, String> remoteMap;
-
+    private final List<String> blackUriList = new ArrayList<>();
+    private final List<String> blackHostList = new ArrayList<>();
+    private final List<String> whiteUriList = new ArrayList<>();
+    private final List<String> whiteHostList = new ArrayList<>();
+    private final Map<String, String> remoteUriMap = new HashMap<>();
     private Map<String, String> localMap;
-
-    private String userName;
-
-    private String password;
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
+        String uri = request.uri();
+        if (blackUriList.contains(uri)) {
+            return ResponseUtils.htmlResponse("Uri Blocked!", HttpResponseStatus.OK);
+        }
+        if (whiteUriList.size() > 0 && !whiteUriList.contains(uri)) {
+            return ResponseUtils.htmlResponse("Not In Uri White List!", HttpResponseStatus.OK);
+        }
+        String host = request.headers().get(HttpHeaderNames.HOST);
+        if (blackHostList.contains(host)) {
+            return ResponseUtils.htmlResponse("Host Blocked!", HttpResponseStatus.OK);
+        }
+        if (whiteHostList.size() > 0 && !whiteHostList.contains(host)) {
+            return ResponseUtils.htmlResponse("Not In Host White List!", HttpResponseStatus.OK);
+        }
+        String remoteUri = remoteUriMap.get(uri);
+        ConnectionInfo info = RequestUtils.parseUri(remoteUri);
+        if (null != remoteUri && null != info) {
+            request.setUri(remoteUri);
+            request.headers().set(HttpHeaderNames.HOST, info.getRemoteHost());
+            ConnectionInfo originInfo = ctx.getConnectionInfo();
+            originInfo.setRemoteHost(info.getRemoteHost());
+            originInfo.setRemotePort(info.getRemotePort());
+            originInfo.setHostHeader(info.getRemoteHost() + ":" + info.getRemotePort());
+        }
         return null;
     }
 
@@ -39,5 +65,25 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
     @Override
     public FullHttpResponse onException(InterceptContext ctx, Throwable cause) {
         return null;
+    }
+
+    public List<String> getBlackUriList() {
+        return blackUriList;
+    }
+
+    public List<String> getWhiteUriList() {
+        return whiteUriList;
+    }
+
+    public List<String> getBlackHostList() {
+        return blackHostList;
+    }
+
+    public List<String> getWhiteHostList() {
+        return whiteHostList;
+    }
+
+    public Map<String, String> getRemoteUriMap() {
+        return remoteUriMap;
     }
 }
