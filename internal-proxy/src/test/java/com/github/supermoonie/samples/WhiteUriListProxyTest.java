@@ -20,7 +20,7 @@ public class WhiteUriListProxyTest {
             ConfigurableIntercept config = new ConfigurableIntercept();
             List<String> whiteList = config.getWhiteUriList();
             whiteList.add("https://httpbin.org/get");
-            requestIntercepts.put("block-intercept", config);
+            requestIntercepts.put("white-intercept", config);
         });
         proxy.start();
     }

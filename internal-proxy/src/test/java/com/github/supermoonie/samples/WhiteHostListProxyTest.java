@@ -20,7 +20,7 @@ public class WhiteHostListProxyTest {
             ConfigurableIntercept config = new ConfigurableIntercept();
             List<String> whiteList = config.getWhiteHostList();
             whiteList.add("httpbin.org");
-            requestIntercepts.put("block-intercept", config);
+            requestIntercepts.put("white-intercept", config);
         });
         proxy.start();
     }
