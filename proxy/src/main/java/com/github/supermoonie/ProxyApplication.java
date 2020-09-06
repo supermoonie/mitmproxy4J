@@ -20,7 +20,7 @@ import io.netty.handler.codec.http.HttpResponse;
 public class ProxyApplication
 {
     public static void main(String[] args) {
-        int port = 10800;
+        int port = 10801;
         HttpProxyServerConfig serverConfig = new HttpProxyServerConfig();
         serverConfig.setHandleSsl(true);
         new HttpProxyServer()

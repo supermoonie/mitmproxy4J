@@ -2,6 +2,7 @@ package com.github.supermoonie.util;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
@@ -54,10 +55,11 @@ public class ResponseUtils {
         channel.writeAndFlush(response);
     }
 
-    public static void sendHtmlBody(Channel channel, String body) {
-        HttpResponse response = htmlResponse(body, HttpResponseStatus.OK);
+    public static void sendError(Channel channel, String error) {
+        error = "<h1>Error: " + error + "</h1>";
+        HttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
         // Close the connection as soon as the error message is sent.
-        channel.writeAndFlush(response);
+        channel.writeAndFlush(response).addListener((ChannelFutureListener) future -> channel.close());
     }
 
     public static FullHttpResponse htmlResponse(String body, HttpResponseStatus status) {
