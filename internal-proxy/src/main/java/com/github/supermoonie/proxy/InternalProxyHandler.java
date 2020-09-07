@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.proxy.ProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
@@ -135,7 +136,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         .forServer(certificateConfig.getServerPriKey(), CertificateUtil.getCert(port, host, certificateConfig)).build();
                 ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
                 ctx.pipeline().addLast("decompressor", new HttpContentDecompressor());
-                ctx.pipeline().addLast("aggregator", new HttpObjectAggregator(512 * 1024));
+                ctx.pipeline().addLast("aggregator", new HttpObjectAggregator(100 * 1024 * 1024));
                 ctx.pipeline().addFirst("sslHandler", sslCtx.newHandler(ctx.alloc()));
                 // 重新过一遍pipeline，拿到解密后的的http报文
                 ctx.pipeline().fireChannelRead(msg);
@@ -172,6 +173,10 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
+                            ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
+                            if (null != proxyHandler) {
+                                ch.pipeline().addLast("proxyHandler", proxyHandler);
+                            }
                             InternalProxy.CertificateConfig certificateConfig = internalProxy.getCertificateConfig();
                             if (connectionInfo.isHttps()) {
                                 ch.pipeline().addLast("sslHandler", certificateConfig
@@ -180,7 +185,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                             }
                             ch.pipeline().addLast("httpCodec", new HttpClientCodec());
                             ch.pipeline().addLast("decompressor", new HttpContentDecompressor());
-                            ch.pipeline().addLast("aggregator", new HttpObjectAggregator(512 * 1024));
+                            ch.pipeline().addLast("aggregator", new HttpObjectAggregator(100 * 1024 * 1024));
                             ch.pipeline().addLast("proxyClientHandle", new ChannelInboundHandlerAdapter() {
 
                                 @Override

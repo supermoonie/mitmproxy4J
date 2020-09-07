@@ -197,7 +197,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
                     }
                 }
             }
-            ChannelInitializer channelInitializer = isHttp ? new HttpProxyInitializer(channel, requestProto, proxyHandler)
+            ChannelInitializer<?> channelInitializer = isHttp ? new HttpProxyInitializer(channel, requestProto, proxyHandler)
                     : new TunnelProxyInitializer(channel, proxyHandler);
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(serverConfig.getProxyLoopGroup())
