@@ -31,6 +31,10 @@ public class InterceptContext {
 
     private ConnectionInfo connectionInfo;
 
+    private HttpRequest request;
+
+    private FullHttpResponse fullHttpResponse;
+
     private final Map<String, RequestIntercept> requestIntercepts = new LinkedHashMap<>();
 
     private final Map<String, ResponseIntercept> responseIntercepts = new LinkedHashMap<>();
@@ -49,11 +53,11 @@ public class InterceptContext {
         return true;
     }
 
-    FullHttpResponse onResponse(FullHttpResponse response) {
+    FullHttpResponse onResponse(HttpRequest request, FullHttpResponse response) {
         Set<String> keySet = responseIntercepts.keySet();
         for (String key : keySet) {
             ResponseIntercept responseIntercept = responseIntercepts.get(key);
-            FullHttpResponse httpResponse = responseIntercept.onResponse(this, response);
+            FullHttpResponse httpResponse = responseIntercept.onResponse(this, request, response);
             logger.debug("responseIntercept: {}, response: {}", key, httpResponse);
             if (null != httpResponse) {
                 return httpResponse;
@@ -62,11 +66,11 @@ public class InterceptContext {
         return response;
     }
 
-    FullHttpResponse onRequestException(Throwable cause) {
+    FullHttpResponse onRequestException(HttpRequest request, Throwable cause) {
         Set<String> keySet = requestIntercepts.keySet();
         for (String key : keySet) {
             RequestIntercept requestIntercept = requestIntercepts.get(key);
-            FullHttpResponse response = requestIntercept.onException(this, cause);
+            FullHttpResponse response = requestIntercept.onException(this, request, cause);
             logger.debug("requestIntercept: {}, response: {}", key, response);
             if (null != response) {
                 clientChannel.writeAndFlush(response);
@@ -76,11 +80,11 @@ public class InterceptContext {
         return null;
     }
 
-    FullHttpResponse onResponseException(Throwable cause) {
+    FullHttpResponse onResponseException(HttpRequest request, FullHttpResponse response, Throwable cause) {
         Set<String> keySet = responseIntercepts.keySet();
         for (String key : keySet) {
             ResponseIntercept responseIntercept = responseIntercepts.get(key);
-            FullHttpResponse httpResponse = responseIntercept.onException(this, cause);
+            FullHttpResponse httpResponse = responseIntercept.onException(this, request, response, cause);
             logger.debug("responseIntercept: {}, response: {}", key, httpResponse);
             if (null != httpResponse) {
                 return httpResponse;
@@ -135,5 +139,21 @@ public class InterceptContext {
 
     void setConnectionInfo(ConnectionInfo connectionInfo) {
         this.connectionInfo = connectionInfo;
+    }
+
+    HttpRequest getRequest() {
+        return request;
+    }
+
+    void setRequest(HttpRequest request) {
+        this.request = request;
+    }
+
+    FullHttpResponse getFullHttpResponse() {
+        return fullHttpResponse;
+    }
+
+    void setFullHttpResponse(FullHttpResponse fullHttpResponse) {
+        this.fullHttpResponse = fullHttpResponse;
     }
 }

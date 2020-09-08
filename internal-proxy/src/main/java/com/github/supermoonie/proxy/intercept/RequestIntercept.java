@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpRequest;
  * @author supermoonie
  * @date 2020-08-20
  */
-public interface RequestIntercept extends ExceptionHandler {
+public interface RequestIntercept {
 
     /**
      * on request
@@ -19,8 +19,7 @@ public interface RequestIntercept extends ExceptionHandler {
      */
     FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request);
 
-    @Override
-    default FullHttpResponse onException(InterceptContext ctx, Throwable cause) {
+    default FullHttpResponse onException(InterceptContext ctx, HttpRequest request, Throwable cause) {
         return null;
     }
 }

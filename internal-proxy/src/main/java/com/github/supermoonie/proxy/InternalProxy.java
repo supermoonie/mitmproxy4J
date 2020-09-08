@@ -2,7 +2,6 @@ package com.github.supermoonie.proxy;
 
 import com.github.supermoonie.ex.InternalProxyCloseException;
 import com.github.supermoonie.ex.InternalProxyStartException;
-import com.github.supermoonie.proxy.intercept.ExceptionHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -32,14 +31,16 @@ public class InternalProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(InternalProxy.class);
 
-    private static final int DEFAULT_N_BOOS_THREAD = 1;
-    private static final int DEFAULT_N_WORKER_THREAD = 5;
+    private static final int DEFAULT_N_BOOS_THREAD = 2;
+    private static final int DEFAULT_N_WORKER_THREAD = 16;
+    private static final int DEFAULT_N_PROXY_THREAD = 16;
     private static final int DEFAULT_PORT = 10801;
     private static final String DEFAULT_CA_FILE_NAME = "ca.crt";
     private static final String DEFAULT_PRIVATE_KEY_FILE_NAME = "ca_private.pem";
 
-    private NioEventLoopGroup boss;
-    private NioEventLoopGroup worker;
+    private NioEventLoopGroup bossThreads;
+    private NioEventLoopGroup workerThreads;
+    private NioEventLoopGroup proxyThreads;
     private int port = DEFAULT_PORT;
     private String username;
     private String password;
@@ -49,7 +50,6 @@ public class InternalProxy {
     private SecondProxyConfig secondProxyConfig;
     private ChannelFuture future;
     private final InterceptInitializer initializer;
-    private ExceptionHandler exceptionHandler;
 
     public InternalProxy(InterceptInitializer initializer) {
         this.initializer = initializer;
@@ -59,14 +59,17 @@ public class InternalProxy {
         ServerBootstrap b = new ServerBootstrap();
         try {
             initialCertificate();
-            if (null == boss) {
-                boss = new NioEventLoopGroup(DEFAULT_N_BOOS_THREAD);
+            if (null == bossThreads) {
+                bossThreads = new NioEventLoopGroup(DEFAULT_N_BOOS_THREAD);
             }
-            if (null == worker) {
-                worker = new NioEventLoopGroup(DEFAULT_N_WORKER_THREAD);
+            if (null == workerThreads) {
+                workerThreads = new NioEventLoopGroup(DEFAULT_N_WORKER_THREAD);
+            }
+            if (null == proxyThreads) {
+                proxyThreads = new NioEventLoopGroup(DEFAULT_N_PROXY_THREAD);
             }
             InternalProxy that = this;
-            future = b.group(boss, worker)
+            future = b.group(bossThreads, workerThreads)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<Channel>() {
                         @Override
@@ -79,11 +82,11 @@ public class InternalProxy {
                     }).bind(port).sync();
             logger.info("proxy listening on {}", port);
         } catch (Exception e) {
-            if (null != worker) {
-                worker.shutdownGracefully();
+            if (null != workerThreads) {
+                workerThreads.shutdownGracefully();
             }
-            if (null != boss) {
-                boss.shutdownGracefully();
+            if (null != bossThreads) {
+                bossThreads.shutdownGracefully();
             }
             throw new InternalProxyStartException(e);
         }
@@ -98,11 +101,11 @@ public class InternalProxy {
         } catch (InterruptedException e) {
             throw new InternalProxyCloseException(e);
         } finally {
-            if (null != worker) {
-                worker.shutdownGracefully();
+            if (null != workerThreads) {
+                workerThreads.shutdownGracefully();
             }
-            if (null != boss) {
-                boss.shutdownGracefully();
+            if (null != bossThreads) {
+                bossThreads.shutdownGracefully();
             }
         }
 
@@ -246,20 +249,28 @@ public class InternalProxy {
         this.port = port;
     }
 
-    public NioEventLoopGroup getBoss() {
-        return boss;
+    public NioEventLoopGroup getBossThreads() {
+        return bossThreads;
     }
 
-    public void setBoss(NioEventLoopGroup boss) {
-        this.boss = boss;
+    public void setBossThreads(NioEventLoopGroup bossThreads) {
+        this.bossThreads = bossThreads;
     }
 
-    public NioEventLoopGroup getWorker() {
-        return worker;
+    public NioEventLoopGroup getWorkerThreads() {
+        return workerThreads;
     }
 
-    public void setWorker(NioEventLoopGroup worker) {
-        this.worker = worker;
+    public void setWorkerThreads(NioEventLoopGroup workerThreads) {
+        this.workerThreads = workerThreads;
+    }
+
+    public NioEventLoopGroup getProxyThreads() {
+        return proxyThreads;
+    }
+
+    public void setProxyThreads(NioEventLoopGroup proxyThreads) {
+        this.proxyThreads = proxyThreads;
     }
 
     public String getCaPath() {
@@ -280,14 +291,6 @@ public class InternalProxy {
 
     public CertificateConfig getCertificateConfig() {
         return certificateConfig;
-    }
-
-    public ExceptionHandler getExceptionHandler() {
-        return exceptionHandler;
-    }
-
-    public void setExceptionHandler(ExceptionHandler exceptionHandler) {
-        this.exceptionHandler = exceptionHandler;
     }
 
     public String getUsername() {

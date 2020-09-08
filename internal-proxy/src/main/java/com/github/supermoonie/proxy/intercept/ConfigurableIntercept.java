@@ -9,6 +9,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,10 +23,14 @@ import java.util.Map;
  */
 public class ConfigurableIntercept implements RequestIntercept, ResponseIntercept {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConfigurableIntercept.class);
+
     private final List<String> blackUriList = new ArrayList<>();
     private final List<String> blackHostList = new ArrayList<>();
     private final List<String> whiteUriList = new ArrayList<>();
     private final List<String> whiteHostList = new ArrayList<>();
+    private final List<String> useSecondProxyHostList = new ArrayList<>();
+    private final List<String> notUseSecondProxyHostList = new ArrayList<>();
     private final Map<String, String> remoteUriMap = new HashMap<>();
     private Map<String, String> localMap;
 
@@ -54,16 +60,18 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
             originInfo.setRemotePort(info.getRemotePort());
             originInfo.setHostHeader(info.getRemoteHost() + ":" + info.getRemotePort());
         }
+        if (useSecondProxyHostList.size() > 0) {
+            ctx.getConnectionInfo().setUseSecondProxy(useSecondProxyHostList.contains(host));
+            logger.info(request.uri() + " use proxy: " + ctx.getConnectionInfo().isUseSecondProxy());
+        }
+        if (notUseSecondProxyHostList.size() > 0) {
+            ctx.getConnectionInfo().setUseSecondProxy(!notUseSecondProxyHostList.contains(host));
+        }
         return null;
     }
 
     @Override
-    public FullHttpResponse onResponse(InterceptContext ctx, FullHttpResponse response) {
-        return null;
-    }
-
-    @Override
-    public FullHttpResponse onException(InterceptContext ctx, Throwable cause) {
+    public FullHttpResponse onResponse(InterceptContext ctx, HttpRequest request, FullHttpResponse response) {
         return null;
     }
 
@@ -85,5 +93,13 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
 
     public Map<String, String> getRemoteUriMap() {
         return remoteUriMap;
+    }
+
+    public List<String> getUseSecondProxyHostList() {
+        return useSecondProxyHostList;
+    }
+
+    public List<String> getNotUseSecondProxyHostList() {
+        return notUseSecondProxyHostList;
     }
 }

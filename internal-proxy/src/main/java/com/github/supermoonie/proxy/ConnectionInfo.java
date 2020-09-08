@@ -18,6 +18,8 @@ public class ConnectionInfo {
 
     private boolean isHttps = false;
 
+    private boolean useSecondProxy = true;
+
     public String getRemoteHost() {
         return remoteHost;
     }
@@ -64,6 +66,14 @@ public class ConnectionInfo {
 
     public void setHostHeader(String hostHeader) {
         this.hostHeader = hostHeader;
+    }
+
+    public boolean isUseSecondProxy() {
+        return useSecondProxy;
+    }
+
+    public void setUseSecondProxy(boolean useSecondProxy) {
+        this.useSecondProxy = useSecondProxy;
     }
 
     @Override

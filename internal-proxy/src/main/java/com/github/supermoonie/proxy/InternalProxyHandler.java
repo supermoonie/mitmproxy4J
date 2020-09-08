@@ -111,6 +111,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 SSLSession session = sslHandler.engine().getSession();
                 logger.debug("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
             }
+            interceptContext.setRequest(request);
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
                 return;
@@ -154,7 +155,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        FullHttpResponse response = interceptContext.onRequestException(cause);
+        FullHttpResponse response = interceptContext.onRequestException(interceptContext.getRequest(), cause);
         if (null == response) {
             ResponseUtils.sendError(ctx.channel(), cause.getMessage());
         } else {
@@ -167,15 +168,19 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (!(msg instanceof HttpRequest)) {
                 return;
             }
+            HttpRequest request = (HttpRequest) msg;
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(internalProxy.getWorker())
+            bootstrap.group(internalProxy.getProxyThreads())
                     .channel(NioSocketChannel.class)
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
-                            ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
-                            if (null != proxyHandler) {
-                                ch.pipeline().addLast("proxyHandler", proxyHandler);
+                            if (connectionInfo.isUseSecondProxy()) {
+                                logger.info(interceptContext.getRequest().uri() + " use proxy");
+                                ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
+                                if (null != proxyHandler) {
+                                    ch.pipeline().addLast("proxyHandler", proxyHandler);
+                                }
                             }
                             InternalProxy.CertificateConfig certificateConfig = internalProxy.getCertificateConfig();
                             if (connectionInfo.isHttps()) {
@@ -203,7 +208,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     }
                                     if (msg instanceof FullHttpResponse) {
                                         FullHttpResponse response = (FullHttpResponse) msg;
-                                        FullHttpResponse httpResponse = interceptContext.onResponse(response);
+                                        interceptContext.setFullHttpResponse(response);
+                                        FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
                                         clientChannel.writeAndFlush(httpResponse);
                                     }
 
@@ -213,7 +219,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                         @Override
                         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                            FullHttpResponse response = interceptContext.onResponseException(cause);
+                            FullHttpResponse response = interceptContext.onResponseException(request, interceptContext.getFullHttpResponse(), cause);
                             if (null == response) {
                                 ResponseUtils.sendError(clientChannel, cause.getMessage());
                             } else {
@@ -239,7 +245,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     if (remoteChannelFuture.channel().isOpen()) {
                         remoteChannelFuture.channel().close();
                     }
-                    FullHttpResponse response = interceptContext.onResponseException(future.cause());
+                    FullHttpResponse response = interceptContext.onResponseException(request, interceptContext.getFullHttpResponse(), future.cause());
                     if (null == response) {
                         ResponseUtils.sendError(clientChannel, future.cause().getMessage());
                     } else {

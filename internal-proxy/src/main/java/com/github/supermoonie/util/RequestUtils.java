@@ -29,6 +29,9 @@ public final class RequestUtils {
     }
 
     public static ConnectionInfo parseUri(String uri) {
+        if (null == uri) {
+            return null;
+        }
         Matcher matcher = HOST_PORT_PATTERN.matcher(uri);
         if (matcher.find()) {
             ConnectionInfo info = new ConnectionInfo();

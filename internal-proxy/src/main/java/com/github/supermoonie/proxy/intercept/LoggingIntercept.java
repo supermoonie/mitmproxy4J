@@ -15,20 +15,26 @@ public class LoggingIntercept implements RequestIntercept, ResponseIntercept {
     private static final Logger logger = LoggerFactory.getLogger(LoggingIntercept.class);
 
     @Override
-    public FullHttpResponse onException(InterceptContext ctx, Throwable cause) {
-        logger.error(cause.getMessage(), cause);
-        return null;
-    }
-
-    @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
         logger.info(">>>> {}\n", request.toString());
         return null;
     }
 
     @Override
-    public FullHttpResponse onResponse(InterceptContext ctx, FullHttpResponse response) {
-        logger.info("<<<< {}\n", response.toString());
+    public FullHttpResponse onResponse(InterceptContext ctx, HttpRequest request, FullHttpResponse response) {
+        logger.info("<<<< {}, {}\n", request.uri(), response.toString());
+        return null;
+    }
+
+    @Override
+    public FullHttpResponse onException(InterceptContext ctx, HttpRequest request, Throwable cause) {
+        logger.error("uri: {}, error: {}", request.uri(), cause.getMessage(), cause);
+        return null;
+    }
+
+    @Override
+    public FullHttpResponse onException(InterceptContext ctx, HttpRequest request, FullHttpResponse response, Throwable cause) {
+        logger.error("uri: {}, error: {}", request.uri(), cause.getMessage(), cause);
         return null;
     }
 }
