@@ -73,13 +73,37 @@ public final class RequestUtils {
             if (hostAndPort.length == 2) {
                 info.setRemotePort(Integer.parseInt(hostAndPort[1]));
             } else {
-                if (request.uri().startsWith("https://")) {
-                    info.setRemotePort(443);
+                String uri = request.uri();
+                Matcher matcher = HOST_PORT_PATTERN.matcher(uri);
+                if (matcher.find()) {
+                    String portStr = matcher.group("port");
+                    if (null == portStr) {
+                        if (uri.startsWith("https://")) {
+                            info.setRemotePort(443);
+                        } else if (uri.startsWith("http://")) {
+                            info.setRemotePort(80);
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        int port = Integer.parseInt(portStr);
+                        info.setRemotePort(port);
+                    }
                 } else {
-                    info.setRemotePort(80);
+                    return null;
                 }
+
             }
         }
         return info;
+    }
+
+    public static void main(String[] args) {
+        String url = "http://ocsp.apple.com/ocsp03-devid06/ME4wTKADAgEAMEUwQzBBMAkGBSsOAwIaBQAEFDOB0e%2FbaLCFIU0u76%2BMSmlkPCpsBBRXF%2B2iz9x8mKEQ4Py%2Bhy0s8uMXVAIIdVIDQAdHsMs%3D";
+        Matcher matcher = HOST_PORT_PATTERN.matcher(url);
+        if (matcher.find()) {
+            System.out.println(matcher.group("host"));
+            System.out.println(matcher.group("port"));
+        }
     }
 }

@@ -22,9 +22,9 @@ public class SecondProxyTest {
         secondProxyConfig.setPort(7890);
         secondProxyConfig.setProxyType(ProxyType.HTTP);
         proxy.setSecondProxyConfig(secondProxyConfig);
-        proxy.setWorkerThreads(new NioEventLoopGroup(32));
-        proxy.setBossThreads(new NioEventLoopGroup(2));
-        proxy.setProxyThreads(new NioEventLoopGroup(32));
+        proxy.setWorkerThreads(new NioEventLoopGroup(16));
+        proxy.setBossThreads(new NioEventLoopGroup(1));
+        proxy.setProxyThreads(new NioEventLoopGroup(16));
         proxy.setPort(10801);
         proxy.start();
     }

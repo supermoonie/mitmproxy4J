@@ -68,6 +68,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         Channel clientChannel = ctx.channel();
         interceptContext.setClientChannel(clientChannel);
         InetSocketAddress clientAddress = (InetSocketAddress) clientChannel.remoteAddress();
+        logger.debug("{} active", clientAddress.toString());
         String clientHost = clientAddress.getHostString();
         int clientPort = clientAddress.getPort();
         connectionInfo = new ConnectionInfo();
@@ -78,7 +79,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        logger.debug("msg: {} \n", msg);
+        logger.debug("from client msg: {} \n", msg);
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
             interceptContext.setRequest(request);
@@ -92,7 +93,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 if (HttpMethod.CONNECT.equals(request.method())) {
                     HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                     ctx.writeAndFlush(response);
-                    logger.info("end handshake with {}:{}", info.getClientHost(), info.getClientPort());
+                    logger.info("be connected with {}:{}", info.getClientHost(), info.getClientPort());
                     // 暂时移除 httpServerCodec，处理 https 握手
                     ctx.channel().pipeline().remove("httpCodec");
                     ctx.channel().pipeline().remove("decompressor");
@@ -130,7 +131,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             ByteBuf byteBuf = (ByteBuf) msg;
             // ssl握手
             if (byteBuf.getByte(0) == SSL_FLAG) {
-                logger.info("begin handshake with {}:{}", connectionInfo.getClientHost(), connectionInfo.getClientPort());
+                logger.info("handshake with {}:{}", connectionInfo.getClientHost(), connectionInfo.getClientPort());
                 connectionInfo.setHttps(true);
                 int port = ((InetSocketAddress) ctx.channel().localAddress()).getPort();
                 String host = connectionInfo.getHostHeader().split(":")[0];
@@ -178,7 +179,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             if (connectionInfo.isUseSecondProxy()) {
-                                logger.debug(interceptContext.getRequest().uri() + " use proxy");
+                                logger.debug(request.uri() + " use proxy");
                                 ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
                                 if (null != proxyHandler) {
                                     ch.pipeline().addLast("proxyHandler", proxyHandler);
@@ -186,6 +187,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                             }
                             InternalProxy.CertificateConfig certificateConfig = internalProxy.getCertificateConfig();
                             if (connectionInfo.isHttps()) {
+                                logger.info("{}:{} is https", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
                                 ch.pipeline().addLast("sslHandler", certificateConfig
                                         .getClientSslCtx()
                                         .newHandler(ch.alloc(), connectionInfo.getRemoteHost(), connectionInfo.getRemotePort()));
@@ -212,9 +214,17 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         FullHttpResponse response = (FullHttpResponse) msg;
                                         interceptContext.setFullHttpResponse(response);
                                         FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
-                                        clientChannel.writeAndFlush(httpResponse);
+                                        clientChannel.writeAndFlush(httpResponse)
+                                                .addListener(ChannelFutureListener.CLOSE)
+                                        ;
+                                        remoteChannelFuture.channel().close();
                                     }
 
+                                }
+
+                                @Override
+                                public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                    logger.info("{}:{} inactive", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
                                 }
                             });
                         }
