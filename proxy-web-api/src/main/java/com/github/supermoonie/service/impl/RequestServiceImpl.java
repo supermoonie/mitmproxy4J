@@ -10,6 +10,7 @@ import com.github.supermoonie.service.RequestService;
 import com.github.supermoonie.util.ProtoUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -39,7 +40,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
-    public Request saveRequest(FullHttpRequest httpRequest) {
+    public Request saveRequest(HttpRequest httpRequest) {
         ProtoUtil.RequestProto proto = ProtoUtil.getRequestProto(httpRequest);
         Assert.notNull(proto, "RequestProto is null!");
         String host = proto.getHost();

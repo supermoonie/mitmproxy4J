@@ -2,6 +2,7 @@ package com.github.supermoonie.service;
 
 import com.github.supermoonie.model.Request;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpRequest;
 
 /**
  * @author supermoonie
@@ -15,5 +16,5 @@ public interface RequestService {
      * @param httpRequest {@link FullHttpRequest}
      * @return {@link Request}
      */
-    Request saveRequest(FullHttpRequest httpRequest);
+    Request saveRequest(HttpRequest httpRequest);
 }

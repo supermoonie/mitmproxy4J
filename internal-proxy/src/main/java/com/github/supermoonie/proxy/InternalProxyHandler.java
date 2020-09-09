@@ -92,6 +92,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 if (HttpMethod.CONNECT.equals(request.method())) {
                     HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                     ctx.writeAndFlush(response);
+                    logger.info("end handshake with {}:{}", info.getClientHost(), info.getClientPort());
                     // 暂时移除 httpServerCodec，处理 https 握手
                     ctx.channel().pipeline().remove("httpCodec");
                     ctx.channel().pipeline().remove("decompressor");
@@ -110,13 +111,13 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (connectionInfo.isHttps()) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                 SSLSession session = sslHandler.engine().getSession();
-                logger.debug("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
+                logger.info("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
             }
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
                 return;
             }
-            logger.info(connectionInfo.toString());
+            logger.debug(connectionInfo.toString());
             connectRemote(ctx.channel(), request);
         } else if (msg instanceof HttpContent) {
             if (status.equals(ConnectionStatus.CONNECTED_WITH_CLIENT)) {
@@ -129,6 +130,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             ByteBuf byteBuf = (ByteBuf) msg;
             // ssl握手
             if (byteBuf.getByte(0) == SSL_FLAG) {
+                logger.info("begin handshake with {}:{}", connectionInfo.getClientHost(), connectionInfo.getClientPort());
                 connectionInfo.setHttps(true);
                 int port = ((InetSocketAddress) ctx.channel().localAddress()).getPort();
                 String host = connectionInfo.getHostHeader().split(":")[0];

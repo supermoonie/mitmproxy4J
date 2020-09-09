@@ -35,6 +35,8 @@ public class InterceptContext {
 
     private FullHttpResponse fullHttpResponse;
 
+    private Object userData;
+
     private final Map<String, RequestIntercept> requestIntercepts = new LinkedHashMap<>();
 
     private final Map<String, ResponseIntercept> responseIntercepts = new LinkedHashMap<>();
@@ -155,5 +157,13 @@ public class InterceptContext {
 
     void setFullHttpResponse(FullHttpResponse fullHttpResponse) {
         this.fullHttpResponse = fullHttpResponse;
+    }
+
+    public Object getUserData() {
+        return userData;
+    }
+
+    public void setUserData(Object userData) {
+        this.userData = userData;
     }
 }
