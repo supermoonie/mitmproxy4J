@@ -62,7 +62,6 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
         }
         if (useSecondProxyHostList.size() > 0) {
             ctx.getConnectionInfo().setUseSecondProxy(useSecondProxyHostList.contains(host));
-            logger.info(request.uri() + " use proxy: " + ctx.getConnectionInfo().isUseSecondProxy());
         }
         if (notUseSecondProxyHostList.size() > 0) {
             ctx.getConnectionInfo().setUseSecondProxy(!notUseSecondProxyHostList.contains(host));

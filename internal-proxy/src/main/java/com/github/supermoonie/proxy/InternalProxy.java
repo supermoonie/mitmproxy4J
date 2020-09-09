@@ -107,6 +107,9 @@ public class InternalProxy {
             if (null != bossThreads) {
                 bossThreads.shutdownGracefully();
             }
+            if (null != proxyThreads) {
+                proxyThreads.shutdownGracefully();
+            }
         }
 
     }

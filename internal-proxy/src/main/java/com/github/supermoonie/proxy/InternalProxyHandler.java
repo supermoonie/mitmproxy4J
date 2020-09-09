@@ -81,6 +81,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         logger.debug("msg: {} \n", msg);
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
+            interceptContext.setRequest(request);
             if (status.equals(ConnectionStatus.NOT_CONNECTED)) {
                 ConnectionInfo info = RequestUtils.parseRemoteInfo(request, this.connectionInfo);
                 if (null == info) {
@@ -111,7 +112,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 SSLSession session = sslHandler.engine().getSession();
                 logger.debug("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
             }
-            interceptContext.setRequest(request);
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
                 return;
@@ -176,7 +176,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             if (connectionInfo.isUseSecondProxy()) {
-                                logger.info(interceptContext.getRequest().uri() + " use proxy");
+                                logger.debug(interceptContext.getRequest().uri() + " use proxy");
                                 ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
                                 if (null != proxyHandler) {
                                     ch.pipeline().addLast("proxyHandler", proxyHandler);
