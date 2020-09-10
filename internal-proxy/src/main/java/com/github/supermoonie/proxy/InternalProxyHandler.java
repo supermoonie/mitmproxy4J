@@ -35,7 +35,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     private final InterceptContext interceptContext = new InterceptContext();
     private final Queue<Object> requestQueue = new LinkedBlockingDeque<>();
-    private ConnectionStatus status = ConnectionStatus.NOT_CONNECTED;
+    private volatile ConnectionStatus status = ConnectionStatus.NOT_CONNECTED;
     private ChannelFuture remoteChannelFuture;
     private final InternalProxy internalProxy;
     private ConnectionInfo connectionInfo;
@@ -79,7 +79,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        logger.debug("from client msg: {} \n", msg);
+        logger.debug("from client {} msg: {} \n", ctx.channel().remoteAddress().toString(), msg);
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
             interceptContext.setRequest(request);
@@ -93,7 +93,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 if (HttpMethod.CONNECT.equals(request.method())) {
                     HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                     ctx.writeAndFlush(response);
-                    logger.info("be connected with {}:{}", info.getClientHost(), info.getClientPort());
+                    logger.debug("be connected by {}", ctx.channel().remoteAddress().toString());
                     // 暂时移除 httpServerCodec，处理 https 握手
                     ctx.channel().pipeline().remove("httpCodec");
                     ctx.channel().pipeline().remove("decompressor");
@@ -121,12 +121,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             logger.debug(connectionInfo.toString());
             connectRemote(ctx.channel(), request);
         } else if (msg instanceof HttpContent) {
-            if (status.equals(ConnectionStatus.CONNECTED_WITH_CLIENT)) {
-                connectRemote(ctx.channel(), msg);
-            } else {
-                ReferenceCountUtil.release(msg);
-                status = ConnectionStatus.CONNECTING;
-            }
+            connectRemote(ctx.channel(), msg);
         } else {
             ByteBuf byteBuf = (ByteBuf) msg;
             // ssl握手
@@ -214,10 +209,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         FullHttpResponse response = (FullHttpResponse) msg;
                                         interceptContext.setFullHttpResponse(response);
                                         FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
-                                        clientChannel.writeAndFlush(httpResponse)
-                                                .addListener(ChannelFutureListener.CLOSE)
-                                        ;
-                                        remoteChannelFuture.channel().close();
+                                        clientChannel.writeAndFlush(httpResponse);
                                     }
 
                                 }

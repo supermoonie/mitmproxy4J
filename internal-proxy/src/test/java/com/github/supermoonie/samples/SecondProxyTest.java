@@ -13,9 +13,9 @@ public class SecondProxyTest {
 
     public static void main(String[] args) {
         InternalProxy proxy = new InternalProxy((requestIntercepts, responseIntercepts) -> {
-            LoggingIntercept loggingIntercept = new LoggingIntercept();
-            requestIntercepts.put("logging-intercept", loggingIntercept);
-            responseIntercepts.put("logging-intercept", loggingIntercept);
+//            LoggingIntercept loggingIntercept = new LoggingIntercept();
+//            requestIntercepts.put("logging-intercept", loggingIntercept);
+//            responseIntercepts.put("logging-intercept", loggingIntercept);
         });
         InternalProxy.SecondProxyConfig secondProxyConfig = new InternalProxy.SecondProxyConfig();
         secondProxyConfig.setHost("127.0.0.1");

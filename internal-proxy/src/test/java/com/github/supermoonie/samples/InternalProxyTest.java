@@ -14,9 +14,9 @@ public class InternalProxyTest {
 
     public static void main(String[] args) {
         InternalProxy proxy = new InternalProxy((requestIntercepts, responseIntercepts) -> {
-            LoggingIntercept loggingIntercept = new LoggingIntercept();
-            requestIntercepts.put("logging-intercept", loggingIntercept);
-            responseIntercepts.put("logging-intercept", loggingIntercept);
+//            LoggingIntercept loggingIntercept = new LoggingIntercept();
+//            requestIntercepts.put("logging-intercept", loggingIntercept);
+//            responseIntercepts.put("logging-intercept", loggingIntercept);
 //            requestIntercepts.put("request-intercept-0", (ctx, request) -> {
 //                request.headers().add("foo", "bar");
 //                return null;

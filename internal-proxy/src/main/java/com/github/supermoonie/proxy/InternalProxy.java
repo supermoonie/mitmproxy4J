@@ -69,6 +69,7 @@ public class InternalProxy {
                 proxyThreads = new NioEventLoopGroup(DEFAULT_N_PROXY_THREAD);
             }
             InternalProxy that = this;
+
             future = b.group(bossThreads, workerThreads)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<Channel>() {
