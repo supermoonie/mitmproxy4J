@@ -8,7 +8,6 @@ import com.github.supermoonie.constant.EnumTextFormDataType;
 import com.github.supermoonie.controller.params.TextFormData;
 import com.github.supermoonie.exception.ApiException;
 import com.github.supermoonie.message.SimpleHeader;
-import com.github.supermoonie.service.HttpService;
 import com.github.supermoonie.util.HttpClientUtils;
 import com.github.supermoonie.util.JSON;
 import io.swagger.annotations.Api;
@@ -59,9 +58,6 @@ public class HttpController {
 
     @Resource
     private MyProxyConfig myProxyConfig;
-
-    @Resource
-    private HttpService httpService;
 
     @ApiOperation(value = "发请求", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     @PostMapping(value = "/execute", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)

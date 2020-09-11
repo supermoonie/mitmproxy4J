@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy;
 
-import com.github.supermoonie.ex.InternalProxyCloseException;
-import com.github.supermoonie.ex.InternalProxyStartException;
+import com.github.supermoonie.proxy.ex.InternalProxyCloseException;
+import com.github.supermoonie.proxy.ex.InternalProxyStartException;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;

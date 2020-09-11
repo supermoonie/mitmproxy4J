@@ -4,10 +4,11 @@ import cn.hutool.core.lang.UUID;
 import com.github.supermoonie.mapper.RequestMapper;
 import com.github.supermoonie.model.Content;
 import com.github.supermoonie.model.Request;
+import com.github.supermoonie.proxy.ConnectionInfo;
+import com.github.supermoonie.proxy.util.RequestUtils;
 import com.github.supermoonie.service.ContentService;
 import com.github.supermoonie.service.HeaderService;
 import com.github.supermoonie.service.RequestService;
-import com.github.supermoonie.util.ProtoUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -41,10 +42,10 @@ public class RequestServiceImpl implements RequestService {
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public Request saveRequest(HttpRequest httpRequest) {
-        ProtoUtil.RequestProto proto = ProtoUtil.getRequestProto(httpRequest);
-        Assert.notNull(proto, "RequestProto is null!");
-        String host = proto.getHost();
-        int port = proto.getPort();
+        ConnectionInfo connectionInfo = RequestUtils.parseRemoteInfo(httpRequest, null);
+        Assert.notNull(connectionInfo, "ConnectionInfo is null!");
+        String host = connectionInfo.getRemoteHost();
+        int port = connectionInfo.getRemotePort();
         HttpMethod method = httpRequest.method();
         HttpVersion httpVersion = httpRequest.protocolVersion();
         String contentType = httpRequest.headers().get(HttpHeaders.CONTENT_TYPE);
@@ -56,8 +57,10 @@ public class RequestServiceImpl implements RequestService {
         req.setContentType(contentType);
         req.setHost(host);
         req.setPort(port);
-        Content content = contentService.saveContent(httpRequest.content(), req.getUri());
-        req.setContentId(content.getId());
+        if (httpRequest instanceof FullHttpRequest) {
+            Content content = contentService.saveContent(((FullHttpRequest) httpRequest).content(), req.getUri());
+            req.setContentId(content.getId());
+        }
         requestMapper.insert(req);
         log.info("saved request: {}, uri: {}", req.getId(), req.getUri());
         headerService.saveHeaders(httpRequest.headers(), req.getId(), null);

@@ -9,7 +9,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Test;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 

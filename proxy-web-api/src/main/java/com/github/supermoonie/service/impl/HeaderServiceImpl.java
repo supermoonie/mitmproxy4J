@@ -40,7 +40,6 @@ public class HeaderServiceImpl implements HeaderService {
                 header.setResponseId(responseId);
                 headerMapper.insert(header);
                 count = count + 1;
-                log.info("saved header: {}, key: {}, value: {}, requestId: {}, responseId: {}", header.getId(), name, value, requestId, responseId);
             }
         }
         return count;

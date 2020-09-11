@@ -1,9 +1,9 @@
 package com.github.supermoonie.proxy;
 
-import com.github.supermoonie.ex.AuthorizationFailedException;
-import com.github.supermoonie.ex.BadRequestException;
-import com.github.supermoonie.util.RequestUtils;
-import com.github.supermoonie.util.ResponseUtils;
+import com.github.supermoonie.proxy.ex.AuthorizationFailedException;
+import com.github.supermoonie.proxy.ex.BadRequestException;
+import com.github.supermoonie.proxy.util.RequestUtils;
+import com.github.supermoonie.proxy.util.ResponseUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;

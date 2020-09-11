@@ -3,8 +3,8 @@ package com.github.supermoonie.proxy.intercept;
 
 import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.InterceptContext;
-import com.github.supermoonie.util.RequestUtils;
-import com.github.supermoonie.util.ResponseUtils;
+import com.github.supermoonie.proxy.util.RequestUtils;
+import com.github.supermoonie.proxy.util.ResponseUtils;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;

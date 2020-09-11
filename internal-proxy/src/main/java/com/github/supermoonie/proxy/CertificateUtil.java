@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy;
 
-import com.github.supermoonie.ex.InternalProxyException;
+import com.github.supermoonie.proxy.ex.InternalProxyException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
