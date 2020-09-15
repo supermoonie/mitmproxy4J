@@ -20,6 +20,8 @@ public class ConnectionInfo {
 
     private boolean useSecondProxy = true;
 
+    private volatile boolean finished = false;
+
     public String getRemoteHost() {
         return remoteHost;
     }
@@ -76,6 +78,14 @@ public class ConnectionInfo {
         this.useSecondProxy = useSecondProxy;
     }
 
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished = finished;
+    }
+
     @Override
     public String toString() {
         return "ConnectionInfo{" +
@@ -85,6 +95,8 @@ public class ConnectionInfo {
                 ", clientHost='" + clientHost + '\'' +
                 ", clientPort=" + clientPort +
                 ", isHttps=" + isHttps +
+                ", useSecondProxy=" + useSecondProxy +
+                ", finished=" + finished +
                 '}';
     }
 }

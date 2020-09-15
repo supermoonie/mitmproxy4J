@@ -4,6 +4,7 @@ import com.github.supermoonie.model.Request;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.service.RequestService;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

@@ -35,12 +35,14 @@ public class InternalProxy {
     private static final int DEFAULT_N_WORKER_THREAD = 16;
     private static final int DEFAULT_N_PROXY_THREAD = 16;
     private static final int DEFAULT_PORT = 10801;
+    private static final int DEFAULT_MAX_CONTENT_SIZE = 32 * 1024 * 1024;
     private static final String DEFAULT_CA_FILE_NAME = "ca.crt";
     private static final String DEFAULT_PRIVATE_KEY_FILE_NAME = "ca_private.pem";
 
     private NioEventLoopGroup bossThreads;
     private NioEventLoopGroup workerThreads;
     private NioEventLoopGroup proxyThreads;
+    private int maxContentSize = DEFAULT_MAX_CONTENT_SIZE;
     private int port = DEFAULT_PORT;
     private String username;
     private String password;
@@ -69,7 +71,6 @@ public class InternalProxy {
                 proxyThreads = new NioEventLoopGroup(DEFAULT_N_PROXY_THREAD);
             }
             InternalProxy that = this;
-
             future = b.group(bossThreads, workerThreads)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<Channel>() {
@@ -77,8 +78,8 @@ public class InternalProxy {
                         protected void initChannel(Channel ch) throws Exception {
                             ch.pipeline().addLast("httpCodec", new HttpServerCodec());
                             ch.pipeline().addLast("decompressor", new HttpContentDecompressor());
-                            ch.pipeline().addLast("aggregator", new HttpObjectAggregator(512 * 1024));
-                            ch.pipeline().addLast(new InternalProxyHandler(that, initializer));
+                            ch.pipeline().addLast("aggregator", new HttpObjectAggregator(maxContentSize));
+                            ch.pipeline().addLast("internalProxyHandler", new InternalProxyHandler(that, initializer));
                         }
                     }).bind(port).sync();
             logger.info("proxy listening on {}", port);
@@ -319,5 +320,13 @@ public class InternalProxy {
 
     public void setSecondProxyConfig(SecondProxyConfig secondProxyConfig) {
         this.secondProxyConfig = secondProxyConfig;
+    }
+
+    public int getMaxContentSize() {
+        return maxContentSize;
+    }
+
+    public void setMaxContentSize(int maxContentSize) {
+        this.maxContentSize = maxContentSize;
     }
 }

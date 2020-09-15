@@ -2,6 +2,7 @@ package com.github.supermoonie.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

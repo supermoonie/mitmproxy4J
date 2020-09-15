@@ -95,14 +95,15 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     ctx.writeAndFlush(response);
                     logger.debug("be connected by {}", ctx.channel().remoteAddress().toString());
                     // 暂时移除 httpServerCodec，处理 https 握手
-                    ctx.channel().pipeline().remove("httpCodec");
-                    ctx.channel().pipeline().remove("decompressor");
-                    ctx.channel().pipeline().remove("aggregator");
+                    ctx.pipeline().remove("httpCodec");
+                    ctx.pipeline().remove("decompressor");
+                    ctx.pipeline().remove("aggregator");
                     ReferenceCountUtil.release(msg);
                     status = ConnectionStatus.CONNECTED_WITH_CLIENT;
                     return;
                 }
             }
+            logger.debug("pipeline: " + ctx.pipeline());
             verifyAuth(request);
             String separator = "/";
             if (request.uri().startsWith(separator)) {
@@ -112,7 +113,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (connectionInfo.isHttps()) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                 SSLSession session = sslHandler.engine().getSession();
-                logger.info("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
+                logger.debug("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
             }
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
@@ -121,12 +122,16 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             logger.debug(connectionInfo.toString());
             connectRemote(ctx.channel(), request);
         } else if (msg instanceof HttpContent) {
-            connectRemote(ctx.channel(), msg);
+            if (msg instanceof LastHttpContent) {
+                connectionInfo.setFinished(true);
+            }
+            HttpContent content = (HttpContent) msg;
+            connectRemote(ctx.channel(), content);
         } else {
             ByteBuf byteBuf = (ByteBuf) msg;
             // ssl握手
             if (byteBuf.getByte(0) == SSL_FLAG) {
-                logger.info("handshake with {}:{}", connectionInfo.getClientHost(), connectionInfo.getClientPort());
+                logger.debug("handshake with {}:{}", connectionInfo.getClientHost(), connectionInfo.getClientPort());
                 connectionInfo.setHttps(true);
                 int port = ((InetSocketAddress) ctx.channel().localAddress()).getPort();
                 String host = connectionInfo.getHostHeader().split(":")[0];
@@ -134,8 +139,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 SslContext sslCtx = SslContextBuilder
                         .forServer(certificateConfig.getServerPriKey(), CertificateUtil.getCert(port, host, certificateConfig)).build();
                 ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
-                ctx.pipeline().addLast("decompressor", new HttpContentDecompressor());
-                ctx.pipeline().addLast("aggregator", new HttpObjectAggregator(100 * 1024 * 1024));
+                ctx.pipeline().addAfter("httpCodec", "decompressor", new HttpContentDecompressor());
+                ctx.pipeline().addAfter("decompressor", "aggregator", new HttpObjectAggregator(internalProxy.getMaxContentSize()));
                 ctx.pipeline().addFirst("sslHandler", sslCtx.newHandler(ctx.alloc()));
                 // 重新过一遍pipeline，拿到解密后的的http报文
                 ctx.pipeline().fireChannelRead(msg);
@@ -148,6 +153,9 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         logger.debug(ctx.channel().remoteAddress().toString() + " inactive");
+        if (null != remoteChannelFuture && remoteChannelFuture.channel().isOpen()) {
+            remoteChannelFuture.channel().close();
+        }
         super.channelInactive(ctx);
     }
 
@@ -174,15 +182,15 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             if (connectionInfo.isUseSecondProxy()) {
-                                logger.debug(request.uri() + " use proxy");
                                 ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
                                 if (null != proxyHandler) {
+                                    logger.debug(request.uri() + " through second proxy");
                                     ch.pipeline().addLast("proxyHandler", proxyHandler);
                                 }
                             }
                             InternalProxy.CertificateConfig certificateConfig = internalProxy.getCertificateConfig();
                             if (connectionInfo.isHttps()) {
-                                logger.info("{}:{} is https", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
+                                logger.debug("{}:{} is https", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
                                 ch.pipeline().addLast("sslHandler", certificateConfig
                                         .getClientSslCtx()
                                         .newHandler(ch.alloc(), connectionInfo.getRemoteHost(), connectionInfo.getRemotePort()));
@@ -210,13 +218,21 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         interceptContext.setFullHttpResponse(response);
                                         FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
                                         clientChannel.writeAndFlush(httpResponse);
+                                    } else {
+                                        clientChannel.writeAndFlush(msg);
                                     }
 
                                 }
 
                                 @Override
+                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                                    // TODO
+                                    interceptContext.onResponseException(request, null, cause);
+                                }
+
+                                @Override
                                 public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                                    logger.info("{}:{} inactive", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
+                                    logger.debug("{}:{} inactive", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
                                 }
                             });
                         }

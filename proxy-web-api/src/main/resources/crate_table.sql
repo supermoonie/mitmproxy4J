@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS header
 (
   id          VARCHAR(64) PRIMARY KEY ,
-  name        VARCHAR(64),
-  value       VARCHAR(2048),
+  `name`      VARCHAR(64),
+  `value`     VARCHAR(2048),
   requestId   VARCHAR(64),
-  responseId   VARCHAR(64),
+  responseId  VARCHAR(64),
   timeCreated DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
 CREATE INDEX name_idx ON header(name);
@@ -43,5 +43,13 @@ CREATE TABLE IF NOT EXISTS content
 (
   id          VARCHAR(64) PRIMARY KEY,
   content     BLOB,
+  timeCreated DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
+);
+--EOF--
+CREATE TABLE IF NOT EXISTS config
+(
+  id          VARCHAR(64) PRIMARY KEY,
+  `key`       VARCHAR(64),
+  `value`     VARCHAR(64),
   timeCreated DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
