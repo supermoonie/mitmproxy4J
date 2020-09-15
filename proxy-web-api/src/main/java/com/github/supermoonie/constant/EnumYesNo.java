@@ -23,8 +23,6 @@ public enum EnumYesNo {
 
     @Override
     public String toString() {
-        return "EnumYesNo{" +
-                "value=" + value +
-                '}';
+        return String.valueOf(value);
     }
 }

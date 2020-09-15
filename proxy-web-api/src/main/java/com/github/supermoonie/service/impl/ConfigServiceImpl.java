@@ -23,8 +23,26 @@ public class ConfigServiceImpl implements ConfigService {
     private ConfigMapper configMapper;
 
     @Override
-    public Integer changeRecordStatus() {
-        return null;
+    public String change(String key) {
+        QueryWrapper<Config> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("key", key);
+        Config config = configMapper.selectOne(queryWrapper);
+        if (null == config) {
+            config = new Config();
+            config.setId(UUID.randomUUID().toString());
+            config.setKey(key);
+            config.setValue(String.valueOf(EnumYesNo.YES));
+            configMapper.insert(config);
+            return EnumYesNo.YES.toString();
+        } else {
+            if (config.getValue().equals(String.valueOf(EnumYesNo.YES.getValue()))) {
+                config.setValue(String.valueOf(EnumYesNo.NO.getValue()));
+            } else {
+                config.setValue(String.valueOf(EnumYesNo.YES.getValue()));
+            }
+            configMapper.updateById(config);
+            return config.getValue();
+        }
     }
 
     @Override
@@ -40,7 +58,7 @@ public class ConfigServiceImpl implements ConfigService {
             config = new Config();
             config.setId(UUID.randomUUID().toString());
             config.setKey(RECORD_KEY);
-            config.setValue(String.valueOf(EnumYesNo.YES));
+            config.setValue(EnumYesNo.YES.toString());
             configMapper.insert(config);
         }
     }

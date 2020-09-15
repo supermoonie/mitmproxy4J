@@ -8,7 +8,7 @@ public interface ConfigService {
 
     String RECORD_KEY = "RECORD_STATUS";
 
-    Integer changeRecordStatus();
+    String change(String key);
 
     void initial();
 

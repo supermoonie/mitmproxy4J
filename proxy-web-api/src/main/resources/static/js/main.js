@@ -137,7 +137,9 @@ new Vue({
             dp: '',
             videoUrl: '',
             videoDialogVisible: false,
-
+            menu: {
+                'proxyRecord': 'Start Record'
+            },
             edit: {
                 tabs: ['URL', 'Headers', 'Body'],
                 activeTab: '0',
@@ -402,8 +404,23 @@ new Vue({
          * @param keyPath   菜单的路径
          */
         handleSelect(key, keyPath) {
+            const that = this;
             if ('Save' === key) {
                 this.doSave();
+            } else if ('proxy-record' === key) {
+                axios({
+                    method: 'post',
+                    url: '/config/RECORD_STATUS/change'
+                }).then(function (response) {
+                    console.log(response);
+                    if (response.data === 1) {
+                        that.menu.proxyRecord = 'Stop Record';
+                    } else {
+                        that.menu.proxyRecord = 'Start Record';
+                    }
+                }).catch(error => {
+                    that.responseErrorHandler(error);
+                });
             }
         },
         doSave() {
@@ -1089,6 +1106,7 @@ new Vue({
             this.webSocket.close();
         }
     },
+
     mounted() {
         let that = this;
         window.onload = function () {
@@ -1097,6 +1115,19 @@ new Vue({
             that.autoAdjustWhenWindowResize();
             axios.defaults.baseURL = 'http://127.0.1:8866';
             that.connect(true);
+            axios({
+                method: 'get',
+                url: '/config/RECORD_STATUS/status'
+            }).then(function (response) {
+                console.log(response);
+                if (response.data === 1) {
+                    that.menu.proxyRecord = 'Stop Record';
+                } else {
+                    that.menu.proxyRecord = 'Start Record';
+                }
+            }).catch(error => {
+                that.responseErrorHandler(error);
+            });
         }
     },
     beforeDestroy() {
