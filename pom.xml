@@ -11,6 +11,7 @@
     <modules>
         <module>proxy-web-api</module>
         <module>internal-proxy</module>
+        <module>proxy-fx</module>
     </modules>
 
     <name>mitmproxy4J</name>
@@ -183,6 +184,21 @@
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-controls</artifactId>
+                <version>13</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-swing</artifactId>
+                <version>13</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-fxml</artifactId>
+                <version>13</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>

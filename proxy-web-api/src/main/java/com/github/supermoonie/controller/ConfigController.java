@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -31,6 +34,13 @@ public class ConfigController {
     @PostMapping("/{key}/change")
     public ResponseEntity<String> change(@PathVariable("key") String key) {
         return ResponseEntity.ok(configService.change(key));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Map<String, String>> all() {
+        List<Config> configs = configMapper.selectList(new QueryWrapper<>());
+        Map<String, String> map = configs.stream().collect(Collectors.toMap(Config::getKey, Config::getValue));
+        return ResponseEntity.ok(map);
     }
 
     @GetMapping("/{key}/status")

@@ -197,7 +197,10 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                             }
                             ch.pipeline().addLast("httpCodec", new HttpClientCodec());
                             ch.pipeline().addLast("decompressor", new HttpContentDecompressor());
-                            ch.pipeline().addLast("aggregator", new HttpObjectAggregator(100 * 1024 * 1024));
+                            ch.pipeline().addLast("aggregator", new HttpObjectAggregator(internalProxy.getMaxContentSize()));
+                            if (internalProxy.isTrafficShaping()) {
+                                ch.pipeline().addLast("trafficShapingHandler", internalProxy.getTrafficShapingHandler());
+                            }
                             ch.pipeline().addLast("proxyClientHandle", new ChannelInboundHandlerAdapter() {
 
                                 @Override

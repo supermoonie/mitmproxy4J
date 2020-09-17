@@ -1117,14 +1117,10 @@ new Vue({
             that.connect(true);
             axios({
                 method: 'get',
-                url: '/config/RECORD_STATUS/status'
+                url: '/config/all'
             }).then(function (response) {
                 console.log(response);
-                if (response.data === 1) {
-                    that.menu.proxyRecord = 'Stop Record';
-                } else {
-                    that.menu.proxyRecord = 'Start Record';
-                }
+                that.menu.proxyRecord = response.data['RECORD_STATUS'] === '1' ? 'Stop Record' : 'Start Record';
             }).catch(error => {
                 that.responseErrorHandler(error);
             });

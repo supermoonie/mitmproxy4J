@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,8 @@ import java.util.Date;
 public class InternalProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(InternalProxy.class);
+
+    private GlobalChannelTrafficShapingHandler trafficShapingHandler;
 
     private static final int DEFAULT_N_BOOS_THREAD = 2;
     private static final int DEFAULT_N_WORKER_THREAD = 16;
@@ -49,6 +52,8 @@ public class InternalProxy {
     private String caPath;
     private String privateKeyPath;
     private CertificateConfig certificateConfig;
+    private volatile boolean trafficShaping;
+    private final TrafficShapingConfig trafficShapingConfig = new TrafficShapingConfig();
     private SecondProxyConfig secondProxyConfig;
     private ChannelFuture future;
     private final InterceptInitializer initializer;
@@ -69,6 +74,13 @@ public class InternalProxy {
             }
             if (null == proxyThreads) {
                 proxyThreads = new NioEventLoopGroup(DEFAULT_N_PROXY_THREAD);
+            }
+            if (trafficShaping) {
+                trafficShapingHandler = new GlobalChannelTrafficShapingHandler(workerThreads);
+                trafficShapingHandler.setReadLimit(trafficShapingConfig.getReadLimit());
+                trafficShapingHandler.setWriteLimit(trafficShapingConfig.getWriteLimit());
+                trafficShapingHandler.setCheckInterval(trafficShapingConfig.getCheckInterval());
+                trafficShapingHandler.setMaxTimeWait(trafficShapingConfig.getMaxWaitTime());
             }
             InternalProxy that = this;
             future = b.group(bossThreads, workerThreads)
@@ -140,6 +152,49 @@ public class InternalProxy {
         certificateConfig.serverPriKey = keyPair.getPrivate();
         certificateConfig.serverPubKey = keyPair.getPublic();
         logger.debug("load ca {}", caCert);
+    }
+
+    public static class TrafficShapingConfig {
+
+        private long readLimit = 1024L;
+
+        private long writeLimit = 1024L;
+
+        private long checkInterval = GlobalChannelTrafficShapingHandler.DEFAULT_CHECK_INTERVAL;
+
+        private long maxWaitTime = GlobalChannelTrafficShapingHandler.DEFAULT_MAX_TIME;
+
+        public long getReadLimit() {
+            return readLimit;
+        }
+
+        public void setReadLimit(long readLimit) {
+            this.readLimit = readLimit;
+        }
+
+        public long getWriteLimit() {
+            return writeLimit;
+        }
+
+        public void setWriteLimit(long writeLimit) {
+            this.writeLimit = writeLimit;
+        }
+
+        public long getCheckInterval() {
+            return checkInterval;
+        }
+
+        public void setCheckInterval(long checkInterval) {
+            this.checkInterval = checkInterval;
+        }
+
+        public long getMaxWaitTime() {
+            return maxWaitTime;
+        }
+
+        public void setMaxWaitTime(long maxWaitTime) {
+            this.maxWaitTime = maxWaitTime;
+        }
     }
 
     public static class SecondProxyConfig {
@@ -328,5 +383,21 @@ public class InternalProxy {
 
     public void setMaxContentSize(int maxContentSize) {
         this.maxContentSize = maxContentSize;
+    }
+
+    public boolean isTrafficShaping() {
+        return trafficShaping;
+    }
+
+    public void setTrafficShaping(boolean trafficShaping) {
+        this.trafficShaping = trafficShaping;
+    }
+
+    public GlobalChannelTrafficShapingHandler getTrafficShapingHandler() {
+        return trafficShapingHandler;
+    }
+
+    public TrafficShapingConfig getTrafficShapingConfig() {
+        return trafficShapingConfig;
     }
 }
