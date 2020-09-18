@@ -150,6 +150,10 @@ html, body, #main {
 }
 /*request edit container*/
 
+.p-switch .el-switch {
+    height: 40px;
+}
+
 .p-select-none {
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -264,6 +268,14 @@ html, body, #main {
 .el-menu-item {
     height: 35px;
     line-height: 35px;
+}
+
+.p-icon-active {
+    color: #409EFF;
+}
+
+.p-icon-inactive {
+    color: red;
 }
 
 /*header组件*/

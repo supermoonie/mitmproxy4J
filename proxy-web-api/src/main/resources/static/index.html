@@ -45,6 +45,30 @@
     </div>
     <!--video dialog end-->
 
+    <!--throttling setting dialog begin-->
+    <el-dialog v-cloak title="Throttling Setting" top="5vh" :visible.sync="throttlingSettingDialogVisible">
+        <el-form :model="throttlingSetting">
+            <el-form-item label="Switch" label-width="120px" class="p-switch">
+                <el-switch v-model="throttlingSetting.throttlingSwitch"></el-switch>
+            </el-form-item>
+            <el-form-item label="Download" label-width="120px">
+                <el-input type="number" v-model="throttlingSetting.readLimit" autocomplete="off">
+                    <template slot="append">KB/s</template>
+                </el-input>
+            </el-form-item>
+            <el-form-item label="Upload" label-width="120px">
+                <el-input type="number" v-model="throttlingSetting.writeLimit" autocomplete="off">
+                    <template slot="append">KB/s</template>
+                </el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="throttlingSettingDialogVisible = false">Cancel</el-button>
+            <el-button type="primary" @click="throttlingSettingConfirm">Confirm</el-button>
+        </div>
+    </el-dialog>
+    <!--throttling setting dialog end-->
+
     <!--request edit dialog begin-->
     <div class="p-request-edit-container" v-cloak>
         <el-dialog title="Edit" top="5vh" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.3)"
@@ -365,9 +389,12 @@
                 </el-submenu>
                 <el-submenu index="2">
                     <template slot="title">Proxy</template>
-                    <el-menu-item index="proxy-record">{{menu.proxyRecord}}</el-menu-item>
-                    <el-menu-item index="2-2">Start Throttling...</el-menu-item>
+                    <el-menu-item index="RECORD_STATUS">{{menu.proxyRecord}}</el-menu-item>
+                    <el-menu-item index="THROTTLING_STATUS">{{menu.throttling}}</el-menu-item>
+                    <div style="height: 1px;width: 100%;border-bottom: 1px #ddd solid;"></div>
                     <el-menu-item index="2-3">Open Windows Proxy</el-menu-item>
+                    <div style="height: 1px;width: 100%;border-bottom: 1px #ddd solid;"></div>
+                    <el-menu-item index="throttlingConfig" @click="throttlingSettingDialogVisible = true">Throttling Settings...</el-menu-item>
                     <el-menu-item index="2-4">Proxy Settings...</el-menu-item>
                 </el-submenu>
                 <el-submenu index="3">
@@ -389,7 +416,7 @@
             <div class="p-tool">
                 <i class="el-icon-delete p-icon" @click="clearClicked()"></i>
                 <i class="el-icon-edit p-icon" @click="requestEditClicked()"></i>
-                <i :class="{'el-icon-video-play': !fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}"
+                <i :class="{'el-icon-video-play': !fetchSwitch, 'p-icon-inactive': !fetchSwitch, 'p-icon-active': fetchSwitch, 'el-icon-video-pause': fetchSwitch, 'p-icon': true}"
                    @click="fetchSwitchClicked"></i>
                 <div style="display: inline;" class="p-search-input-group">
                     <el-select size="mini" v-model="search.method">

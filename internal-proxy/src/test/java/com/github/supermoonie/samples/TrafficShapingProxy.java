@@ -15,10 +15,10 @@ public class TrafficShapingProxy {
     public static void main(String[] args) {
         InternalProxy proxy = new InternalProxy(null);
         proxy.setTrafficShaping(true);
-        InternalProxy.TrafficShapingConfig trafficShapingConfig = proxy.getTrafficShapingConfig();
-        trafficShapingConfig.setCheckInterval(1_000);
-        trafficShapingConfig.setReadLimit(1024L);
-        trafficShapingConfig.setWriteLimit(1024L);
+        GlobalChannelTrafficShapingHandler handler = proxy.getTrafficShapingHandler();
+        handler.setCheckInterval(1_000);
+        handler.setReadLimit(1024L);
+        handler.setWriteLimit(1024L);
         proxy.start();
         GlobalChannelTrafficShapingHandler trafficShapingHandler = proxy.getTrafficShapingHandler();
         TrafficCounter trafficCounter = trafficShapingHandler.trafficCounter();

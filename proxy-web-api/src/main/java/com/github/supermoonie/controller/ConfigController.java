@@ -1,12 +1,14 @@
 package com.github.supermoonie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.supermoonie.controller.params.ThrottlingSetting;
 import com.github.supermoonie.mapper.ConfigMapper;
 import com.github.supermoonie.model.Config;
 import com.github.supermoonie.service.ConfigService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequestMapping(value = "/config")
 @CrossOrigin
 @Slf4j
+@Validated
 public class ConfigController {
 
     @Resource
@@ -30,6 +33,11 @@ public class ConfigController {
 
     @Resource
     private ConfigMapper configMapper;
+
+    @PostMapping("/throttling/setting")
+    public ResponseEntity<String> throttlingSetting(@RequestBody ThrottlingSetting setting) {
+        return ResponseEntity.ok(configService.throttlingSetting(setting));
+    }
 
     @PostMapping("/{key}/change")
     public ResponseEntity<String> change(@PathVariable("key") String key) {

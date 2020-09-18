@@ -137,8 +137,15 @@ new Vue({
             dp: '',
             videoUrl: '',
             videoDialogVisible: false,
+            throttlingSettingDialogVisible: false,
+            throttlingSetting: {
+                throttlingSwitch: false,
+                readLimit: 64,
+                writeLimit: 32
+            },
             menu: {
-                'proxyRecord': 'Start Record'
+                'proxyRecord': 'Start Record',
+                'throttling': 'Start Throttling'
             },
             edit: {
                 tabs: ['URL', 'Headers', 'Body'],
@@ -405,23 +412,65 @@ new Vue({
          */
         handleSelect(key, keyPath) {
             const that = this;
+            const configKey = ['THROTTLING_STATUS', 'RECORD_STATUS'];
             if ('Save' === key) {
                 this.doSave();
-            } else if ('proxy-record' === key) {
+            } else if (configKey.indexOf(key) !== -1) {
                 axios({
                     method: 'post',
-                    url: '/config/RECORD_STATUS/change'
+                    url: '/config/' + key + '/change'
                 }).then(function (response) {
                     console.log(response);
-                    if (response.data === 1) {
-                        that.menu.proxyRecord = 'Stop Record';
-                    } else {
-                        that.menu.proxyRecord = 'Start Record';
+                    if (key === 'RECORD_STATUS') {
+                        if (response.data === 1) {
+                            that.menu.proxyRecord = 'Stop Record';
+                        } else {
+                            that.menu.proxyRecord = 'Start Record';
+                        }
+                    } else if (key === 'THROTTLING_STATUS') {
+                        if (response.data === 1) {
+                            that.menu.throttling = 'Stop Throttling';
+                            that.throttlingSetting.throttlingSwitch = true;
+                        } else {
+                            that.menu.throttling = 'Start Throttling';
+                            that.throttlingSetting.throttlingSwitch = false;
+                        }
+
                     }
+
                 }).catch(error => {
                     that.responseErrorHandler(error);
                 });
             }
+        },
+        throttlingSettingConfirm() {
+            const that = this;
+            let readLimit, writeLimit;
+            try {
+                readLimit = Number(that.throttlingSetting.readLimit);
+                writeLimit = Number(that.throttlingSetting.writeLimit)
+            } catch (e) {
+                this.$message({
+                    showClose: true,
+                    message: 'Please Type In Number!',
+                    type: 'error'
+                });
+                return;
+            }
+            axios({
+                method: 'post',
+                url: '/config/throttling/setting',
+                data: {
+                    status: that.throttlingSetting.throttlingSwitch,
+                    readLimit: readLimit,
+                    writeLimit: writeLimit
+                }
+            }).then((ignore) => {
+                that.menu.throttling = that.throttlingSetting.throttlingSwitch ? 'Stop Throttling' : 'Start Throttling';
+                that.throttlingSettingDialogVisible = false;
+            }).catch(error => {
+                that.responseErrorHandler(error);
+            });
         },
         doSave() {
             if (!!this.currentFlowId) {
@@ -1121,6 +1170,11 @@ new Vue({
             }).then(function (response) {
                 console.log(response);
                 that.menu.proxyRecord = response.data['RECORD_STATUS'] === '1' ? 'Stop Record' : 'Start Record';
+                that.menu.throttling = response.data['THROTTLING_STATUS'] === '1' ? 'Stop Throttling' : 'Start Throttling';
+                that.throttlingSetting.throttlingSwitch = (response.data['THROTTLING_STATUS'] === '1');
+                that.throttlingSetting.readLimit = Number(response.data['THROTTLING_READ_LIMIT']);
+                that.throttlingSetting.writeLimit = Number(response.data['THROTTLING_WRITE_LIMIT']);
+                console.log(that.throttlingSetting);
             }).catch(error => {
                 that.responseErrorHandler(error);
             });

@@ -2,17 +2,18 @@ package com.github.supermoonie.runner;
 
 import cn.hutool.json.JSONUtil;
 import com.github.supermoonie.config.InternalProxyConfig;
-import com.github.supermoonie.proxy.*;
-import com.github.supermoonie.proxy.intercept.RequestIntercept;
-import com.github.supermoonie.proxy.intercept.ResponseIntercept;
+import com.github.supermoonie.proxy.InternalProxy;
+import com.github.supermoonie.proxy.InternalProxyInterceptInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
+import io.netty.handler.traffic.TrafficCounter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author supermoonie
@@ -44,7 +45,26 @@ public class InternalProxyRunner implements CommandLineRunner {
         proxy.setCaPath(internalProxyConfig.getCaPath());
         proxy.setPrivateKeyPath(internalProxyConfig.getPrivateKeyPath());
         proxy.setSecondProxyConfig(internalProxyConfig.getSecondProxyConfig());
+        proxy.setTrafficShaping(false);
         proxy.start();
+        GlobalChannelTrafficShapingHandler trafficShapingHandler = proxy.getTrafficShapingHandler();
+        TrafficCounter trafficCounter = trafficShapingHandler.trafficCounter();
+        new Thread(() -> {
+            while (true) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+//                final long totalRead = trafficCounter.cumulativeReadBytes();
+//                final long totalWrite = trafficCounter.cumulativeWrittenBytes();
+//                System.out.println("total read: " + (totalRead >> 10) + " KB");
+//                System.out.println("total write: " + (totalWrite >> 10) + " KB");
+                if (proxy.isTrafficShaping()) {
+                    log.info(trafficCounter.toString());
+                }
+            }
+        }).start();
     }
 
     public InternalProxy getProxy() {
