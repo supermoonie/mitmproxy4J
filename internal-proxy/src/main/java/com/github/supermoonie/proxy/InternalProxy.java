@@ -52,7 +52,7 @@ public class InternalProxy {
     private String caPath;
     private String privateKeyPath;
     private CertificateConfig certificateConfig;
-    private volatile boolean trafficShaping;
+    private volatile boolean trafficShaping = false;
     private SecondProxyConfig secondProxyConfig;
     private ChannelFuture future;
     private final InterceptInitializer initializer;

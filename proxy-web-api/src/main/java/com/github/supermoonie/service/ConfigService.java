@@ -17,6 +17,8 @@ public interface ConfigService {
 
     String throttlingSetting(ThrottlingSetting setting);
 
+    String switchThrottling();
+
     void initial();
 
 }

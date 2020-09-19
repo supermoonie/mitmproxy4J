@@ -39,6 +39,11 @@ public class ConfigController {
         return ResponseEntity.ok(configService.throttlingSetting(setting));
     }
 
+    @PostMapping("/switch/throttling")
+    public ResponseEntity<String> switchThrottling() {
+        return ResponseEntity.ok(configService.switchThrottling());
+    }
+
     @PostMapping("/{key}/change")
     public ResponseEntity<String> change(@PathVariable("key") String key) {
         return ResponseEntity.ok(configService.change(key));
@@ -57,5 +62,16 @@ public class ConfigController {
         queryWrapper.eq("key", key);
         Config config = configMapper.selectOne(queryWrapper);
         return ResponseEntity.ok(config.getValue());
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, String>> status(@RequestParam("keys") List<String> keys) {
+        QueryWrapper<Config> queryWrapper = new QueryWrapper<>();
+        for (String key : keys) {
+            queryWrapper.or().eq("key", key);
+        }
+        List<Config> configs = configMapper.selectList(queryWrapper);
+        Map<String, String> map = configs.stream().collect(Collectors.toMap(Config::getKey, Config::getValue));
+        return ResponseEntity.ok(map);
     }
 }

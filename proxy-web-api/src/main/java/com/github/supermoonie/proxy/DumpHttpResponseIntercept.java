@@ -39,7 +39,6 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
     @Resource
     private ConfigMapper configMapper;
 
-
     @Override
     public FullHttpResponse onResponse(InterceptContext ctx, HttpRequest request, FullHttpResponse response) {
         if (null == ctx.getUserData()) {

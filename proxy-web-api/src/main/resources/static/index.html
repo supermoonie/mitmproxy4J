@@ -390,11 +390,11 @@
                 <el-submenu index="2">
                     <template slot="title">Proxy</template>
                     <el-menu-item index="RECORD_STATUS">{{menu.proxyRecord}}</el-menu-item>
-                    <el-menu-item index="THROTTLING_STATUS">{{menu.throttling}}</el-menu-item>
+                    <el-menu-item index="switchThrottling">{{menu.throttling}}</el-menu-item>
                     <div style="height: 1px;width: 100%;border-bottom: 1px #ddd solid;"></div>
                     <el-menu-item index="2-3">Open Windows Proxy</el-menu-item>
                     <div style="height: 1px;width: 100%;border-bottom: 1px #ddd solid;"></div>
-                    <el-menu-item index="throttlingConfig" @click="throttlingSettingDialogVisible = true">Throttling Settings...</el-menu-item>
+                    <el-menu-item index="throttlingConfig">Throttling Settings...</el-menu-item>
                     <el-menu-item index="2-4">Proxy Settings...</el-menu-item>
                 </el-submenu>
                 <el-submenu index="3">

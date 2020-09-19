@@ -15,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -82,6 +85,32 @@ public class ConfigServiceImpl implements ConfigService {
             handler.setWriteLimit(setting.getWriteLimit());
         }
         return value;
+    }
+
+    @Override
+    public String switchThrottling() {
+        QueryWrapper<Config> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("key", THROTTLING_KEY);
+        Config config = configMapper.selectOne(queryWrapper);
+        if (config.getValue().equals(EnumYesNo.YES.toString())) {
+            config.setValue(EnumYesNo.NO.toString());
+        } else {
+            config.setValue(EnumYesNo.YES.toString());
+        }
+        configMapper.updateById(config);
+        if (config.getValue().equals(EnumYesNo.YES.toString())) {
+            queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("key", THROTTLING_READ_LIMIT).or().eq("key", THROTTLING_WRITE_LIMIT);
+            List<Config> configs = configMapper.selectList(queryWrapper);
+            Map<String, String> map = configs.stream().collect(Collectors.toMap(Config::getKey, Config::getValue));
+            GlobalChannelTrafficShapingHandler trafficShapingHandler = internalProxyRunner.getProxy().getTrafficShapingHandler();
+            trafficShapingHandler.setReadLimit(Long.parseLong(map.get(THROTTLING_READ_LIMIT)));
+            trafficShapingHandler.setWriteLimit(Long.parseLong(map.get(THROTTLING_WRITE_LIMIT)));
+            internalProxyRunner.getProxy().setTrafficShaping(true);
+        } else {
+            internalProxyRunner.getProxy().setTrafficShaping(false);
+        }
+        return config.getValue();
     }
 
     @Override

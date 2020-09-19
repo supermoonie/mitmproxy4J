@@ -210,12 +210,12 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                                 @Override
                                 public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                    logger.debug("received: " + msg);
                                     if (connectionInfo.isHttps()) {
                                         SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                                         SSLSession session = sslHandler.engine().getSession();
                                         logger.debug("remote session: {}, {}", session.getProtocol(), session.getCipherSuite());
                                     }
+                                    logger.debug("received: " + msg);
                                     if (msg instanceof FullHttpResponse) {
                                         FullHttpResponse response = (FullHttpResponse) msg;
                                         interceptContext.setFullHttpResponse(response);
@@ -224,7 +224,13 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     } else {
                                         clientChannel.writeAndFlush(msg);
                                     }
-
+//                                    if (msg instanceof HttpResponse) {
+//                                        HttpResponse response = (HttpResponse) msg;
+//                                        if (response.headers().get(HttpHeaderNames.TRANSFER_ENCODING).equals("chunked")) {
+//                                            logger.info("-----add chunked handler");
+//                                            ch.pipeline().addAfter("httpCodec", "streamer", new ChunkedWriteHandler());
+//                                        }
+//                                    }
                                 }
 
                                 @Override

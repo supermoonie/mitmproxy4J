@@ -29,7 +29,7 @@ public class InternalProxyRunner implements CommandLineRunner {
 
     @Resource
     private InternalProxyInterceptInitializer initializer;
-
+    
     private InternalProxy proxy;
 
     @Override

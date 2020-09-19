@@ -415,29 +415,43 @@ new Vue({
             const configKey = ['THROTTLING_STATUS', 'RECORD_STATUS'];
             if ('Save' === key) {
                 this.doSave();
+            } else if ('switchThrottling' === key) {
+                axios({
+                    method: 'post',
+                    url: '/config/switch/throttling'
+                }).then(response => {
+                    const data = response.data;
+                    that.menu.throttling = Number(data) === 1 ? 'Stop Throttling' : 'Start Throttling';
+                }).catch(error => {
+                    that.responseErrorHandler(error);
+                });
+            } else if ('throttlingConfig' === key) {
+                axios({
+                    method: 'get',
+                    url: '/config/status?keys=THROTTLING_STATUS&keys=THROTTLING_READ_LIMIT&keys=THROTTLING_WRITE_LIMIT'
+                }).then(response => {
+                    console.log(response);
+                    const data = response.data;
+                    that.menu.proxyRecord = Number(data['THROTTLING_STATUS']) === 1 ? 'Stop Throttling' : 'Start Throttling';
+                    that.throttlingSetting.throttlingSwitch = Number(data['THROTTLING_STATUS']) === 1;
+                    that.throttlingSetting.readLimit = Number(data['THROTTLING_READ_LIMIT']);
+                    that.throttlingSetting.writeLimit = Number(data['THROTTLING_WRITE_LIMIT']);
+                    that.throttlingSettingDialogVisible = true
+                }).catch(error => {
+                    that.responseErrorHandler(error);
+                });
             } else if (configKey.indexOf(key) !== -1) {
                 axios({
                     method: 'post',
                     url: '/config/' + key + '/change'
                 }).then(function (response) {
-                    console.log(response);
                     if (key === 'RECORD_STATUS') {
-                        if (response.data === 1) {
+                        if (Number(response.data) === 1) {
                             that.menu.proxyRecord = 'Stop Record';
                         } else {
                             that.menu.proxyRecord = 'Start Record';
                         }
-                    } else if (key === 'THROTTLING_STATUS') {
-                        if (response.data === 1) {
-                            that.menu.throttling = 'Stop Throttling';
-                            that.throttlingSetting.throttlingSwitch = true;
-                        } else {
-                            that.menu.throttling = 'Start Throttling';
-                            that.throttlingSetting.throttlingSwitch = false;
-                        }
-
                     }
-
                 }).catch(error => {
                     that.responseErrorHandler(error);
                 });
@@ -453,7 +467,15 @@ new Vue({
                 this.$message({
                     showClose: true,
                     message: 'Please Type In Number!',
-                    type: 'error'
+                    type: 'warning'
+                });
+                return;
+            }
+            if (readLimit < 0 || writeLimit) {
+                this.$message({
+                    showClose: true,
+                    message: 'Value Must Great Than Zero!',
+                    type: 'warning'
                 });
                 return;
             }
