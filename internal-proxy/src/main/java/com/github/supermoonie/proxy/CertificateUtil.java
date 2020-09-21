@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy;
 
+import com.github.supermoonie.proxy.codec.SHACoder;
 import com.github.supermoonie.proxy.ex.InternalProxyException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -12,6 +13,7 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -117,6 +119,33 @@ public class CertificateUtil {
         KeyPairGenerator caKeyPairGen = KeyPairGenerator.getInstance("RSA", "BC");
         caKeyPairGen.initialize(2048, new SecureRandom());
         return caKeyPairGen.genKeyPair();
+    }
+
+    /**
+     * 获取证书的SHA1摘要
+     */
+    public static String getCertSHA1(X509Certificate certificate) throws Exception {
+        byte[] bytes = certificate.getEncoded();
+        byte[] sha = SHACoder.encodeSHA(bytes);
+        return Hex.toHexString(sha).toUpperCase();
+    }
+
+    /**
+     * 获取证书的SHA1摘要
+     */
+    public static String getCertSHA256(X509Certificate certificate) throws Exception {
+        byte[] bytes = certificate.getEncoded();
+        byte[] sha = SHACoder.encodeSHA256(bytes);
+        return Hex.toHexString(sha).toUpperCase();
+    }
+
+    /**
+     * 获取CN
+     */
+    public static Optional<String> getCN(String subjectName) {
+        return Stream.of(subjectName.split(", ")).filter(item -> item.startsWith("CN"))
+                .map(item -> item.split("=")[1])
+                .findFirst();
     }
 
     /**

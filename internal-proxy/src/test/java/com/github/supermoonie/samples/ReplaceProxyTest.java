@@ -23,7 +23,6 @@ public class ReplaceProxyTest {
                 content.readBytes(bytes);
                 String html = new String(bytes, StandardCharsets.UTF_8);
                 html = html.replaceAll("(http://)(cdn|welfare)", "https://$2");
-                System.out.println(html);
                 content.resetReaderIndex();
                 ByteBuf buf = Unpooled.wrappedBuffer(html.getBytes(StandardCharsets.UTF_8));
                 content.release();

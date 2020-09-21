@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy;
 
+import com.github.supermoonie.proxy.dns.IntervalAddressResolverGroup;
 import com.github.supermoonie.proxy.ex.AuthorizationFailedException;
 import com.github.supermoonie.proxy.ex.BadRequestException;
 import com.github.supermoonie.proxy.util.RequestUtils;
@@ -224,13 +225,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     } else {
                                         clientChannel.writeAndFlush(msg);
                                     }
-//                                    if (msg instanceof HttpResponse) {
-//                                        HttpResponse response = (HttpResponse) msg;
-//                                        if (response.headers().get(HttpHeaderNames.TRANSFER_ENCODING).equals("chunked")) {
-//                                            logger.info("-----add chunked handler");
-//                                            ch.pipeline().addAfter("httpCodec", "streamer", new ChunkedWriteHandler());
-//                                        }
-//                                    }
                                 }
 
                                 @Override
@@ -257,6 +251,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         }
                     });
             logger.debug("connect to {}:{}", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
+            bootstrap.resolver(IntervalAddressResolverGroup.INSTANCE);
             remoteChannelFuture = bootstrap.connect(connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
             remoteChannelFuture.addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {

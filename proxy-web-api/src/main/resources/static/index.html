@@ -375,7 +375,7 @@
     <!--header开始-->
     <div class="p-header">
         <div class="p-menus p-border-bottom">
-            <el-menu v-cloak :default-active="'1'" :unique-opened="true" class="p-menu" menu-trigger="click"
+            <el-menu v-cloak :default-active="'1'" :unique-opened="true" class="p-menu" menu-trigger="hover"
                      mode="horizontal"
                      @select="handleSelect">
                 <el-submenu index="1">
@@ -406,7 +406,9 @@
                 </el-submenu>
                 <el-submenu index="4">
                     <template slot="title">Help</template>
-                    <el-menu-item index="4-1">Download Root Certificate</el-menu-item>
+                    <el-menu-item index="downloadCert">
+                        <el-link href="/ca.crt">Download Root Certificate</el-link>
+                    </el-menu-item>
                     <el-menu-item index="4-2">Check For Update</el-menu-item>
                     <el-menu-item index="4-3">About mitmproxy4J</el-menu-item>
                 </el-submenu>
