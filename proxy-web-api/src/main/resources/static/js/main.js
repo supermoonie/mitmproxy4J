@@ -559,7 +559,8 @@ new Vue({
             this.edit.tabs = ['URL', 'Headers'];
             this.edit.query.data = [];
             this.edit.query.select = '';
-            this.edit.headers = [];
+            this.edit.headers.select = '';
+            this.edit.headers.data = [];
             this.edit.request.contentType = 'none';
             this.edit.multipart.select = '';
             this.edit.multipart.data = [];
@@ -664,7 +665,7 @@ new Vue({
         addClicked(field) {
             this.edit[field].data.forEach(data => {
                 data.editing = false;
-            });
+            })
             let row;
             if ('multipart' === field) {
                 row = {name: '', type: 'Text', value: '', uploadFile: '', editing: true, editable: true};

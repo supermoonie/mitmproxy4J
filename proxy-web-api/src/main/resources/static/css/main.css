@@ -86,7 +86,7 @@ html, body, #main {
 }
 .p-request-edit-none {
     height: 500px;
-    width: 1282px;
+    width: calc(100% - 2px);
     text-align: center;
     line-height: 500px;
     border: 1px solid #DCDFE6;

@@ -196,6 +196,9 @@
                     let cookieFieldList = cookieText.split(';');
                     let cookie = {};
                     for (let i = 0; i < cookieFieldList.length; i++) {
+                        if (cookieFieldList[i].trim() === '') {
+                            continue;
+                        }
                         let field = cookieFieldList[i].split('=')[0].toLowerCase().trim();
                         let value = cookieFieldList[i].split('=')[1];
                         if (field === 'httponly') {
