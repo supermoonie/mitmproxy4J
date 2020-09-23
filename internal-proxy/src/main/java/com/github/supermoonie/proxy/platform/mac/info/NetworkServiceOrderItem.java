@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.platform.mac;
+package com.github.supermoonie.proxy.platform.mac.info;
 
 /**
  * @author supermoonie

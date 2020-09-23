@@ -392,7 +392,7 @@
                     <el-menu-item index="RECORD_STATUS">{{menu.proxyRecord}}</el-menu-item>
                     <el-menu-item index="switchThrottling">{{menu.throttling}}</el-menu-item>
                     <div style="height: 1px;width: 100%;border-bottom: 1px #ddd solid;"></div>
-                    <el-menu-item index="2-3">Open Windows Proxy</el-menu-item>
+                    <el-menu-item index="openSystemProxy">{{menu.systemProxyStatus}}</el-menu-item>
                     <div style="height: 1px;width: 100%;border-bottom: 1px #ddd solid;"></div>
                     <el-menu-item index="throttlingConfig">Throttling Settings...</el-menu-item>
                     <el-menu-item index="2-4">Proxy Settings...</el-menu-item>
@@ -681,4 +681,13 @@
 <script type="application/javascript" src="third/url-search-params-polyfill.js"></script>
 <script type="application/javascript" src="js/utils.js"></script>
 <script type="application/javascript" src="js/main.js"></script>
+<script type="application/javascript">
+    function banBack() {
+        history.pushState(null, null, document.URL);
+        window.addEventListener("popstate", function() {
+            history.pushState(null, null, document.URL);
+        });
+    }
+    banBack();
+</script>
 </html>

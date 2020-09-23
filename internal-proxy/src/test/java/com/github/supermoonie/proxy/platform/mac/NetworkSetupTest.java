@@ -1,5 +1,9 @@
 package com.github.supermoonie.proxy.platform.mac;
 
+import com.github.supermoonie.proxy.platform.mac.info.HardwarePortInfo;
+import com.github.supermoonie.proxy.platform.mac.info.NetworkServiceInfo;
+import com.github.supermoonie.proxy.platform.mac.info.NetworkServiceOrderItem;
+import com.github.supermoonie.proxy.platform.mac.info.ProxyInfo;
 import org.junit.Test;
 
 import java.io.IOException;

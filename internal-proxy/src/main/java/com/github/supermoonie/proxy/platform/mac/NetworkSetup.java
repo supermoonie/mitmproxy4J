@@ -1,5 +1,9 @@
 package com.github.supermoonie.proxy.platform.mac;
 
+import com.github.supermoonie.proxy.platform.mac.info.HardwarePortInfo;
+import com.github.supermoonie.proxy.platform.mac.info.NetworkServiceInfo;
+import com.github.supermoonie.proxy.platform.mac.info.NetworkServiceOrderItem;
+import com.github.supermoonie.proxy.platform.mac.info.ProxyInfo;
 import com.github.supermoonie.proxy.util.ExecUtils;
 
 import java.io.IOException;
@@ -14,7 +18,7 @@ import java.util.stream.Collectors;
  * @author supermoonie
  * @since 2020/9/21
  */
-public class NetworkSetup {
+public final class NetworkSetup {
 
     private static final Pattern NETWORK_SERVICE_ORDER_PATTERN = Pattern.compile("^\\(Hardware Port: (?<name>.*), Device: (?<device>.*)\\)$");
 
@@ -193,7 +197,11 @@ public class NetworkSetup {
                                         boolean authenticated,
                                         String username,
                                         String password) throws IOException {
-        ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setwebproxy", networkService, domain, String.valueOf(port), authenticated ? "on" : "off", username, password);
+        if (authenticated && null != username && null != password) {
+            ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setwebproxy", networkService, domain, String.valueOf(port), "on", username, password);
+        } else {
+            ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setwebproxy", networkService, domain, String.valueOf(port), "off");
+        }
         return getWebProxy(networkService);
     }
 
@@ -211,7 +219,12 @@ public class NetworkSetup {
                                               boolean authenticated,
                                               String username,
                                               String password) throws IOException {
-        ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setsecurewebproxy", networkService, domain, String.valueOf(port), authenticated ? "on" : "off", username, password);
+        if (authenticated && null != username && null != password) {
+            ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setsecurewebproxy", networkService, domain, String.valueOf(port), "on", username, password);
+        } else {
+            ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setsecurewebproxy", networkService, domain, String.valueOf(port), "off");
+        }
+
         return getSecureWebProxy(networkService);
     }
 
@@ -229,7 +242,11 @@ public class NetworkSetup {
                                                   boolean authenticated,
                                                   String username,
                                                   String password) throws IOException {
-        ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setsocksfirewallproxy", networkService, domain, String.valueOf(port), authenticated ? "on" : "off", username, password);
+        if (authenticated && null != username && null != password) {
+            ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setsocksfirewallproxy", networkService, domain, String.valueOf(port), "on", username, password);
+        } else {
+            ExecUtils.execBlock(NETWORK_SETUP_CMD, "-setsocksfirewallproxy", networkService, domain, String.valueOf(port), "off");
+        }
         return getSocksFirewallProxy(networkService);
     }
 

@@ -145,7 +145,8 @@ new Vue({
             },
             menu: {
                 'proxyRecord': 'Start Record',
-                'throttling': 'Start Throttling'
+                'throttling': 'Start Throttling',
+                'systemProxyStatus': 'Open System Proxy'
             },
             edit: {
                 tabs: ['URL', 'Headers', 'Body'],
@@ -415,6 +416,28 @@ new Vue({
             const configKey = ['THROTTLING_STATUS', 'RECORD_STATUS'];
             if ('Save' === key) {
                 this.doSave();
+            } else if ('openSystemProxy' === key) {
+                if (that.menu.systemProxyStatus === 'Open System Proxy') {
+                    axios({
+                        method: 'post',
+                        url: '/system/proxy/enable'
+                    }).then(() => {
+                        that.menu.systemProxyStatus = 'Close System Proxy';
+                    }).catch(error => {
+                        that.menu.systemProxyStatus = 'Open System Proxy';
+                        that.responseErrorHandler(error);
+                    });
+                } else {
+                    axios({
+                        method: 'post',
+                        url: '/system/proxy/disable'
+                    }).then(() => {
+                        that.menu.systemProxyStatus = 'Open System Proxy';
+                    }).catch(error => {
+                        that.menu.systemProxyStatus = 'Close System Proxy';
+                        that.responseErrorHandler(error);
+                    });
+                }
             } else if ('switchThrottling' === key) {
                 axios({
                     method: 'post',
@@ -1100,7 +1123,7 @@ new Vue({
             const len = params.length;
             let currentParent = baseFlow;
             for (let i = 1; i < len; i++) {
-                const param = params[i];
+                const param = params[i] === '' ? '/' : params[i];
                 const children = currentParent.children;
                 if (i === (len - 1)) {
                     children.push({
@@ -1198,6 +1221,19 @@ new Vue({
                 that.throttlingSetting.readLimit = Number(response.data['THROTTLING_READ_LIMIT']);
                 that.throttlingSetting.writeLimit = Number(response.data['THROTTLING_WRITE_LIMIT']);
                 console.log(that.throttlingSetting);
+            }).catch(error => {
+                that.responseErrorHandler(error);
+            });
+            axios({
+                method: 'get',
+                url: '/system/proxy/status'
+            }).then(function (response) {
+                console.log(response);
+                if (response === 'true') {
+                    that.menu.systemProxyStatus = 'Close System Proxy';
+                } else {
+                    that.menu.systemProxyStatus = 'Open System Proxy';
+                }
             }).catch(error => {
                 that.responseErrorHandler(error);
             });

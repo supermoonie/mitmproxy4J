@@ -141,12 +141,12 @@ public class FlowServiceImpl implements FlowService {
      * @param url      url
      */
     private void setPathFlowNode(FlowNode baseFlow, SimpleRequestDAO request, URL url) {
-        String path = url.getPath().substring(1);
+        String path = url.getPath().substring(1) + " ";
         String[] parts = path.split("/");
         int len = parts.length;
         FlowNode currentParent = baseFlow;
         for (int i = 0; i < len; i++) {
-            String part = parts[i];
+            String part = parts[i].equals(" ") ? "/" : parts[i];
             List<FlowNode> children = currentParent.getChildren();
             if (null == children) {
                 children = new ArrayList<>();
@@ -158,7 +158,7 @@ public class FlowServiceImpl implements FlowService {
             }
             FlowNode child;
             Optional<FlowNode> first = children.stream().filter(flow -> flow.getUrl().equals(part)).findFirst();
-            if (!first.isPresent()) {
+            if (first.isEmpty()) {
                 child = new FlowNode();
                 child.setUrl(part);
                 child.setId(part);
