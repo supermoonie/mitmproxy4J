@@ -8,8 +8,15 @@ import javafx.stage.Stage;
  */
 public class App extends Application {
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
+    private static Stage primaryStage;
 
+    @Override
+    public void start(Stage stage) throws Exception {
+        primaryStage = stage;
+
+    }
+
+    public static Stage getPrimaryStage() {
+        return primaryStage;
     }
 }

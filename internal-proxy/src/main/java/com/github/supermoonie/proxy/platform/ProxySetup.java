@@ -30,6 +30,9 @@ public class ProxySetup {
                     ProxyInfo webProxy = NetworkSetup.getWebProxy(networkService);
                     ProxyInfo secureWebProxy = NetworkSetup.getSecureWebProxy(networkService);
                     ProxyInfo socksFirewallProxy = NetworkSetup.getSocksFirewallProxy(networkService);
+                    if (null == webProxy.getServer() || null == secureWebProxy.getServer() || null == socksFirewallProxy.getServer()) {
+                        return false;
+                    }
                     boolean flag = webProxy.getServer().equals(host) && webProxy.getPort() == port
                             && secureWebProxy.getServer().equals(host) && secureWebProxy.getPort() == port
                             && socksFirewallProxy.getServer().equals(host) && socksFirewallProxy.getPort() == port;

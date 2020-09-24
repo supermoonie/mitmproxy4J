@@ -143,6 +143,10 @@ new Vue({
                 readLimit: 64,
                 writeLimit: 32
             },
+            proxySettingDialogVisible: false,
+            proxySetting: {
+                port: 10801
+            },
             menu: {
                 'proxyRecord': 'Start Record',
                 'throttling': 'Start Throttling',
@@ -416,6 +420,16 @@ new Vue({
             const configKey = ['THROTTLING_STATUS', 'RECORD_STATUS'];
             if ('Save' === key) {
                 this.doSave();
+            } else if ('proxySetting' === key) {
+                axios({
+                    method: 'get',
+                    url: '/config/proxy/port'
+                }).then((res) => {
+                    that.proxySetting.port = res.data;
+                    that.proxySettingDialogVisible = true;
+                }).catch(error => {
+                    that.responseErrorHandler(error);
+                });
             } else if ('openSystemProxy' === key) {
                 if (that.menu.systemProxyStatus === 'Open System Proxy') {
                     axios({
@@ -479,6 +493,44 @@ new Vue({
                     that.responseErrorHandler(error);
                 });
             }
+        },
+        proxySettingConfirm() {
+            const that = this;
+            let port;
+            try {
+                port = Number(that.proxySetting.port);
+            } catch (e) {
+                this.$message({
+                    showClose: true,
+                    message: 'Please Type In Number!',
+                    type: 'warning'
+                });
+                return;
+            }
+            this.loading = true;
+            axios({
+                method: 'post',
+                url: '/config/proxy/setting',
+                data: {'port': port},
+                transformRequest: [function (data) {
+                    let ret = '';
+                    for (let key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            ret += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + '&'
+                        }
+                    }
+                    return ret;
+                }],
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then((res) => {
+                that.proxySettingDialogVisible = false;
+                that.loading = false;
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
         },
         throttlingSettingConfirm() {
             const that = this;

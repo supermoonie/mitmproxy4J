@@ -34,6 +34,18 @@ public class InternalProxyRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        start();
+    }
+
+    public void restart(int port) {
+        if (null != proxy) {
+            internalProxyConfig.setPort(port);
+            proxy.close();
+            start();
+        }
+    }
+
+    private void start() {
         log.info("InternalProxyConfig: {}", JSONUtil.toJsonStr(internalProxyConfig));
         proxy = new InternalProxy(initializer);
         proxy.setPort(internalProxyConfig.getPort());

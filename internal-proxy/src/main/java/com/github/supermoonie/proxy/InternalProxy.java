@@ -4,7 +4,6 @@ import com.github.supermoonie.proxy.ex.InternalProxyCloseException;
 import com.github.supermoonie.proxy.ex.InternalProxyStartException;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -55,7 +54,6 @@ public class InternalProxy {
     private CertificateConfig certificateConfig;
     private volatile boolean trafficShaping = false;
     private SecondProxyConfig secondProxyConfig;
-    private ChannelFuture future;
     private final InterceptInitializer initializer;
 
     public InternalProxy() {
@@ -80,7 +78,7 @@ public class InternalProxy {
                 proxyThreads = new NioEventLoopGroup(DEFAULT_N_PROXY_THREAD);
             }
             InternalProxy that = this;
-            future = b.group(bossThreads, workerThreads)
+            b.group(bossThreads, workerThreads)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<Channel>() {
                         @Override
@@ -105,22 +103,21 @@ public class InternalProxy {
 
     public void close() {
         try {
-            if (null != future) {
-                future.channel().close().sync();
-                logger.info("proxy closed on {}", port);
+            if (null != proxyThreads) {
+                proxyThreads.shutdownGracefully().sync();
+                proxyThreads = null;
             }
-        } catch (InterruptedException e) {
-            throw new InternalProxyCloseException(e);
-        } finally {
             if (null != workerThreads) {
-                workerThreads.shutdownGracefully();
+                workerThreads.shutdownGracefully().sync();
+                workerThreads = null;
             }
             if (null != bossThreads) {
-                bossThreads.shutdownGracefully();
+                bossThreads.shutdownGracefully().sync();
+                bossThreads = null;
             }
-            if (null != proxyThreads) {
-                proxyThreads.shutdownGracefully();
-            }
+            logger.info("proxy closed on {}", port);
+        } catch (InterruptedException e) {
+            throw new InternalProxyCloseException(e);
         }
 
     }

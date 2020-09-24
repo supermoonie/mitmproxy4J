@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.controller.params.ThrottlingSetting;
 import com.github.supermoonie.mapper.ConfigMapper;
 import com.github.supermoonie.model.Config;
+import com.github.supermoonie.proxy.InternalProxy;
+import com.github.supermoonie.runner.InternalProxyRunner;
 import com.github.supermoonie.service.ConfigService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +36,23 @@ public class ConfigController {
 
     @Resource
     private ConfigMapper configMapper;
+
+    @Resource
+    private InternalProxyRunner internalProxyRunner;
+
+    @GetMapping("/proxy/port")
+    public ResponseEntity<Integer> proxyPort() {
+        return ResponseEntity.ok(internalProxyRunner.getProxy().getPort());
+    }
+
+    @PostMapping("/proxy/setting")
+    public ResponseEntity<Boolean> proxySetting(@RequestParam("port") Integer port) {
+        if (port < 1024) {
+            return new ResponseEntity<>(Boolean.FALSE, HttpStatus.BAD_REQUEST);
+        }
+        internalProxyRunner.restart(port);
+        return ResponseEntity.ok(Boolean.TRUE);
+    }
 
     @PostMapping("/throttling/setting")
     public ResponseEntity<String> throttlingSetting(@RequestBody ThrottlingSetting setting) {

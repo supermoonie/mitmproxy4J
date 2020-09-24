@@ -179,6 +179,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(internalProxy.getProxyThreads())
                     .channel(NioSocketChannel.class)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000)
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
