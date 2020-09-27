@@ -51,5 +51,6 @@ CREATE TABLE IF NOT EXISTS config
   id          VARCHAR(64) PRIMARY KEY,
   `key`       VARCHAR(64),
   `value`     VARCHAR(64),
+  `type`      INTEGER,
   timeCreated DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );

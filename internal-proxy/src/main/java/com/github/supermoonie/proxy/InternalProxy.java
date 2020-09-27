@@ -32,7 +32,6 @@ public class InternalProxy {
     private static final Logger logger = LoggerFactory.getLogger(InternalProxy.class);
 
     private final GlobalChannelTrafficShapingHandler trafficShapingHandler = new GlobalChannelTrafficShapingHandler(new NioEventLoopGroup(1));
-    ;
 
     private static final int DEFAULT_N_BOOS_THREAD = 2;
     private static final int DEFAULT_N_WORKER_THREAD = 16;

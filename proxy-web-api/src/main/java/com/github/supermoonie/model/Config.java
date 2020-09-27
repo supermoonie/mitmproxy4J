@@ -14,4 +14,6 @@ public class Config extends BaseModel {
     private String key;
 
     private String value;
+
+    private Integer type;
 }

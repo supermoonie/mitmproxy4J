@@ -22,9 +22,13 @@ public class InternalProxyInterceptInitializer implements InterceptInitializer {
     @Resource
     private DumpHttpResponseIntercept dumpHttpResponseIntercept;
 
+    @Resource
+    private DefaultConfigIntercept defaultConfigIntercept;
+
     @Override
     public void initIntercept(Map<String, RequestIntercept> requestIntercepts, Map<String, ResponseIntercept> responseIntercepts) {
         requestIntercepts.put("dumpHttpRequestIntercept", dumpHttpRequestIntercept);
         responseIntercepts.put("dumpHttpResponseIntercept", dumpHttpResponseIntercept);
+        requestIntercepts.put("configurableIntercept", defaultConfigIntercept);
     }
 }

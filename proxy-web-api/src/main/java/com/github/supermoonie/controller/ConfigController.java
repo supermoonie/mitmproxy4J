@@ -1,10 +1,11 @@
 package com.github.supermoonie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.supermoonie.constant.EnumConfigType;
+import com.github.supermoonie.controller.params.ConfigSetting;
 import com.github.supermoonie.controller.params.ThrottlingSetting;
 import com.github.supermoonie.mapper.ConfigMapper;
 import com.github.supermoonie.model.Config;
-import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.runner.InternalProxyRunner;
 import com.github.supermoonie.service.ConfigService;
 import io.swagger.annotations.Api;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +41,28 @@ public class ConfigController {
 
     @Resource
     private InternalProxyRunner internalProxyRunner;
+
+    @PostMapping("/set/remoteUriMap")
+    public ResponseEntity<List<Config>> setRemoteUriMap(@RequestBody List<ConfigSetting> remoteUriMapList) {
+        remoteUriMapList.forEach(setting -> {
+            Config config = new Config();
+            config.setKey(setting.getKey());
+            config.setValue(setting.getValue());
+            config.setType(EnumConfigType.REMOTE_URI_MAP.getType());
+            QueryWrapper<Config> queryWrapper = new QueryWrapper<Config>().eq("key", setting.getKey()).eq("type", EnumConfigType.REMOTE_URI_MAP.getType());
+            Config conf = configMapper.selectOne(queryWrapper);
+            if (null != conf) {
+                config.setId(conf.getId());
+                configMapper.updateById(config);
+            } else {
+                config.setId(UUID.randomUUID().toString());
+                configMapper.insert(config);
+            }
+        });
+        QueryWrapper<Config> queryWrapper = new QueryWrapper<Config>().eq("type", EnumConfigType.REMOTE_URI_MAP.getType());
+        List<Config> configs = configMapper.selectList(queryWrapper);
+        return ResponseEntity.ok(configs);
+    }
 
     @GetMapping("/proxy/port")
     public ResponseEntity<Integer> proxyPort() {

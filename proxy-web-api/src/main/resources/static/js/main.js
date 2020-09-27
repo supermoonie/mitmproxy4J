@@ -316,14 +316,19 @@ new Vue({
             this.flow.list.shown = [];
             this.flow.tree.shown = [];
             that.loading = true;
+            let start = '', end = '';
+            if (!!that.search.time && that.search.time.length === 2 && '' !== that.search.time) {
+                start = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[0]);
+                end = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[1]);
+            }
             axios({
                 method: 'post',
                 url: '/flow/list',
                 data: {
                     host: that.search.host,
                     method: that.search.method,
-                    start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[0]),
-                    end: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[1])
+                    start: start,
+                    end: end
                 },
                 transformRequest: [function (data) {
                     let ret = '';
@@ -351,14 +356,19 @@ new Vue({
         fetchTreeFlow() {
             const that = this;
             that.loading = true;
+            let start = '', end = '';
+            if (!!that.search.time && that.search.time.length === 2 && '' !== that.search.time) {
+                start = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[0]);
+                end = Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[1]);
+            }
             axios({
                 method: 'post',
                 url: '/flow/tree',
                 data: {
                     host: that.search.host,
                     method: that.search.method,
-                    start: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[0]),
-                    end: Utils.dateFormat('YYYY-mm-dd HH:MM:SS', that.search.time[1])
+                    start: start,
+                    end: end
                 },
                 transformRequest: [function (data) {
                     let ret = '';
@@ -1201,8 +1211,7 @@ new Vue({
             }
         },
         fetchSwitchClicked() {
-            this.fetchSwitch = !this.fetchSwitch;
-            if (this.fetchSwitch) {
+            if (!this.fetchSwitch) {
                 this.connect(false);
             } else {
                 this.disconnect();
@@ -1242,6 +1251,7 @@ new Vue({
                 that.filter();
             };
             this.webSocket.onerror = function (event) {
+                that.fetchSwitch = false;
                 that.$notify.error({
                     title: 'Error',
                     duration: 0,
