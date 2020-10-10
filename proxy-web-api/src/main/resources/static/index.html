@@ -86,6 +86,58 @@
     </div>
     <!--proxy setting dialog end-->
 
+    <!--remote uri map setting dialog start-->
+    <div class="p-remote-uri-map-setting-container" v-cloak>
+        <el-dialog title="Remote Uri Map Setting" top="5vh" v-loading="loading"
+                   element-loading-background="rgba(255, 255, 255, 0.3)"
+                   :visible.sync="remoteUriMapDialogVisible" :close-on-click-modal="false" :show-close="true">
+            <div class="p-placeholder"></div>
+            <el-table :data="remoteUriMap.data" :empty-text="'No data'" stripe border height="450">
+                <el-table-column label="#" type="index" align="center"></el-table-column>
+                <el-table-column prop="key" label="From">
+                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" clearable v-focus
+                                                      v-model="remoteUriMap.select['key']"></el-input>
+                                        </span>
+                        <span v-else>{{scope.row['key']}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="value" label="To">
+                    <template slot-scope="scope">
+                                        <span v-if="scope.row.editing">
+                                            <el-input size="mini" clearable
+                                                      @keyup.enter.native="remoteUriMapRowEditClicked(scope.row, scope.$index, true)"
+                                                      v-model="remoteUriMap.select['value']"></el-input>
+                                        </span>
+                        <span v-else>{{scope.row['value']}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="Operation" align="center" width="150">
+                    <template slot-scope="scope">
+                        <el-link type="primary"
+                                 @click="remoteUriMapRowEditClicked(scope.row, scope.$index, true)">{{scope.row.editing ? 'Ok' : 'Edit'}}</el-link>&nbsp;&nbsp;
+                        <el-link type="danger" v-if="!scope.row.editing"
+                                 @click="remoteUriMapRowDeleteClicked(scope.row, scope.$index)">Delete</el-link>&nbsp;&nbsp;
+                        <el-link type="info" v-else
+                                 @click="remoteUriMapRowEditClicked(scope.row, scope.$index, false)">Cancel</el-link>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="p-placeholder"></div>
+            <div class="p-url-footer p-select-none">
+                <el-col span="24">
+                    <div @click="addRemoteUriMapClicked"><span>+ Add</span></div>
+                </el-col>
+            </div>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="remoteUriMapDialogVisible = false">Cancel</el-button>
+                <el-button type="primary" @click="remoteUriMapConfirm">Confirm</el-button>
+            </div>
+        </el-dialog>
+    </div>
+    <!--remote uri map setting dialog end-->
+
     <!--request edit dialog begin-->
     <div class="p-request-edit-container" v-cloak>
         <el-dialog title="Edit" top="5vh" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.3)"
@@ -662,11 +714,18 @@
                                     <!-- response.image 结束-->
                                     <!-- response.video 开始-->
                                     <div v-else-if="item === 'Video'">
-                                        <el-button type="primary" plain icon="el-icon-video-play"
+                                        <el-button plain icon="el-icon-video-play"
                                                    @click="videoDialogVisible = true">Try Play
                                         </el-button>
                                     </div>
                                     <!-- response.video 结束-->
+                                    <!-- response.audio 开始-->
+                                    <div v-else-if="item === 'Audio'">
+                                        <el-button plain icon="el-icon-video-play">
+                                            <el-link :href=currentFlow.request.uri target="_blank">Try Play</el-link>
+                                        </el-button>
+                                    </div>
+                                    <!-- response.audio 结束-->
                                     <!-- response.plain 开始-->
                                     <div v-else-if="item === 'Plain'">
                                         <div id="readOnlyEditor"
@@ -701,10 +760,11 @@
 <script type="application/javascript">
     function banBack() {
         history.pushState(null, null, document.URL);
-        window.addEventListener("popstate", function() {
+        window.addEventListener("popstate", function () {
             history.pushState(null, null, document.URL);
         });
     }
+
     banBack();
 </script>
 </html>

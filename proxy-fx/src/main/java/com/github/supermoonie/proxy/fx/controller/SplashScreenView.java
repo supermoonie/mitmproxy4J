@@ -7,9 +7,9 @@ import java.util.ResourceBundle;
 
 /**
  * @author supermoonie
- * @since 2020/9/25
+ * @since 2020/10/9
  */
-public class MainController implements Initializable {
+public class SplashScreenView implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

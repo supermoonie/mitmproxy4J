@@ -174,12 +174,21 @@
             for (let cookieField of cookieFieldList) {
                 cookies.push({
                     'name': cookieField.split('=')[0].trim(),
-                    'value': cookieField.split('=')[1].trim()
+                    'value': !!cookieField.split('=')[1] && cookieField.split('=')[1].trim()
                 })
             }
         }
         return cookies;
     };
+    Utils.decodeHex = (hex) => {
+        let content;
+        try {
+            content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hex));
+        } catch (e) {
+            content = CryptoJS.enc.Latin1.stringify(CryptoJS.enc.Hex.parse(hex));
+        }
+        return content;
+    }
     /**
      * 解析响应头中的 Set-Cookie
      *

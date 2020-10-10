@@ -147,6 +147,17 @@ new Vue({
             proxySetting: {
                 port: 10801
             },
+            remoteUriMapDialogVisible: false,
+            remoteUriMap: {
+                select: '',
+                data: [{
+                    id: undefined,
+                    key: undefined,
+                    value: undefined,
+                    type: undefined,
+                    timeCreated: undefined
+                }]
+            },
             menu: {
                 'proxyRecord': 'Start Record',
                 'throttling': 'Start Throttling',
@@ -210,6 +221,70 @@ new Vue({
         }
     },
     methods: {
+        addRemoteUriMapClicked() {
+            this.remoteUriMap.data.forEach(data => {
+                data.editing = false;
+            });
+            let row = {
+                id: undefined,
+                key: '',
+                value: '',
+                type: 1,
+                timeCreated: undefined,
+                editing: true
+            };
+            this.remoteUriMap.data.push(row);
+            this.remoteUriMap.select = Utils.clone(row);
+        },
+        remoteUriMapRowEditClicked(row, index, flag) {
+            console.log(row);
+            //是否是取消操作
+            if (!flag) {
+                if (row.name === '' && row.value === '') {
+                    this.rowDeleteClicked(row, index, '');
+                }
+                return row.editing = !row.editing;
+            }
+            if (row.editing) {
+                // OK
+                row.key = this.remoteUriMap.select.key.trim();
+                row.value = this.remoteUriMap.select.value.trim();
+                row.editing = false;
+            } else {
+                // Edit
+                this.remoteUriMap.data.forEach(data => {
+                    data.editing = false;
+                });
+                this.remoteUriMap.select = Utils.clone(row);
+                row.editing = true;
+                console.log(row);
+            }
+        },
+        remoteUriMapRowDeleteClicked(row, index) {
+            this.remoteUriMap.data.splice(index, 1);
+        },
+        remoteUriMapConfirm() {
+            const that = this;
+            that.loading = true;
+            let data = this.remoteUriMap.data.map(item => {
+                return {'key': item.key, 'value': item.value};
+            });
+            console.log(data);
+            axios({
+                method: 'post',
+                url: '/config/set/remoteUriMap',
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(function (response) {
+                that.loading = false;
+                that.remoteUriMapDialogVisible = false;
+            }).catch(error => {
+                that.loading = false;
+                that.responseErrorHandler(error);
+            });
+        },
         clearClicked() {
             this.flow.list.shown = [];
             this.flow.tree.shown = [];
@@ -395,6 +470,7 @@ new Vue({
             this.filter(this.flow[field].all, field);
         },
         responseErrorHandler(error) {
+            console.error(error);
             this.$message({
                 showClose: true,
                 message: error,
@@ -430,6 +506,20 @@ new Vue({
             const configKey = ['THROTTLING_STATUS', 'RECORD_STATUS'];
             if ('Save' === key) {
                 this.doSave();
+            } else if ('mapRemoteSetting' === key) {
+                axios({
+                    method: 'get',
+                    url: '/config/get/remoteUriMap'
+                }).then((res) => {
+                    if (res.data.length > 0) {
+                        that.remoteUriMap.data = Utils.unionListFrom(res.data, {editing: false});
+                    } else {
+                        that.remoteUriMap.data = [];
+                    }
+                    that.remoteUriMapDialogVisible = true;
+                }).catch(error => {
+                    that.responseErrorHandler(error);
+                });
             } else if ('proxySetting' === key) {
                 axios({
                     method: 'get',
@@ -750,7 +840,7 @@ new Vue({
         addClicked(field) {
             this.edit[field].data.forEach(data => {
                 data.editing = false;
-            })
+            });
             let row;
             if ('multipart' === field) {
                 row = {name: '', type: 'Text', value: '', uploadFile: '', editing: true, editable: true};
@@ -840,6 +930,7 @@ new Vue({
          */
         handleUrlClicked(id, data, event) {
             this.currentFlow = data;
+            console.log(this.currentFlow);
             this.currentFlowId = id;
             // Overview Tab
             this.current.overview = this.buildCurrentOverview(data);
@@ -880,28 +971,28 @@ new Vue({
                 raw = raw + '<p>' + header.name + ' : ' + header.value + '</p>';
             }
             if (data.responseContent) {
-                let contentType = data.response.contentType.toLowerCase();
+                let contentType = !data.response.contentType ? '' : data.response.contentType.toLowerCase();
                 if (contentType.indexOf('json') !== -1) {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                     that.buildCurrentResponseJson(content);
                 } else if (contentType.indexOf('text/xml') !== -1) {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                     that.buildCurrentResponseXml(content);
                 } else if (contentType.indexOf('text/html') !== -1) {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     let rawContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + rawContent + '</pre><p></p>';
                     this.buildCurrentResponseHtml(content);
                 } else if (contentType.indexOf('text/css') !== -1) {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildCurrentResponseCss(content);
                 } else if (contentType.indexOf('application/javascript') !== -1 || contentType.indexOf('application/x-javascript') !== -1) {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     let rawContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + rawContent + '</pre><p></p>';
                     this.buildCurrentResponseJavaScript(content);
@@ -910,7 +1001,7 @@ new Vue({
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildCurrentResponseImage(data.responseContent);
                 } else if (contentType.indexOf('vnd.apple.mpegurl') !== -1) {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.responseTabs.push('Video');
                     this.videoUrl = data.request.uri;
@@ -918,15 +1009,19 @@ new Vue({
                     let content = Utils.wordsToString(CryptoJS.enc.Hex.parse(data.responseContent).words);
                     raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
                     this.buildHexResponse(data.responseContent);
+                } else if (contentType.indexOf('audio/mpeg') !== -1) {
+                    raw = raw + '<p></p><pre>Too Large</pre><p></p>';
+                    this.responseTabs.push('Audio');
                 } else {
-                    let content = CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(data.responseContent));
+                    let content = Utils.decodeHex(data.responseContent);
                     try {
                         JSON.parse(content);
                         let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                         raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                         this.buildCurrentResponseJson(content);
                     } catch (ignore) {
-                        raw = raw + '<p></p><pre>' + content + '</pre><p></p>';
+                        let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
+                        raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                         this.buildCurrentResponsePlain(content);
                     }
                 }
@@ -1291,7 +1386,7 @@ new Vue({
                 url: '/system/proxy/status'
             }).then(function (response) {
                 console.log(response);
-                if (response === 'true') {
+                if (response.data) {
                     that.menu.systemProxyStatus = 'Close System Proxy';
                 } else {
                     that.menu.systemProxyStatus = 'Open System Proxy';

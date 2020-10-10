@@ -42,8 +42,17 @@ public class ConfigController {
     @Resource
     private InternalProxyRunner internalProxyRunner;
 
+    @GetMapping("/get/remoteUriMap")
+    public ResponseEntity<List<Config>> getRemoteUriMap() {
+        QueryWrapper<Config> queryWrapper = new QueryWrapper<Config>().eq("type", EnumConfigType.REMOTE_URI_MAP.getType());
+        List<Config> configs = configMapper.selectList(queryWrapper);
+        return ResponseEntity.ok(configs);
+    }
+
     @PostMapping("/set/remoteUriMap")
     public ResponseEntity<List<Config>> setRemoteUriMap(@RequestBody List<ConfigSetting> remoteUriMapList) {
+        QueryWrapper<Config> configQueryWrapper = new QueryWrapper<Config>().eq("type", EnumConfigType.REMOTE_URI_MAP.getType());
+        configMapper.delete(configQueryWrapper);
         remoteUriMapList.forEach(setting -> {
             Config config = new Config();
             config.setKey(setting.getKey());
@@ -59,8 +68,7 @@ public class ConfigController {
                 configMapper.insert(config);
             }
         });
-        QueryWrapper<Config> queryWrapper = new QueryWrapper<Config>().eq("type", EnumConfigType.REMOTE_URI_MAP.getType());
-        List<Config> configs = configMapper.selectList(queryWrapper);
+        List<Config> configs = configMapper.selectList(configQueryWrapper);
         return ResponseEntity.ok(configs);
     }
 

@@ -64,6 +64,39 @@ html, body, #main {
 }
 /*search container*/
 
+/*remote uri map setting*/
+.p-remote-uri-map-setting-container .el-dialog {
+    width: 90%;
+    height: 623px;
+    overflow: auto;
+}
+.p-remote-uri-map-setting-container .el-dialog__header {
+    padding: 20px 20px 0;
+}
+.p-remote-uri-map-setting-container .el-dialog__body {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.p-remote-uri-map-setting-container .el-table__row {
+    height: 35px;
+    line-height: 35px;
+}
+.p-remote-uri-map-setting-container .el-tabs__header {
+    margin: 0;
+}
+.p-remote-uri-map-setting-container .el-textarea__inner {
+    overflow-x: hidden;
+}
+.p-remote-uri-map-setting-container .el-dialog__footer {
+    padding: 0 20px;
+}
+.p-remote-uri-map-setting-container .el-textarea__inner {
+    height: 500px;
+    width: 1284px;
+    resize: none;
+}
+/*remote uri map setting*/
+
 /*request edit container*/
 .p-request-edit-container .el-dialog {
     width: 90%;
