@@ -12,5 +12,6 @@ public class InternalProxyTest {
         InternalProxy proxy = new InternalProxy();
         proxy.setPort(10801);
         proxy.start();
+        proxy.close();
     }
 }

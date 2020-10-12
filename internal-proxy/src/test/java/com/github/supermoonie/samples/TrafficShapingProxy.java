@@ -14,14 +14,13 @@ public class TrafficShapingProxy {
 
     public static void main(String[] args) {
         InternalProxy proxy = new InternalProxy(null);
+        proxy.start();
         proxy.setTrafficShaping(true);
         GlobalChannelTrafficShapingHandler handler = proxy.getTrafficShapingHandler();
         handler.setCheckInterval(1_000);
         handler.setReadLimit(1024L);
         handler.setWriteLimit(1024L);
-        proxy.start();
-        GlobalChannelTrafficShapingHandler trafficShapingHandler = proxy.getTrafficShapingHandler();
-        TrafficCounter trafficCounter = trafficShapingHandler.trafficCounter();
+        TrafficCounter trafficCounter = handler.trafficCounter();
         new Thread(() -> {
             while (true) {
                 try {

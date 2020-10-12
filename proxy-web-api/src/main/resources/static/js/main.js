@@ -977,7 +977,7 @@ new Vue({
                     let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';
                     that.buildCurrentResponseJson(content);
-                } else if (contentType.indexOf('text/xml') !== -1) {
+                } else if (contentType.indexOf('text/xml') !== -1 || contentType.indexOf('application/xml') !== -1) {
                     let content = Utils.decodeHex(data.responseContent);
                     let clearedContent = Utils.replaceSpecialChar(content).replace(/\s{2}/g, '&nbsp;&nbsp;');
                     raw = raw + '<p></p><pre>' + clearedContent + '</pre><p></p>';

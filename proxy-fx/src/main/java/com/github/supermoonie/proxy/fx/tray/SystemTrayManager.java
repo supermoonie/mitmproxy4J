@@ -1,8 +1,8 @@
 package com.github.supermoonie.proxy.fx.tray;
 
 import com.github.supermoonie.proxy.fx.App;
+import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.sun.javafx.PlatformUtil;
-import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -52,7 +51,9 @@ public class SystemTrayManager {
             SpringApplication.exit(applicationContext, () -> 0);
             Platform.runLater(() -> {
                 App.getPrimaryStage().close();
-                Platform.exit();
+                System.exit(0);
+//                ProxyManager.stop();
+//                Platform.exit();
             });
         });
         popupMenu.add(quitItem);

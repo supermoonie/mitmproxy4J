@@ -4,6 +4,7 @@ import com.github.supermoonie.proxy.ex.InternalProxyCloseException;
 import com.github.supermoonie.proxy.ex.InternalProxyStartException;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -31,7 +32,7 @@ public class InternalProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(InternalProxy.class);
 
-    private final GlobalChannelTrafficShapingHandler trafficShapingHandler = new GlobalChannelTrafficShapingHandler(new NioEventLoopGroup(1));
+    private GlobalChannelTrafficShapingHandler trafficShapingHandler;
 
     private static final int DEFAULT_N_BOOS_THREAD = 2;
     private static final int DEFAULT_N_WORKER_THREAD = 16;
@@ -41,6 +42,7 @@ public class InternalProxy {
     private static final String DEFAULT_CA_FILE_NAME = "ca.crt";
     private static final String DEFAULT_PRIVATE_KEY_FILE_NAME = "ca_private.pem";
 
+    private NioEventLoopGroup trafficShapingEventLoopGroup;
     private NioEventLoopGroup bossThreads;
     private NioEventLoopGroup workerThreads;
     private NioEventLoopGroup proxyThreads;
@@ -54,6 +56,7 @@ public class InternalProxy {
     private volatile boolean trafficShaping = false;
     private SecondProxyConfig secondProxyConfig;
     private final InterceptInitializer initializer;
+    private ChannelFuture future;
 
     public InternalProxy() {
         this.initializer = null;
@@ -76,8 +79,10 @@ public class InternalProxy {
             if (null == proxyThreads) {
                 proxyThreads = new NioEventLoopGroup(DEFAULT_N_PROXY_THREAD);
             }
+            trafficShapingEventLoopGroup = new NioEventLoopGroup(1);
+            trafficShapingHandler = new GlobalChannelTrafficShapingHandler(trafficShapingEventLoopGroup);
             InternalProxy that = this;
-            b.group(bossThreads, workerThreads)
+            future = b.group(bossThreads, workerThreads)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<Channel>() {
                         @Override
@@ -90,18 +95,20 @@ public class InternalProxy {
                     }).bind(port).sync();
             logger.info("proxy listening on {}", port);
         } catch (Exception e) {
-            if (null != workerThreads) {
-                workerThreads.shutdownGracefully();
-            }
-            if (null != bossThreads) {
-                bossThreads.shutdownGracefully();
-            }
+            close();
             throw new InternalProxyStartException(e);
         }
     }
 
-    public void close() {
+    public synchronized void close() {
         try {
+            if (null == future) {
+                return;
+            }
+            if (null != trafficShapingEventLoopGroup) {
+                trafficShapingEventLoopGroup.shutdownGracefully().sync();
+                trafficShapingEventLoopGroup = null;
+            }
             if (null != proxyThreads) {
                 proxyThreads.shutdownGracefully().sync();
                 proxyThreads = null;
@@ -114,6 +121,7 @@ public class InternalProxy {
                 bossThreads.shutdownGracefully().sync();
                 bossThreads = null;
             }
+            future = null;
             logger.info("proxy closed on {}", port);
         } catch (InterruptedException e) {
             throw new InternalProxyCloseException(e);

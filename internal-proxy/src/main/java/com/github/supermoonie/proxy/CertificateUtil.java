@@ -51,6 +51,10 @@ public class CertificateUtil {
         }
     }
 
+    public static void clearCertCache() {
+        CERT_CACHE.clear();
+    }
+
     private static KeyFactory getKeyFactory() {
         return keyFactory;
     }
