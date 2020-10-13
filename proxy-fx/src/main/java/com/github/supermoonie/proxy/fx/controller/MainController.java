@@ -3,9 +3,11 @@ package com.github.supermoonie.proxy.fx.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
+import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
+import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
@@ -14,13 +16,10 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.util.Callback;
+import org.springframework.util.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -62,6 +61,9 @@ public class MainController implements Initializable {
     protected Tab requestHeaderTab;
 
     @FXML
+    protected Tab requestFormTab;
+
+    @FXML
     protected Tab requestRawTab;
 
     @FXML
@@ -74,19 +76,33 @@ public class MainController implements Initializable {
     protected TableView<Header> requestHeaderTableView;
 
     @FXML
-    public TableColumn<Header, String> requestHeaderNameColumn;
+    protected TableColumn<Header, String> requestHeaderNameColumn;
 
     @FXML
-    public TableColumn<Header, String> requestHeaderValueColumn;
+    protected TableColumn<Header, String> requestHeaderValueColumn;
+
+    @FXML
+    protected TableColumn<Header, String> requestFormNameColumn;
+
+    @FXML
+    protected TableColumn<Header, String> requestFormValueColumn;
 
     @FXML
     protected TableView<Header> responseHeaderTableView;
 
     @FXML
-    public TableColumn<Header, String> responseHeaderNameColumn;
+    protected TableColumn<Header, String> responseHeaderNameColumn;
 
     @FXML
-    public TableColumn<Header, String> responseHeaderValueColumn;
+    protected TableColumn<Header, String> responseHeaderValueColumn;
+
+    @FXML
+    protected TextArea requestRawTextArea;
+
+    @FXML
+    protected TextArea responseRawTextArea;
+
+    private String currentRequestId;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -94,17 +110,8 @@ public class MainController implements Initializable {
         treeView.setRoot(root);
         treeView.setShowRoot(false);
         treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, treeViewClickedHandler);
-        requestHeaderNameColumn.setCellFactory(centerCellCallBack);
-        requestHeaderValueColumn.setCellFactory(centerCellCallBack);
-        responseHeaderNameColumn.setCellFactory(centerCellCallBack);
-        responseHeaderValueColumn.setCellFactory(centerCellCallBack);
+        requestTabPane.getTabs().removeIf(tab -> tab.getText().equals(requestFormTab.getText()));
     }
-
-    private final Callback<TableColumn<Header, String>, TableCell<Header, String>> centerCellCallBack = headerStringTableColumn -> {
-        TableCell<Header, String> cell = new TextFieldTableCell<>();
-        cell.setAlignment(Pos.CENTER);
-        return cell;
-    };
 
     private final EventHandler<MouseEvent> treeViewClickedHandler = mouseEvent -> {
         TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
@@ -113,6 +120,11 @@ public class MainController implements Initializable {
         }
         FlowNode selectedNode = selectedItem.getValue();
         if (EnumFlowType.TARGET.equals(selectedNode.getType())) {
+            if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
+                return;
+            }
+            requestHeaderTableView.getItems().clear();
+            responseHeaderTableView.getItems().clear();
             RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
             Request request = requestMapper.selectById(selectedNode.getId());
             infoLabel.setText(request.getUri());
@@ -129,6 +141,35 @@ public class MainController implements Initializable {
             responseHeaderQueryWrapper.eq("response_id", response.getId());
             List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
             responseHeaderTableView.getItems().addAll(responseHeaders);
+            requestRawTextArea.clear();
+            StringBuilder requestRawBuilder = new StringBuilder();
+            requestRawBuilder.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
+            for (Header header : requestHeaders) {
+                requestRawBuilder.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
+            }
+            ContentMapper contentMapper = ApplicationContextUtil.getBean(ContentMapper.class);
+            if (!StringUtils.isEmpty(request.getContentId())) {
+                Content content = contentMapper.selectById(request.getContentId());
+                byte[] bytes = content.getContent();
+                requestRawBuilder.append("\n");
+                // TODO charset utf8 gbk gbk2312 iso8859-1
+                requestRawBuilder.append(new String(bytes));
+            }
+            requestRawTextArea.appendText(requestRawBuilder.toString());
+
+            responseRawTextArea.clear();
+            StringBuilder responseRawBuilder = new StringBuilder();
+            responseRawBuilder.append("status : ").append(response.getStatus()).append("\n");
+            for (Header header : responseHeaders) {
+                responseRawBuilder.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
+            }
+            if (!StringUtils.isEmpty(response.getContentId())) {
+                Content content = contentMapper.selectById(response.getContentId());
+                byte[] bytes = content.getContent();
+                responseRawBuilder.append("\n");
+                responseRawBuilder.append(new String(bytes));
+            }
+            responseRawTextArea.appendText(responseRawBuilder.toString());
         }
     };
 
