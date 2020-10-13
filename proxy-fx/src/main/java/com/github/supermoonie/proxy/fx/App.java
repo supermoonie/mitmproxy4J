@@ -3,12 +3,14 @@ package com.github.supermoonie.proxy.fx;
 import com.github.supermoonie.proxy.fx.controller.MainController;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.tray.SystemTrayManager;
+import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.commons.io.IOUtils;
 import org.mybatis.spring.annotation.MapperScan;
@@ -22,6 +24,7 @@ import javax.annotation.Resource;
 import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 /**
  * Hello world!
@@ -60,6 +63,7 @@ public class App extends Application {
         Parent root = fxmlLoader.load();
         mainController = fxmlLoader.getController();
         primaryStage.setScene(new Scene(root));
+        setCommonIcon(primaryStage);
         primaryStage.show();
         primaryStage.toFront();
         primaryStage.setOnCloseRequest(windowEvent -> {
@@ -92,6 +96,17 @@ public class App extends Application {
                 jdbcTemplate.execute(sql);
             }
         }
+    }
+
+    private void setCommonIcon(Stage stage) {
+        URL iconUrl;
+        if (PlatformUtil.isWindows()) {
+            iconUrl = getClass().getResource("/lightning-win.png");
+        } else {
+            iconUrl = getClass().getResource("/lightning-mac.png");
+        }
+        stage.getIcons().add(new Image(iconUrl.toString()));
+        stage.setTitle("Lightning");
     }
 
     public static Stage getPrimaryStage() {

@@ -1,7 +1,9 @@
 package com.github.supermoonie.proxy.fx.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Header;
@@ -25,6 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -82,10 +85,10 @@ public class MainController implements Initializable {
     protected TableColumn<Header, String> requestHeaderValueColumn;
 
     @FXML
-    protected TableColumn<Header, String> requestFormNameColumn;
+    protected TableColumn<ColumnMap, String> requestFormNameColumn;
 
     @FXML
-    protected TableColumn<Header, String> requestFormValueColumn;
+    protected TableColumn<ColumnMap, String> requestFormValueColumn;
 
     @FXML
     protected TableView<Header> responseHeaderTableView;
@@ -101,6 +104,9 @@ public class MainController implements Initializable {
 
     @FXML
     protected TextArea responseRawTextArea;
+
+    @FXML
+    protected TableView<ColumnMap> formTableView;
 
     private String currentRequestId;
 
@@ -123,8 +129,12 @@ public class MainController implements Initializable {
             if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
                 return;
             }
+            currentRequestId = selectedNode.getId();
             requestHeaderTableView.getItems().clear();
             responseHeaderTableView.getItems().clear();
+            requestRawTextArea.clear();
+            responseRawTextArea.clear();
+            formTableView.getItems().clear();
             RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
             Request request = requestMapper.selectById(selectedNode.getId());
             infoLabel.setText(request.getUri());
@@ -141,7 +151,7 @@ public class MainController implements Initializable {
             responseHeaderQueryWrapper.eq("response_id", response.getId());
             List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
             responseHeaderTableView.getItems().addAll(responseHeaders);
-            requestRawTextArea.clear();
+
             StringBuilder requestRawBuilder = new StringBuilder();
             requestRawBuilder.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
             for (Header header : requestHeaders) {
@@ -153,11 +163,25 @@ public class MainController implements Initializable {
                 byte[] bytes = content.getContent();
                 requestRawBuilder.append("\n");
                 // TODO charset utf8 gbk gbk2312 iso8859-1
-                requestRawBuilder.append(new String(bytes));
+                String raw = new String(bytes);
+                requestRawBuilder.append(raw);
+                requestHeaders.stream().filter(header -> "Content-Type".equals(header.getName())).findFirst().ifPresent(header -> {
+                    if (header.getValue().startsWith(ContentType.APPLICATION_FORM)) {
+                        String[] params = raw.split("&");
+                        for (String param : params) {
+                            String[] form = param.split("=");
+                            if (form.length == 1) {
+                                formTableView.getItems().add(new ColumnMap(form[0], ""));
+                            } else if (form.length == 2) {
+                                formTableView.getItems().add(new ColumnMap(form[0], form[1]));
+                            }
+                            requestTabPane.getTabs().add(1, requestFormTab);
+                        }
+                    }
+                });
             }
             requestRawTextArea.appendText(requestRawBuilder.toString());
 
-            responseRawTextArea.clear();
             StringBuilder responseRawBuilder = new StringBuilder();
             responseRawBuilder.append("status : ").append(response.getStatus()).append("\n");
             for (Header header : responseHeaders) {

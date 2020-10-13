@@ -55,4 +55,10 @@ public class AppTest
         System.out.println(url.getSchemeSpecificPart());
         System.out.println(url.getUserInfo());
     }
+
+    @Test
+    public void testSplit() {
+        String text = "foo=";
+        System.out.println(Arrays.toString(text.split("=")));
+    }
 }
