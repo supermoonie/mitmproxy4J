@@ -62,12 +62,6 @@ public class FlowNode {
 
     @Override
     public String toString() {
-        return "FlowNode{" +
-                "id='" + id + '\'' +
-                ", url='" + url + '\'' +
-                ", status=" + status +
-                ", type=" + type +
-                ", children=" + children +
-                '}';
+        return url;
     }
 }

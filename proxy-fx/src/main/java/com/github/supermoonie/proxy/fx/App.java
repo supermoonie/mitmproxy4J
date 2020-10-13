@@ -57,8 +57,8 @@ public class App extends Application {
         Platform.setImplicitExit(false);
         App.primaryStage = primaryStage;
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/Main.fxml"));
-        mainController = fxmlLoader.getController();
         Parent root = fxmlLoader.load();
+        mainController = fxmlLoader.getController();
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
         primaryStage.toFront();
