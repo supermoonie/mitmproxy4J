@@ -34,6 +34,12 @@ public class ClipboardUtil {
         Clipboard.getSystemClipboard().setContent(clipboardContent);
     }
 
+    public static void copyText(String text) {
+        final ClipboardContent clipboardContent = new ClipboardContent();
+        clipboardContent.putString(text);
+        Clipboard.getSystemClipboard().setContent(clipboardContent);
+    }
+
     public static void copySelectionToClipboard(final TableView<?> table, List<Integer> copyColumnIndexList) {
         final Set<Integer> rows = new TreeSet<>();
         for (final TablePosition<?, ?> tablePosition : table.getSelectionModel().getSelectedCells()) {

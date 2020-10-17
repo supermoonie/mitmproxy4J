@@ -10,6 +10,7 @@ import com.github.supermoonie.proxy.fx.service.ResponseService;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
+import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -37,12 +38,14 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
             Request req = (Request) ctx.getUserData();
             Response res = responseService.saveResponse(response, req);
             log.info("response saved, uri: {}", request.uri());
-            try {
-                MainController mainController = App.getMainController();
-                mainController.addFlow(req, res);
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
+            Platform.runLater(() -> {
+                try {
+                    MainController mainController = App.getMainController();
+                    mainController.addFlow(req, res);
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
+            });
         }
         return null;
     }

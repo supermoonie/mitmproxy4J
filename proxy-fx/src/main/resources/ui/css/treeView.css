@@ -1,0 +1,4 @@
+.tree-cell:selected {
+    -fx-background-color: #c4c4c4;
+    -fx-text-fill: #000000;
+}
