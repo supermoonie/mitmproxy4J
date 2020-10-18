@@ -18,20 +18,24 @@ import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +43,12 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -57,105 +62,78 @@ public class MainController implements Initializable {
 
     @FXML
     protected MenuBar menuBar;
-
     @FXML
     protected AnchorPane structurePane;
-
     @FXML
     protected AnchorPane sequencePane;
-
     @FXML
     protected TreeView<FlowNode> treeView;
-
     @FXML
     protected ListView<FlowNode> listView;
-
     @FXML
     protected Label infoLabel;
-
     @FXML
     protected TabPane requestTabPane;
-
     @FXML
     protected TabPane responseTabPane;
-
     @FXML
     protected Tab requestHeaderTab;
-
     @FXML
     protected Tab requestFormTab;
-
     @FXML
     protected Tab requestQueryTab;
-
     @FXML
     protected Tab requestRawTab;
-
     @FXML
     protected Tab responseHeaderTab;
-
     @FXML
     protected Tab responseRawTab;
-
     @FXML
     protected Tab responseContentTab;
-
     @FXML
     protected TableView<Header> requestHeaderTableView;
-
     @FXML
     protected TableColumn<Header, String> requestHeaderNameColumn;
-
     @FXML
     protected TableColumn<Header, String> requestHeaderValueColumn;
-
     @FXML
     protected TableColumn<ColumnMap, String> requestFormNameColumn;
-
     @FXML
     protected TableColumn<ColumnMap, String> requestFormValueColumn;
-
     @FXML
     protected TableColumn<ColumnMap, String> requestQueryNameColumn;
-
     @FXML
     protected TableColumn<ColumnMap, String> requestQueryValueColumn;
-
     @FXML
     protected TableView<Header> responseHeaderTableView;
-
     @FXML
     protected TableColumn<Header, String> responseHeaderNameColumn;
-
     @FXML
     protected TableColumn<Header, String> responseHeaderValueColumn;
-
     @FXML
     protected TextArea requestRawTextArea;
-
     @FXML
     protected TextArea responseRawTextArea;
-
     @FXML
     protected TableView<ColumnMap> formTableView;
-
     @FXML
     protected TableView<ColumnMap> queryTableView;
-
     @FXML
     protected WebView responseJsonWebView;
-
     @FXML
     protected Tab responseTextTab;
-
     @FXML
     protected TextArea responseTextArea;
-
     @FXML
     protected Tab responseImageTab;
-
     @FXML
     protected ImageView responseImageView;
+    @FXML
+    protected TextField filterTextField;
+    @FXML
+    protected Button clearButton;
+    @FXML
+    protected Button editButton;
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
@@ -177,6 +155,7 @@ public class MainController implements Initializable {
     private final Image icon404 = new Image(getClass().getResourceAsStream("/icon/404.png"), 16, 16, false, false);
     private final Image linkIcon = new Image(getClass().getResourceAsStream("/icon/link.png"), 16, 16, false, false);
 
+    private ObservableList<FlowNode> allNode;
     private String currentRequestId;
 
 
@@ -213,16 +192,69 @@ public class MainController implements Initializable {
                 ClipboardUtil.copyText(text);
             }
         });
+        clearButton.setOnMouseClicked(event -> {
+            clear();
+            currentRequestId = null;
+            treeView.getRoot().getChildren().clear();
+            listView.getItems().clear();
+            if (null != allNode) {
+                allNode.clear();
+            }
+            infoLabel.setText("");
+        });
+        editButton.setOnMouseClicked(event -> {
+            Stage sendReqStage = new Stage();
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/SendReq.fxml"));
+            try {
+                Parent parent = fxmlLoader.load();
+                SendReqController sendReqController = fxmlLoader.getController();
+                sendReqController.setRequestId(currentRequestId);
+                sendReqStage.setScene(new Scene(parent));
+                sendReqStage.initModality(Modality.APPLICATION_MODAL);
+                sendReqStage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @FXML
+    public void onFilterTextFieldEnter(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            if (null == allNode || allNode.size() < listView.getItems().size()) {
+                allNode = new FilteredList<>(listView.getItems(), p -> true);
+            }
+            String text = filterTextField.getText();
+            if (!StringUtils.isEmpty(text)) {
+                ObservableList<FlowNode> filterList = FXCollections.observableList(new LinkedList<>());
+                allNode.forEach(node -> {
+                    if (node.getUrl().contains(text)) {
+                        filterList.add(node);
+                    }
+                });
+                listView.setItems(filterList);
+            } else {
+                listView.setItems(allNode);
+            }
+            ObservableList<FlowNode> items = listView.getItems();
+            try {
+                setAllTreeNode(items);
+            } catch (URISyntaxException e) {
+                log.error(e.getMessage(), e);
+            }
+        }
     }
 
     private void clear() {
         requestHeaderTableView.getItems().clear();
-        responseHeaderTableView.getItems().clear();
+        queryTableView.getItems().clear();
+        formTableView.getItems().clear();
         requestRawTextArea.clear();
+        responseHeaderTableView.getItems().clear();
         responseRawTextArea.clear();
         responseTextArea.clear();
-        formTableView.getItems().clear();
-        queryTableView.getItems().clear();
+        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
+        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
     }
 
     private void fillRequestRawTab(Request request, List<Header> requestHeaders) {
@@ -240,16 +272,9 @@ public class MainController implements Initializable {
             requestRawBuilder.append(raw);
             requestHeaders.stream().filter(header -> HttpHeaderNames.CONTENT_TYPE.toString().equalsIgnoreCase(header.getName())).findFirst().ifPresent(header -> {
                 if (header.getValue().startsWith(ContentType.APPLICATION_FORM)) {
-                    String[] params = raw.split("&");
-                    for (String param : params) {
-                        String[] form = param.split("=");
-                        if (form.length == 1) {
-                            formTableView.getItems().add(new ColumnMap(form[0], ""));
-                        } else if (form.length == 2) {
-                            formTableView.getItems().add(new ColumnMap(form[0], form[1]));
-                        }
-                        requestTabPane.getTabs().add(1, requestFormTab);
-                    }
+                    List<ColumnMap> columnMaps = ColumnMap.listOf(raw);
+                    formTableView.getItems().addAll(columnMaps);
+                    requestTabPane.getTabs().add(1, requestFormTab);
                 }
             });
         }
@@ -261,16 +286,9 @@ public class MainController implements Initializable {
             URI uri = new URI(request.getUri());
             String query = uri.getQuery();
             if (!StringUtils.isEmpty(query)) {
-                String[] params = query.split("&");
-                for (String param : params) {
-                    String[] form = param.split("=");
-                    if (form.length == 1) {
-                        queryTableView.getItems().add(new ColumnMap(form[0], ""));
-                    } else if (form.length == 2) {
-                        queryTableView.getItems().add(new ColumnMap(form[0], form[1]));
-                    }
-                    requestTabPane.getTabs().add(1, requestQueryTab);
-                }
+                List<ColumnMap> columnMaps = ColumnMap.listOf(query);
+                queryTableView.getItems().addAll(columnMaps);
+                requestTabPane.getTabs().add(1, requestQueryTab);
             }
         } catch (URISyntaxException e) {
             log.error(e.getMessage(), e);
@@ -348,7 +366,7 @@ public class MainController implements Initializable {
             clear();
             currentRequestId = selectedNode.getId();
             Request request = requestMapper.selectById(selectedNode.getId());
-            infoLabel.setText(request.getUri());
+            infoLabel.setText(request.getMethod().toUpperCase() + " " + request.getUri());
             QueryWrapper<Header> requestHeaderQueryWrapper = new QueryWrapper<>();
             requestHeaderQueryWrapper.eq("request_id", request.getId());
             List<Header> requestHeaders = headerMapper.selectList(requestHeaderQueryWrapper);
@@ -366,14 +384,15 @@ public class MainController implements Initializable {
         }
     }
 
-    public void addFlow(Request request, Response response) throws URISyntaxException {
-        FlowNode rootNode = new FlowNode();
-        rootNode.setStatus(response.getStatus());
-        rootNode.setType(EnumFlowType.TARGET);
-        rootNode.setUrl(request.getUri());
-        rootNode.setId(request.getId());
-        listView.getItems().add(rootNode);
-        URI uri = new URI(request.getUri());
+    private void setAllTreeNode(ObservableList<FlowNode> allListNode) throws URISyntaxException {
+        treeView.getRoot().getChildren().clear();
+        for (FlowNode flowNode : allListNode) {
+            addTreeNode(flowNode);
+        }
+    }
+
+    private void addTreeNode(FlowNode flowNode) throws URISyntaxException {
+        URI uri = new URI(flowNode.getUrl());
         String baseUri = uri.getScheme() + "://" + uri.getAuthority();
         TreeItem<FlowNode> root = treeView.getRoot();
         ObservableList<TreeItem<FlowNode>> children = root.getChildren();
@@ -388,10 +407,10 @@ public class MainController implements Initializable {
         });
         if ("".equals(uri.getPath()) || "/".equals(uri.getPath())) {
             FlowNode rootPathNode = new FlowNode();
-            rootPathNode.setId(request.getId());
+            rootPathNode.setId(flowNode.getId());
             rootPathNode.setUrl("/");
             rootPathNode.setType(EnumFlowType.TARGET);
-            TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, new ImageView(loadIcon(response)));
+            TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, new ImageView(loadIcon(flowNode.getStatus(), flowNode.getContentType())));
             rootPathTreeItem.setExpanded(true);
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
         } else {
@@ -402,11 +421,11 @@ public class MainController implements Initializable {
                 String fragment = "".equals(array[i].trim()) ? "/" : array[i].trim();
                 if (i == (len - 1)) {
                     FlowNode node = new FlowNode();
-                    node.setId(request.getId());
+                    node.setId(flowNode.getId());
                     node.setUrl(fragment);
                     node.setType(EnumFlowType.TARGET);
-                    node.setStatus(response.getStatus());
-                    currentItem.getChildren().add(new TreeItem<>(node, new ImageView(loadIcon(response))));
+                    node.setStatus(flowNode.getStatus());
+                    currentItem.getChildren().add(new TreeItem<>(node, new ImageView(loadIcon(flowNode.getStatus(), flowNode.getContentType()))));
                 } else {
                     ObservableList<TreeItem<FlowNode>> treeItems = currentItem.getChildren();
                     currentItem = treeItems.stream().filter(item -> item.getValue().getUrl().equals(fragment) && item.getValue().getType().equals(EnumFlowType.PATH))
@@ -424,6 +443,17 @@ public class MainController implements Initializable {
         }
     }
 
+    public void addFlow(Request request, Response response) throws URISyntaxException {
+        FlowNode flowNode = new FlowNode();
+        flowNode.setStatus(response.getStatus());
+        flowNode.setType(EnumFlowType.TARGET);
+        flowNode.setUrl(request.getUri());
+        flowNode.setId(request.getId());
+        flowNode.setContentType(response.getContentType());
+        listView.getItems().add(flowNode);
+        addTreeNode(flowNode);
+    }
+
     private void appendTab(TabPane tabPane, Tab tab) {
         FilteredList<Tab> list = tabPane.getTabs().filtered(item -> item.getText().equals(tab.getText()));
         if (CollectionUtils.isEmpty(list)) {
@@ -431,20 +461,19 @@ public class MainController implements Initializable {
         }
     }
 
-    private Image loadIcon(Response response) {
-        Integer status = response.getStatus();
+    private Image loadIcon(int status, String contentType) {
         if (200 == status) {
-            if (response.getContentType().startsWith(ContentType.TEXT_CSS)) {
+            if (contentType.startsWith(ContentType.TEXT_CSS)) {
                 return cssIcon;
-            } else if (response.getContentType().startsWith(ContentType.TEXT_XML) || response.getContentType().startsWith(ContentType.APPLICATION_XML)) {
+            } else if (contentType.startsWith(ContentType.TEXT_XML) || contentType.startsWith(ContentType.APPLICATION_XML)) {
                 return xmlIcon;
-            } else if (response.getContentType().startsWith(ContentType.TEXT_PLAIN)) {
+            } else if (contentType.startsWith(ContentType.TEXT_PLAIN)) {
                 return textIcon;
-            } else if (response.getContentType().startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
+            } else if (contentType.startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
                 return jsIcon;
-            } else if (response.getContentType().startsWith(ContentType.TEXT_HTML)) {
+            } else if (contentType.startsWith(ContentType.TEXT_HTML)) {
                 return htmlIcon;
-            } else if (response.getContentType().startsWith(ContentType.APPLICATION_JSON)) {
+            } else if (contentType.startsWith(ContentType.APPLICATION_JSON)) {
                 return jsonIcon;
             }
             return linkIcon;

@@ -17,33 +17,31 @@ import java.lang.reflect.Field;
  */
 public class FilterableTreeItem<T> extends TreeItem<T> {
     final private ObservableList<TreeItem<T>> sourceList;
-    private FilteredList<TreeItem<T>> filteredList;
-    private ObjectProperty<TreeItemPredicate<T>> predicate = new SimpleObjectProperty<>();
+    private final ObjectProperty<TreeItemPredicate<T>> predicate = new SimpleObjectProperty<>();
 
     public FilterableTreeItem(T value) {
         super(value);
         this.sourceList = FXCollections.observableArrayList();
-        this.filteredList = new FilteredList<>(this.sourceList);
-        this.filteredList.predicateProperty().bind(Bindings.createObjectBinding(() -> {
-            return child -> {
-                // Set the predicate of child items to force filtering
-                if (child instanceof FilterableTreeItem) {
-                    FilterableTreeItem<T> filterableChild = (FilterableTreeItem<T>) child;
-                    filterableChild.setPredicate(this.predicate.get());
-                }
-                // If there is no predicate, keep this tree item
-                if (this.predicate.get() == null)
-                    return true;
-                // If there are children, keep this tree item
-                if (child.getChildren().size() > 0)
-                    return true;
-                // Otherwise ask the TreeItemPredicate
-                return this.predicate.get().test(this, child.getValue());
-            };
+        FilteredList<TreeItem<T>> filteredList = new FilteredList<>(this.sourceList);
+        filteredList.predicateProperty().bind(Bindings.createObjectBinding(() -> child -> {
+            // Set the predicate of child items to force filtering
+            if (child instanceof FilterableTreeItem) {
+                FilterableTreeItem<T> filterableChild = (FilterableTreeItem<T>) child;
+                filterableChild.setPredicate(this.predicate.get());
+            }
+            // If there is no predicate, keep this tree item
+            if (this.predicate.get() == null)
+                return true;
+            // If there are children, keep this tree item
+            if (child.getChildren().size() > 0)
+                return true;
+            // Otherwise ask the TreeItemPredicate
+            return this.predicate.get().test(this, child.getValue());
         }, this.predicate));
-        setHiddenFieldChildren(this.filteredList);
+        setHiddenFieldChildren(filteredList);
     }
 
+    @SuppressWarnings("unchecked")
     protected void setHiddenFieldChildren(ObservableList<TreeItem<T>> list) {
         try {
             Field childrenField = TreeItem.class.getDeclaredField("children"); //$NON-NLS-1$
@@ -62,7 +60,7 @@ public class FilterableTreeItem<T> extends TreeItem<T> {
         return this.sourceList;
     }
 
-    public void setPredicate(TreeItemPredicate predicate) {
+    public void setPredicate(TreeItemPredicate<T> predicate) {
         this.predicate.set(predicate);
     }
 }

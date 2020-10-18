@@ -18,6 +18,8 @@ public class FlowNode {
 
     private EnumFlowType type;
 
+    private String contentType;
+
     private List<FlowNode> children;
 
     public String getId() {
@@ -58,6 +60,14 @@ public class FlowNode {
 
     public void setChildren(List<FlowNode> children) {
         this.children = children;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     @Override

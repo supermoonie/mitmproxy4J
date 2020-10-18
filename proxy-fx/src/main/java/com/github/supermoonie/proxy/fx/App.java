@@ -98,12 +98,12 @@ public class App extends Application {
         }
     }
 
-    private void setCommonIcon(Stage stage) {
+    public static void setCommonIcon(Stage stage) {
         URL iconUrl;
         if (PlatformUtil.isWindows()) {
-            iconUrl = getClass().getResource("/lightning-win.png");
+            iconUrl = App.class.getResource("/lightning-win.png");
         } else {
-            iconUrl = getClass().getResource("/lightning-mac.png");
+            iconUrl = App.class.getResource("/lightning-mac.png");
         }
         stage.getIcons().add(new Image(iconUrl.toString()));
         stage.setTitle("Lightning");
