@@ -35,7 +35,7 @@ public class HttpProxyTest {
     @Before
     public void before() throws Exception {
         httpClient = createTrustAllHttpClientBuilder()
-                .setProxy(new HttpHost("127.0.0.1", 10801))
+                .setProxy(new HttpHost("127.0.0.1", 10802))
                 .build();
     }
 
@@ -179,7 +179,8 @@ public class HttpProxyTest {
         HttpPost httpPost = new HttpPost("https://httpbin.org/post?query=string");
 //        InputStream in = HttpProxyTest.class.getClassLoader().getResourceAsStream("test.jpg");
 //        assert in != null;
-        byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/moonie/java/mitmproxy4J/proxy/src/test/resources/test.jpg"));
+        byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/supermoonie/Downloads/test2.jpg"));
+
         HttpEntity httpEntity = MultipartEntityBuilder.create()
                 .addTextBody("foo", "bar", ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8))
                 .addBinaryBody("test\"abc.png", bytes, ContentType.APPLICATION_OCTET_STREAM, "test.jpg")

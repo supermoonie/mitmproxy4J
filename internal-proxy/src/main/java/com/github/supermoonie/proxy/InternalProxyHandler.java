@@ -108,6 +108,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             verifyAuth(request);
             String separator = "/";
             if (request.uri().startsWith(separator)) {
+                // TODO Host 与 URL 不一致
                 request.setUri((connectionInfo.isHttps() ? "https://" : "http://") + request.headers().get(HttpHeaderNames.HOST) + request.uri());
             }
             logger.debug("url: " + request.uri());

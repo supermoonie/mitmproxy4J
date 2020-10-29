@@ -21,7 +21,6 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -208,10 +207,11 @@ public class MainController implements Initializable {
             try {
                 Parent parent = fxmlLoader.load();
                 SendReqController sendReqController = fxmlLoader.getController();
-                sendReqController.setRequestId(currentRequestId);
+                sendReqController.setStage(sendReqStage);
                 sendReqStage.setScene(new Scene(parent));
                 sendReqStage.initModality(Modality.APPLICATION_MODAL);
                 sendReqStage.show();
+                sendReqController.setRequestId(currentRequestId);
             } catch (IOException e) {
                 e.printStackTrace();
             }

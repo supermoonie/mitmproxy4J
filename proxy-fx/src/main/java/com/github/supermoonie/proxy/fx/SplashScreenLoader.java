@@ -26,7 +26,6 @@ public class SplashScreenLoader extends Preloader {
         stage.setScene(splashScene);
         stage.show();
         stage.toFront();
-        stage.setAlwaysOnTop(true);
     }
 
     public Parent getParent() {
