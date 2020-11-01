@@ -611,7 +611,10 @@ public class SendReqController implements Initializable {
     }
 
     public void onFormDataDelButtonClicked() {
-//        removeSelectRow(formDataTableView);
+        ObservableList<Integer> indices = formDataTableView.getSelectionModel().getSelectedIndices();
+        List<Integer> indexList = new LinkedList<>(indices);
+        Collections.reverse(indexList);
+        indexList.forEach(index -> formDataTableView.getItems().remove(index.intValue()));
     }
 
     public void onHeaderValueTextFieldPressed(KeyEvent event) {
@@ -658,12 +661,13 @@ public class SendReqController implements Initializable {
         pair.keyProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
         pair.valueProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
         paramsTableView.getItems().add(pair);
-        // TODO 更新URL
     }
 
     public void onParamsDelButtonClicked() {
-//        removeSelectRow(paramsTableView);
-        // TODO 更新URL
+        ObservableList<Integer> indices = paramsTableView.getSelectionModel().getSelectedIndices();
+        List<Integer> indexList = new LinkedList<>(indices);
+        Collections.reverse(indexList);
+        indexList.forEach(index -> paramsTableView.getItems().remove(index.intValue()));
     }
 
     private <T extends ColumnMap> void removeSelectRow(TableView<T> tableView) {
