@@ -201,21 +201,28 @@ public class MainController implements Initializable {
             }
             infoLabel.setText("");
         });
-        editButton.setOnMouseClicked(event -> {
-            Stage sendReqStage = new Stage();
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/SendReq.fxml"));
-            try {
-                Parent parent = fxmlLoader.load();
-                SendReqController sendReqController = fxmlLoader.getController();
-                sendReqController.setStage(sendReqStage);
-                sendReqStage.setScene(new Scene(parent));
-                sendReqStage.initModality(Modality.APPLICATION_MODAL);
-                sendReqStage.show();
-                sendReqController.setRequestId(currentRequestId);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        editButton.setOnMouseClicked(event -> onSendRequestClicked().setRequestId(currentRequestId));
+    }
+
+    public void onOpenMenuItemClicked() {
+        // TODO
+    }
+
+    public SendReqController onSendRequestClicked() {
+        Stage sendReqStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/SendReq.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            SendReqController sendReqController = fxmlLoader.getController();
+            sendReqController.setStage(sendReqStage);
+            sendReqStage.setScene(new Scene(parent));
+            sendReqStage.initModality(Modality.APPLICATION_MODAL);
+            sendReqStage.show();
+            return sendReqController;
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        return null;
     }
 
     @FXML

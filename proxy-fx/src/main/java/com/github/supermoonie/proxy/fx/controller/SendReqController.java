@@ -6,7 +6,6 @@ import com.github.supermoonie.proxy.fx.constant.EnumFormValueType;
 import com.github.supermoonie.proxy.fx.constant.EnumReqBodyType;
 import com.github.supermoonie.proxy.fx.constant.HttpMethod;
 import com.github.supermoonie.proxy.fx.constant.RequestRawType;
-import com.github.supermoonie.proxy.fx.controller.component.SearchableComboBoxTableCell;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FormDataColumnMap;
 import com.github.supermoonie.proxy.fx.entity.Content;
@@ -15,11 +14,17 @@ import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
+import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -32,7 +37,22 @@ import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +68,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
 /**
@@ -156,16 +177,40 @@ public class SendReqController implements Initializable {
     protected Tab requestBodyTextTab;
     @FXML
     protected TextArea requestBodyTextArea;
+    @FXML
+    protected Button sendButton;
+    @FXML
+    protected Button cancelButton;
+    private ToggleGroup radioGroup;
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
     private final ContentMapper contentMapper = ApplicationContextUtil.getBean(ContentMapper.class);
 
+    private String requestId;
     private Stage stage;
     private File binaryFile;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        requestUrlTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                try {
+                    URI uri = new URI(requestUrlTextField.getText());
+                    paramsTableView.getItems().removeListener(paramListChangeListener);
+                    String query = uri.getQuery();
+                    if (!StringUtils.isEmpty(query)) {
+                        List<ColumnMap> columnMaps = ColumnMap.listOf(query);
+                        paramsTableView.getItems().setAll(columnMaps);
+                    }
+                    paramsTableView.getItems().addListener(paramListChangeListener);
+                } catch (URISyntaxException ignore) {
+                }
+            }
+        });
+        requestUrlTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+
+        });
         initRequestMethodChoiceBox();
         initRequestQueryParamsTab();
         initRequestHeaderTab();
@@ -193,13 +238,141 @@ public class SendReqController implements Initializable {
         });
     }
 
+    public static HttpClientBuilder createTrustAllApacheHttpClientBuilder() throws Exception {
+        SSLContextBuilder builder = new SSLContextBuilder();
+        builder.loadTrustMaterial(null, (chain, authType) -> true);
+        SSLConnectionSocketFactory sslsf = new
+                SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
+        return HttpClients.custom().setSSLSocketFactory(sslsf);
+    }
+
+    public void onSendButtonClicked() {
+        String sending = "Sending...";
+        if (sending.equals(sendButton.getText())) {
+            return;
+        }
+        final List<String> autoCalculateHeaders = List.of("Host", "Content-Length", "host", "content-length");
+        final String method = reqMethodChoiceBox.getValue();
+        final String urlStr = requestUrlTextField.getText();
+        final ObservableList<ColumnMap> headers = headerTableView.getItems();
+        sendButton.setText(sending);
+        if (!StringUtils.isEmpty(requestId)) {
+            App.EXECUTOR.execute(() -> {
+                String rawText = requestBodyTextArea.getText();
+                try (CloseableHttpClient httpClient = createTrustAllApacheHttpClientBuilder()
+                        .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
+                        .build()) {
+                    RequestBuilder requestBuilder = RequestBuilder.create(method).setUri(urlStr);
+                    headers.forEach(header -> {
+                        if (!autoCalculateHeaders.contains(header.getName())) {
+                            requestBuilder.addHeader(header.getName(), header.getValue());
+                        }
+                    });
+                    if (!StringUtils.isEmpty(rawText)) {
+                        requestBuilder.setEntity(new ByteArrayEntity(rawText.getBytes(StandardCharsets.UTF_8)));
+                    }
+                    httpClient.execute(requestBuilder.build()).close();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                } finally {
+                    Platform.runLater(() -> {
+                        sendButton.setText("Send");
+                        stage.close();
+                    });
+                }
+            });
+        } else {
+            App.EXECUTOR.execute(() -> {
+                try (CloseableHttpClient httpClient = createTrustAllApacheHttpClientBuilder()
+                        .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
+                        .build()) {
+                    RequestBuilder requestBuilder = RequestBuilder.create(method).setUri(urlStr);
+                    headers.forEach(header -> {
+                        if (!autoCalculateHeaders.contains(header.getName())) {
+                            requestBuilder.addHeader(header.getName(), header.getValue());
+                        }
+                    });
+                    RadioButton selectedRadioButton = (RadioButton) radioGroup.getSelectedToggle();
+                    if (selectedRadioButton.equals(formDataRadioButton)) {
+                        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+                        ObservableList<FormDataColumnMap> mapList = formDataTableView.getItems();
+                        for (FormDataColumnMap map : mapList) {
+                            if (EnumFormValueType.TEXT.toString().equals(map.getValueType())) {
+                                entityBuilder.addTextBody(map.getName(), map.getValue(), ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8));
+                            } else {
+                                String mimeType;
+                                if ("Auto".equals(map.getContentType())) {
+                                    mimeType = MimeMappings.DEFAULT.get(map.getFileName().substring(map.getFileName().lastIndexOf(".") + 1));
+                                } else {
+                                    mimeType = map.getContentType();
+                                }
+                                entityBuilder.addBinaryBody(map.getName(), map.getFile(), ContentType.getByMimeType(mimeType), map.getFileName());
+                            }
+                        }
+                        requestBuilder.setEntity(entityBuilder.build());
+                    } else if (selectedRadioButton.equals(formUrlEncodedRadioButton)) {
+                        ObservableList<ColumnMap> mapList = formUrlEncodedTableView.getItems();
+                        StringBuilder params = new StringBuilder();
+                        for (ColumnMap map : mapList) {
+                            params.append(map.getName()).append("=").append(map.getValue()).append("&");
+                        }
+                        StringEntity entity = new StringEntity(params.toString(), ContentType.APPLICATION_FORM_URLENCODED.withCharset(StandardCharsets.UTF_8));
+                        requestBuilder.setEntity(entity);
+                    } else if (selectedRadioButton.equals(binaryRadioButton)) {
+                        if (null != binaryFile) {
+                            requestBuilder.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.DEFAULT_BINARY.toString());
+                            requestBuilder.setEntity(new FileEntity(binaryFile));
+                        }
+                    } else if (selectedRadioButton.equals(rawRadioButton)) {
+                        String rawType = rawTypeChoiceBox.getValue();
+                        FutureTask<String> futureTask = new FutureTask<>(() -> rawWebView.getEngine().executeScript("codeEditor.getValue()").toString());
+                        Platform.runLater(futureTask);
+                        String raw = futureTask.get();
+                        switch (rawType) {
+                            case RequestRawType.JSON:
+                                requestBuilder.setEntity(new StringEntity(raw, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8)));
+                                break;
+                            case RequestRawType.HTML:
+                                requestBuilder.setEntity(new StringEntity(raw, ContentType.TEXT_HTML.withCharset(StandardCharsets.UTF_8)));
+                                break;
+                            case RequestRawType.JAVASCRIPT:
+                                requestBuilder.setEntity(new StringEntity(raw, ContentType.create("application/javascript", StandardCharsets.UTF_8)));
+                                break;
+                            case RequestRawType.XML:
+                                requestBuilder.setEntity(new StringEntity(raw, ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8)));
+                                break;
+                            case RequestRawType.TEXT:
+                                requestBuilder.setEntity(new StringEntity(raw, ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8)));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    httpClient.execute(requestBuilder.build()).close();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                } finally {
+                    Platform.runLater(() -> {
+                        sendButton.setText("Send");
+                        stage.close();
+                    });
+                }
+            });
+
+        }
+    }
+
+    public void onCancelButtonClicked() {
+        stage.close();
+    }
+
     private void initRequestBodyRadioGroup() {
         noneRadioButton.setUserData(EnumReqBodyType.NONE);
         formDataRadioButton.setUserData(EnumReqBodyType.FORM_DATA);
         formUrlEncodedRadioButton.setUserData(EnumReqBodyType.X_WWW_FORM_URLENCODED);
         binaryRadioButton.setUserData(EnumReqBodyType.BINARY);
         rawRadioButton.setUserData(EnumReqBodyType.RAW);
-        ToggleGroup radioGroup = new ToggleGroup();
+        radioGroup = new ToggleGroup();
         noneRadioButton.setToggleGroup(radioGroup);
         formDataRadioButton.setToggleGroup(radioGroup);
         formUrlEncodedRadioButton.setToggleGroup(radioGroup);
@@ -233,15 +406,47 @@ public class SendReqController implements Initializable {
         reqMethodChoiceBox.setValue(HttpMethod.GET);
     }
 
+    private final ListChangeListener<ColumnMap> paramListChangeListener = change -> updateRequestUrl();
+
+    private final ChangeListener<String> paramColChangeListener = (observable, oldValue, newValue) -> updateRequestUrl();
+
+    private void updateRequestUrl() {
+        ObservableList<ColumnMap> list = paramsTableView.getItems();
+        StringBuilder urlBuilder = new StringBuilder();
+        String url = requestUrlTextField.getText();
+        if (!StringUtils.isEmpty(url)) {
+            if (url.contains("?")) {
+                urlBuilder.append(url, 0, url.indexOf("?") + 1);
+            } else {
+                urlBuilder.append(url).append("?");
+            }
+        }
+        for (ColumnMap map : list) {
+            urlBuilder.append(map.getName()).append("=").append(map.getValue()).append("&");
+        }
+        requestUrlTextField.setText(urlBuilder.substring(0, urlBuilder.length() - 1));
+    }
+
     private void initRequestQueryParamsTab() {
         paramsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        requestParamNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        requestParamNameColumn.setCellFactory(col -> new TextFieldTableCell<>(new DefaultStringConverter()) {
+            @Override
+            public void commitEdit(String newValue) {
+                super.commitEdit(newValue);
+                setText(newValue);
+                updateRequestUrl();
+            }
+        });
         requestParamValueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+
+//        requestParamNameColumn.textProperty().addListener(paramColChangeListener);
+//        requestParamValueColumn.textProperty().addListener(paramColChangeListener);
+        paramsTableView.getItems().addListener(paramListChangeListener);
     }
 
     private void initRequestHeaderTab() {
         headerTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        List<String> autoCalculateHeaders = List.of("Host", "Content-Type", "Content-Length");
+        List<String> autoCalculateHeaders = List.of("Host", "Content-Type", "Content-Length", "host", "content-type", "content-length");
         requestHeaderNameColumn.setCellFactory(col -> new TextFieldTableCell<>(new DefaultStringConverter()) {
             @Override
             public void updateItem(String item, boolean empty) {
@@ -280,7 +485,7 @@ public class SendReqController implements Initializable {
     }
 
     private void initRequestFormDataTab() {
-        List<String> mimeTypeList = MimeMappings.DEFAULT.getAll().stream().map(MimeMappings.Mapping::getMimeType).sorted().collect(Collectors.toList());
+        List<String> mimeTypeList = MimeMappings.DEFAULT.getAll().stream().map(MimeMappings.Mapping::getMimeType).distinct().sorted().collect(Collectors.toList());
         mimeTypeList.add(0, "Auto");
         ObservableList<String> sortedMimeTypeList = FXCollections.observableList(mimeTypeList);
         formDataNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -334,7 +539,7 @@ public class SendReqController implements Initializable {
             }
         });
         valueTypeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(EnumFormValueType.TEXT.toString(), EnumFormValueType.FILE.toString()));
-        contentTypeColumn.setCellFactory(SearchableComboBoxTableCell.forTableColumn(sortedMimeTypeList));
+        contentTypeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(sortedMimeTypeList));
     }
 
     private void initRequestFormUrlEncodedTab() {
@@ -469,6 +674,7 @@ public class SendReqController implements Initializable {
     public void setRequestId(String requestId) {
         log.info("requestId: {}", requestId);
         if (!StringUtils.isEmpty(requestId)) {
+            this.requestId = requestId;
             requestTabPane.getTabs().removeIf(tab -> tab.getText().equals(requestBodyTab.getText()));
             requestTabPane.getTabs().add(requestBodyTextTab);
             Request request = requestMapper.selectById(requestId);
@@ -487,16 +693,15 @@ public class SendReqController implements Initializable {
             QueryWrapper<Header> requestHeaderQueryWrapper = new QueryWrapper<>();
             requestHeaderQueryWrapper.eq("request_id", request.getId());
             List<Header> requestHeaders = headerMapper.selectList(requestHeaderQueryWrapper);
-            List<String> autoCalculateHeaders = List.of("Host", "Content-Type", "Content-Length");
+            List<String> autoCalculateHeaders = List.of("Host", "Content-Type", "Content-Length", "host", "content-type", "content-length");
             List<ColumnMap> headers = requestHeaders.stream().map(header -> {
                 ColumnMap columnMap = new ColumnMap();
                 columnMap.setName(header.getName());
                 if (autoCalculateHeaders.contains(header.getName())) {
-                    columnMap.setValue("<calculated when request is sent>");
+//                    columnMap.setValue("<calculated when request is sent>");
                     columnMap.setEditable(false);
-                } else {
-                    columnMap.setValue(header.getValue());
                 }
+                columnMap.setValue(header.getValue());
                 return columnMap;
             }).collect(Collectors.toList());
             headerTableView.getItems().addAll(headers);

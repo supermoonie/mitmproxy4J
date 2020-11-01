@@ -25,6 +25,8 @@ import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Hello world!
@@ -33,7 +35,7 @@ import java.net.URL;
 @MapperScan(basePackages = "com.github.supermoonie.proxy.fx.mapper")
 public class App extends Application {
 
-    //    public static final ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(5);
+    public static final ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(5);
 
     public static void main(String[] args) {
         launch(args);

@@ -292,10 +292,10 @@ public class CellUtils {
 
     ;
 
-    public static <T> ComboBox<T> createComboBox(final Cell<T> cell,
+    public static <T> SearchableComboBox<T> createComboBox(final Cell<T> cell,
                                                  final ObservableList<T> items,
                                                  final ObjectProperty<StringConverter<T>> converter) {
-        ComboBox<T> comboBox = new SearchableComboBox<>(items);
+        SearchableComboBox<T> comboBox = new SearchableComboBox<>(items);
         comboBox.converterProperty().bind(converter);
         comboBox.setMaxWidth(Double.MAX_VALUE);
 

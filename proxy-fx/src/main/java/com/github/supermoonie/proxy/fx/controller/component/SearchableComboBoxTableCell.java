@@ -14,6 +14,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.controlsfx.control.SearchableComboBox;
 
 import static com.github.supermoonie.proxy.fx.controller.component.CellUtils.createComboBox;
 
@@ -143,7 +144,7 @@ public class SearchableComboBoxTableCell<S,T> extends TableCell<S,T> {
 
     private final ObservableList<T> items;
 
-    private ComboBox<T> comboBox;
+    private SearchableComboBox<T> comboBox;
 
 
 
