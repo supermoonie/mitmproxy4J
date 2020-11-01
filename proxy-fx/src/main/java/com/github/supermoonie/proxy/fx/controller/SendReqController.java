@@ -15,11 +15,11 @@ import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
+import com.github.supermoonie.proxy.fx.support.PropertyPair;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
+import com.github.supermoonie.proxy.fx.util.UrlUtil;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -37,7 +37,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -84,11 +83,11 @@ public class SendReqController implements Initializable {
     @FXML
     protected TextField requestUrlTextField;
     @FXML
-    protected TableView<ColumnMap> paramsTableView;
+    protected TableView<PropertyPair> paramsTableView;
     @FXML
-    protected TableColumn<ColumnMap, String> requestParamNameColumn;
+    protected TableColumn<PropertyPair, String> requestParamNameColumn;
     @FXML
-    protected TableColumn<ColumnMap, String> requestParamValueColumn;
+    protected TableColumn<PropertyPair, String> requestParamValueColumn;
     @FXML
     protected TableView<ColumnMap> headerTableView;
     @FXML
@@ -193,24 +192,7 @@ public class SendReqController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        requestUrlTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue) {
-                try {
-                    URI uri = new URI(requestUrlTextField.getText());
-                    paramsTableView.getItems().removeListener(paramListChangeListener);
-                    String query = uri.getQuery();
-                    if (!StringUtils.isEmpty(query)) {
-                        List<ColumnMap> columnMaps = ColumnMap.listOf(query);
-                        paramsTableView.getItems().setAll(columnMaps);
-                    }
-                    paramsTableView.getItems().addListener(paramListChangeListener);
-                } catch (URISyntaxException ignore) {
-                }
-            }
-        });
-        requestUrlTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-
-        });
+        initRequestUrlTextField();
         initRequestMethodChoiceBox();
         initRequestQueryParamsTab();
         initRequestHeaderTab();
@@ -219,6 +201,38 @@ public class SendReqController implements Initializable {
         initRequestFormDataTab();
         initRequestFormUrlEncodedTab();
         requestTabPane.getTabs().removeIf(tab -> tab.getText().equals(requestBodyTextTab.getText()));
+        Platform.runLater(() -> requestUrlTextField.requestFocus());
+    }
+
+    private void initRequestUrlTextField() {
+        requestUrlTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                updateParamTabView();
+            }
+        });
+        requestUrlTextField.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.ENTER)) {
+                updateParamTabView();
+            }
+        });
+    }
+
+    private void updateParamTabView() {
+        try {
+            URI uri = new URI(requestUrlTextField.getText());
+            paramsTableView.getItems().removeListener(paramListChangeListener);
+            String query = uri.getQuery();
+            if (!StringUtils.isEmpty(query)) {
+                List<PropertyPair> pairList = UrlUtil.queryToList(query);
+                pairList.forEach(pair -> {
+                    pair.keyProperty().addListener((observable1, oldValue1, newValue1) -> updateRequestUrl());
+                    pair.valueProperty().addListener((observable1, oldValue1, newValue1) -> updateRequestUrl());
+                });
+                paramsTableView.getItems().setAll(pairList);
+            }
+            paramsTableView.getItems().addListener(paramListChangeListener);
+        } catch (URISyntaxException ignore) {
+        }
     }
 
     private void initRequestRawTypeChoiceBox() {
@@ -406,12 +420,10 @@ public class SendReqController implements Initializable {
         reqMethodChoiceBox.setValue(HttpMethod.GET);
     }
 
-    private final ListChangeListener<ColumnMap> paramListChangeListener = change -> updateRequestUrl();
-
-    private final ChangeListener<String> paramColChangeListener = (observable, oldValue, newValue) -> updateRequestUrl();
+    private final ListChangeListener<PropertyPair> paramListChangeListener = change -> updateRequestUrl();
 
     private void updateRequestUrl() {
-        ObservableList<ColumnMap> list = paramsTableView.getItems();
+        ObservableList<PropertyPair> list = paramsTableView.getItems();
         StringBuilder urlBuilder = new StringBuilder();
         String url = requestUrlTextField.getText();
         if (!StringUtils.isEmpty(url)) {
@@ -421,26 +433,16 @@ public class SendReqController implements Initializable {
                 urlBuilder.append(url).append("?");
             }
         }
-        for (ColumnMap map : list) {
-            urlBuilder.append(map.getName()).append("=").append(map.getValue()).append("&");
+        for (PropertyPair pair : list) {
+            urlBuilder.append(pair.getKey()).append("=").append(pair.getValue()).append("&");
         }
         requestUrlTextField.setText(urlBuilder.substring(0, urlBuilder.length() - 1));
     }
 
     private void initRequestQueryParamsTab() {
         paramsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        requestParamNameColumn.setCellFactory(col -> new TextFieldTableCell<>(new DefaultStringConverter()) {
-            @Override
-            public void commitEdit(String newValue) {
-                super.commitEdit(newValue);
-                setText(newValue);
-                updateRequestUrl();
-            }
-        });
+        requestParamNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         requestParamValueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-
-//        requestParamNameColumn.textProperty().addListener(paramColChangeListener);
-//        requestParamValueColumn.textProperty().addListener(paramColChangeListener);
         paramsTableView.getItems().addListener(paramListChangeListener);
     }
 
@@ -650,12 +652,17 @@ public class SendReqController implements Initializable {
             return;
         }
         String value = paramsValueTextField.getText();
-        paramsTableView.getItems().add(new ColumnMap(name, value));
+        PropertyPair pair = new PropertyPair();
+        pair.setKey(name);
+        pair.setValue(value);
+        pair.keyProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
+        pair.valueProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
+        paramsTableView.getItems().add(pair);
         // TODO 更新URL
     }
 
     public void onParamsDelButtonClicked() {
-        removeSelectRow(paramsTableView);
+//        removeSelectRow(paramsTableView);
         // TODO 更新URL
     }
 
@@ -684,8 +691,12 @@ public class SendReqController implements Initializable {
                 URI uri = new URI(request.getUri());
                 String query = uri.getQuery();
                 if (!StringUtils.isEmpty(query)) {
-                    List<ColumnMap> columnMaps = ColumnMap.listOf(query);
-                    paramsTableView.getItems().addAll(columnMaps);
+                    List<PropertyPair> pairList = UrlUtil.queryToList(query);
+                    pairList.forEach(pair -> {
+                        pair.keyProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
+                        pair.valueProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
+                    });
+                    paramsTableView.getItems().addAll(pairList);
                 }
             } catch (URISyntaxException e) {
                 log.error(e.getMessage(), e);

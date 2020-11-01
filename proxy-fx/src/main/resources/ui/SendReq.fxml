@@ -59,7 +59,7 @@
                                             <columns>
                                                 <TableColumn fx:id="requestParamNameColumn" sortable="false" text="Name">
                                                     <cellValueFactory>
-                                                        <PropertyValueFactory property="name" />
+                                                        <PropertyValueFactory property="key" />
                                                     </cellValueFactory>
                                                 </TableColumn>
                                                 <TableColumn fx:id="requestParamValueColumn" sortable="false" text="Value">
