@@ -1,14 +1,10 @@
 package com.github.supermoonie.proxy.fx.proxy.intercept;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.InterceptContext;
-import com.github.supermoonie.proxy.fx.config.GlobalSetting;
-import com.github.supermoonie.proxy.fx.constant.EnumYesNo;
-import com.github.supermoonie.proxy.fx.entity.Config;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.ConfigMapper;
-import com.github.supermoonie.proxy.fx.service.ConfigService;
 import com.github.supermoonie.proxy.fx.service.RequestService;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
@@ -35,7 +31,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        if (GlobalSetting.isRecord) {
+        if (GlobalSetting.getInstance().isRecord()) {
             Request req = requestService.saveRequest(request);
             ctx.setUserData(req);
             log.info("request saved, uri: {}", request.uri());

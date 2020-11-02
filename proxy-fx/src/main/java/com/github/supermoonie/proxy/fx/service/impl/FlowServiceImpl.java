@@ -1,13 +1,22 @@
 package com.github.supermoonie.proxy.fx.service.impl;
 
+import com.github.supermoonie.proxy.fx.entity.Content;
+import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
 import com.github.supermoonie.proxy.fx.service.FlowService;
+import com.github.supermoonie.proxy.fx.support.Flow;
+import com.github.supermoonie.proxy.fx.support.HexContentFlow;
+import org.bouncycastle.util.encoders.Hex;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author supermoonie
@@ -27,6 +36,52 @@ public class FlowServiceImpl implements FlowService {
 
     @Resource
     private ContentMapper contentMapper;
+
+    @Transactional(rollbackFor = RuntimeException.class)
+    @Override
+    public int save(HexContentFlow flow) {
+        String requestContentId = null, responseContentId = null;
+        String hexRequestContent = flow.getHexRequestContent();
+        if (!StringUtils.isEmpty(hexRequestContent)) {
+            Content content = new Content();
+            content.setId(UUID.randomUUID().toString());
+            content.setContent(Hex.decode(hexRequestContent));
+            contentMapper.insert(content);
+            requestContentId = content.getId();
+        }
+        String hexResponseContent = flow.getHexResponseContent();
+        if (!StringUtils.isEmpty(hexResponseContent)) {
+            Content content = new Content();
+            content.setId(UUID.randomUUID().toString());
+            content.setContent(Hex.decode(hexResponseContent));
+            contentMapper.insert(content);
+            responseContentId = content.getId();
+        }
+        flow.getRequest().setId(UUID.randomUUID().toString());
+        if (null != requestContentId) {
+            flow.getRequest().setContentId(requestContentId);
+        }
+        requestMapper.insert(flow.getRequest());
+        flow.getResponse().setId(UUID.randomUUID().toString());
+        flow.getResponse().setRequestId(flow.getRequest().getId());
+        if (null != responseContentId) {
+            flow.getResponse().setContentId(responseContentId);
+        }
+        responseMapper.insert(flow.getResponse());
+        List<Header> requestHeaders = flow.getRequestHeaders();
+        for (Header header : requestHeaders) {
+            header.setId(UUID.randomUUID().toString());
+            header.setRequestId(flow.getRequest().getId());
+            headerMapper.insert(header);
+        }
+        List<Header> responseHeaders = flow.getResponseHeaders();
+        for (Header header : responseHeaders) {
+            header.setId(UUID.randomUUID().toString());
+            header.setResponseId(flow.getResponse().getId());
+            headerMapper.insert(header);
+        }
+        return 1;
+    }
 
 //    @Override
 //    public List<SimpleRequestDTO> list(String host, String method, Date start, Date end) {

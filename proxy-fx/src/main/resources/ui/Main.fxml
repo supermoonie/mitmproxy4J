@@ -35,12 +35,12 @@
                 <Menu mnemonicParsing="false" text="File">
                   <items>
                         <MenuItem mnemonicParsing="false" onAction="#onOpenMenuItemClicked" text="Open" />
-                    <MenuItem mnemonicParsing="false" text="Save" />
+                    <MenuItem mnemonicParsing="false" onAction="#onSaveMenuClicked" text="Save" />
                   </items>
                 </Menu>
                   <Menu mnemonicParsing="false" text="Proxy">
                     <items>
-                      <MenuItem mnemonicParsing="false" text="Stop Record" />
+                      <MenuItem fx:id="recordSwitchMenuItem" mnemonicParsing="false" onAction="#onRecordSwitchMenuItemClicked" text="Stop Record" />
                         <MenuItem mnemonicParsing="false" text="Start Throttling" />
                         <MenuItem mnemonicParsing="false" text="Open System Proxy" />
                         <MenuItem mnemonicParsing="false" text="Proxy Setting" />
@@ -69,16 +69,17 @@
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <Button mnemonicParsing="false" text="Throttling">
-                     <padding>
-                        <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
-                     </padding>
-                  </Button>
                   <Button fx:id="editButton" mnemonicParsing="false" text="Edit">
                      <padding>
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
+                  <Button mnemonicParsing="false" text="Throttling">
+                     <padding>
+                        <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="recordingSwitchButton" mnemonicParsing="false" onAction="#onRecordSwitchButtonClicked" text="Recording" />
               </items>
             </ToolBar>
          </children>

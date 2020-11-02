@@ -14,10 +14,18 @@ import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
+import com.github.supermoonie.proxy.fx.service.FlowService;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.support.Flow;
+import com.github.supermoonie.proxy.fx.support.HexContentFlow;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
+import com.github.supermoonie.proxy.fx.util.JSON;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -31,10 +39,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +54,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,6 +63,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 /**
  * @author supermoonie
@@ -61,6 +75,8 @@ public class MainController implements Initializable {
 
     @FXML
     protected MenuBar menuBar;
+    @FXML
+    protected MenuItem recordSwitchMenuItem;
     @FXML
     protected AnchorPane structurePane;
     @FXML
@@ -133,11 +149,14 @@ public class MainController implements Initializable {
     protected Button clearButton;
     @FXML
     protected Button editButton;
+    @FXML
+    protected Button recordingSwitchButton;
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
     private final ResponseMapper responseMapper = ApplicationContextUtil.getBean(ResponseMapper.class);
     private final ContentMapper contentMapper = ApplicationContextUtil.getBean(ContentMapper.class);
+    private final FlowService flowService = ApplicationContextUtil.getBean(FlowService.class);
 
     private final KeyCodeCombination macKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN);
     private final KeyCodeCombination winKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
@@ -160,6 +179,22 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (GlobalSetting.getInstance().isRecord()) {
+            recordSwitchMenuItem.setText("Stop Recording");
+            recordingSwitchButton.setTextFill(Color.BLACK);
+        } else {
+            recordSwitchMenuItem.setText("Start Recording");
+            recordingSwitchButton.setTextFill(Color.GRAY);
+        }
+        GlobalSetting.getInstance().recordProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                recordSwitchMenuItem.setText("Stop Recording");
+                recordingSwitchButton.setTextFill(Color.BLACK);
+            } else {
+                recordSwitchMenuItem.setText("Start Recording");
+                recordingSwitchButton.setTextFill(Color.GRAY);
+            }
+        });
         TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
         treeView.setRoot(root);
         treeView.setShowRoot(false);
@@ -205,7 +240,60 @@ public class MainController implements Initializable {
     }
 
     public void onOpenMenuItemClicked() {
-        // TODO
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Json Files", "*.json"));
+        File file = fileChooser.showOpenDialog(App.getPrimaryStage());
+        if (null != file) {
+            try {
+                String data = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                HexContentFlow flow = JSON.parse(data, HexContentFlow.class);
+                flowService.save(flow);
+                addFlow(flow.getRequest(), flow.getResponse());
+            } catch (IOException | URISyntaxException e) {
+                log.error(e.getMessage(), e);
+            }
+        }
+    }
+
+    public void onSaveMenuClicked() {
+        if (StringUtils.isEmpty(currentRequestId)) {
+            return;
+        }
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File dir = directoryChooser.showDialog(App.getPrimaryStage());
+        if (null != dir) {
+            Flow flow = getFlow(currentRequestId);
+            HexContentFlow hexContentFlow = new HexContentFlow();
+            hexContentFlow.setRequest(flow.getRequest());
+            hexContentFlow.setResponse(flow.getResponse());
+            hexContentFlow.setRequestHeaders(flow.getRequestHeaders());
+            hexContentFlow.setResponseHeaders(flow.getResponseHeaders());
+            if (!StringUtils.isEmpty(flow.getRequest().getContentId())) {
+                Content content = contentMapper.selectById(flow.getRequest().getContentId());
+                hexContentFlow.setHexRequestContent(Hex.toHexString(content.getContent()));
+            }
+            if (!StringUtils.isEmpty(flow.getResponse().getContentId())) {
+                Content content = contentMapper.selectById(flow.getResponse().getContentId());
+                hexContentFlow.setHexResponseContent(Hex.toHexString(content.getContent()));
+            }
+            String data = JSON.toJsonString(hexContentFlow, true);
+            try {
+                String filePath = dir.getAbsolutePath() + File.separator + flow.getRequest().getId() + ".json";
+                log.info("path: " + filePath);
+                FileUtils.writeStringToFile(new File(filePath), data, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+                AlertUtil.error(e);
+            }
+        }
+    }
+
+    public void onRecordSwitchMenuItemClicked() {
+        GlobalSetting.getInstance().setRecord(!GlobalSetting.getInstance().isRecord());
+    }
+
+    public void onRecordSwitchButtonClicked() {
+        GlobalSetting.getInstance().setRecord(!GlobalSetting.getInstance().isRecord());
     }
 
     public SendReqController onSendRequestClicked() {
@@ -216,6 +304,7 @@ public class MainController implements Initializable {
             SendReqController sendReqController = fxmlLoader.getController();
             sendReqController.setStage(sendReqStage);
             sendReqStage.setScene(new Scene(parent));
+            App.setCommonIcon(sendReqStage, "Lightning");
             sendReqStage.initModality(Modality.APPLICATION_MODAL);
             sendReqStage.show();
             return sendReqController;
@@ -225,7 +314,6 @@ public class MainController implements Initializable {
         return null;
     }
 
-    @FXML
     public void onFilterTextFieldEnter(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             if (null == allNode || allNode.size() < listView.getItems().size()) {
@@ -372,23 +460,37 @@ public class MainController implements Initializable {
             }
             clear();
             currentRequestId = selectedNode.getId();
-            Request request = requestMapper.selectById(selectedNode.getId());
+            Flow flow = getFlow(currentRequestId);
+            Request request = flow.getRequest();
+            Response response = flow.getResponse();
+            List<Header> requestHeaders = flow.getRequestHeaders();
+            List<Header> responseHeaders = flow.getResponseHeaders();
             infoLabel.setText(request.getMethod().toUpperCase() + " " + request.getUri());
-            QueryWrapper<Header> requestHeaderQueryWrapper = new QueryWrapper<>();
-            requestHeaderQueryWrapper.eq("request_id", request.getId());
-            List<Header> requestHeaders = headerMapper.selectList(requestHeaderQueryWrapper);
             requestHeaderTableView.getItems().addAll(requestHeaders);
-            QueryWrapper<Response> responseQueryWrapper = new QueryWrapper<>();
-            responseQueryWrapper.eq("request_id", request.getId());
-            Response response = responseMapper.selectOne(responseQueryWrapper);
-            QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
-            responseHeaderQueryWrapper.eq("response_id", response.getId());
-            List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
             responseHeaderTableView.getItems().addAll(responseHeaders);
             fillRequestRawTab(request, requestHeaders);
             fillRequestQueryTab(request);
             fillResponseRawTab(response, responseHeaders);
         }
+    }
+
+    private Flow getFlow(String requestId) {
+        Request request = requestMapper.selectById(requestId);
+        QueryWrapper<Header> requestHeaderQueryWrapper = new QueryWrapper<>();
+        requestHeaderQueryWrapper.eq("request_id", request.getId());
+        List<Header> requestHeaders = headerMapper.selectList(requestHeaderQueryWrapper);
+        QueryWrapper<Response> responseQueryWrapper = new QueryWrapper<>();
+        responseQueryWrapper.eq("request_id", request.getId());
+        Response response = responseMapper.selectOne(responseQueryWrapper);
+        QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
+        responseHeaderQueryWrapper.eq("response_id", response.getId());
+        List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
+        Flow flow = new Flow();
+        flow.setRequest(request);
+        flow.setRequestHeaders(requestHeaders);
+        flow.setResponse(response);
+        flow.setResponseHeaders(responseHeaders);
+        return flow;
     }
 
     private void setAllTreeNode(ObservableList<FlowNode> allListNode) throws URISyntaxException {

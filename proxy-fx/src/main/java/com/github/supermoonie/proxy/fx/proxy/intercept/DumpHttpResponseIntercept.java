@@ -2,11 +2,11 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.App;
-import com.github.supermoonie.proxy.fx.config.GlobalSetting;
 import com.github.supermoonie.proxy.fx.controller.MainController;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.service.ResponseService;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
@@ -34,7 +34,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
         if (null == ctx.getUserData()) {
             return null;
         }
-        if (GlobalSetting.isRecord) {
+        if (GlobalSetting.getInstance().isRecord()) {
             Request req = (Request) ctx.getUserData();
             Response res = responseService.saveResponse(response, req);
             log.info("response saved, uri: {}", request.uri());

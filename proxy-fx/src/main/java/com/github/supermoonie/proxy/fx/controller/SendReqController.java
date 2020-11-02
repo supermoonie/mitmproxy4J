@@ -24,7 +24,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -581,7 +580,6 @@ public class SendReqController implements Initializable {
             return;
         }
         String value = formUrlEncodedValueTextField.getText();
-        System.out.println("name: " + name + ", value: " + value);
         formUrlEncodedTableView.getItems().add(new ColumnMap(name, value));
     }
 

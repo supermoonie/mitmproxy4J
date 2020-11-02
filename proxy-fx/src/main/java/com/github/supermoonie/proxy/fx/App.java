@@ -3,7 +3,9 @@ package com.github.supermoonie.proxy.fx;
 import com.github.supermoonie.proxy.fx.controller.MainController;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.tray.SystemTrayManager;
+import com.github.supermoonie.proxy.fx.util.SettingUtil;
 import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -83,7 +85,8 @@ public class App extends Application {
     public void init() throws Exception {
         SpringApplication.run(getClass()).getAutowireCapableBeanFactory().autowireBean(this);
         initDatabase();
-        ProxyManager.start(10802, initializer);
+        SettingUtil.load();
+        ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
         systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }
@@ -101,6 +104,10 @@ public class App extends Application {
     }
 
     public static void setCommonIcon(Stage stage) {
+        setCommonIcon(stage, "Lightning:" + ProxyManager.getInternalProxy().getPort());
+    }
+
+    public static void setCommonIcon(Stage stage, String title) {
         URL iconUrl;
         if (PlatformUtil.isWindows()) {
             iconUrl = App.class.getResource("/lightning-win.png");
@@ -108,7 +115,7 @@ public class App extends Application {
             iconUrl = App.class.getResource("/lightning-mac.png");
         }
         stage.getIcons().add(new Image(iconUrl.toString()));
-        stage.setTitle("Lightning");
+        stage.setTitle(title);
     }
 
     public static Stage getPrimaryStage() {

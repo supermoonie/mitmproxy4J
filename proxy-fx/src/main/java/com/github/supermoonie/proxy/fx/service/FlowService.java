@@ -1,13 +1,21 @@
 package com.github.supermoonie.proxy.fx.service;
 
-import java.util.Date;
-import java.util.List;
+import com.github.supermoonie.proxy.fx.support.Flow;
+import com.github.supermoonie.proxy.fx.support.HexContentFlow;
 
 /**
  * @author supermoonie
  * @date 2020-06-11
  */
 public interface FlowService {
+
+    /**
+     * save
+     *
+     * @param flow {@link HexContentFlow}
+     * @return rows effect
+     */
+    int save(HexContentFlow flow);
 
 //    /**
 //     * 根据条件过滤请求
