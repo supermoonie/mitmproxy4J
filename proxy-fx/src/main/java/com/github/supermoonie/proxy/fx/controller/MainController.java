@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.controller.dialog.ThrottlingSettingDialog;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.Content;
@@ -14,6 +15,7 @@ import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
+import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.Flow;
@@ -23,9 +25,7 @@ import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import com.github.supermoonie.proxy.fx.util.JSON;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -39,7 +39,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
@@ -63,7 +62,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.UUID;
 
 /**
  * @author supermoonie
@@ -76,7 +74,9 @@ public class MainController implements Initializable {
     @FXML
     protected MenuBar menuBar;
     @FXML
-    protected MenuItem recordSwitchMenuItem;
+    protected CheckMenuItem recordMenuItem;
+    @FXML
+    protected CheckMenuItem throttlingMenuItem;
     @FXML
     protected AnchorPane structurePane;
     @FXML
@@ -150,6 +150,10 @@ public class MainController implements Initializable {
     @FXML
     protected Button editButton;
     @FXML
+    protected Button repeatButton;
+    @FXML
+    protected Button throttlingSwitchButton;
+    @FXML
     protected Button recordingSwitchButton;
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
@@ -172,6 +176,11 @@ public class MainController implements Initializable {
     private final Image cssIcon = new Image(getClass().getResourceAsStream("/icon/css.png"), 16, 16, false, false);
     private final Image icon404 = new Image(getClass().getResourceAsStream("/icon/404.png"), 16, 16, false, false);
     private final Image linkIcon = new Image(getClass().getResourceAsStream("/icon/link.png"), 16, 16, false, false);
+    private final Image clearIcon = new Image(getClass().getResourceAsStream("/icon/clear.png"), 16, 16, false, false);
+    private final Image editIcon = new Image(getClass().getResourceAsStream("/icon/edit.png"), 16, 16, false, false);
+    private final Image repeatIcon = new Image(getClass().getResourceAsStream("/icon/repeat.png"), 16, 16, false, false);
+    private final Image grayDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_gray.png"), 16, 16, false, false);
+    private final Image greenDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_green.png"), 16, 16, false, false);
 
     private ObservableList<FlowNode> allNode;
     private String currentRequestId;
@@ -179,22 +188,9 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        if (GlobalSetting.getInstance().isRecord()) {
-            recordSwitchMenuItem.setText("Stop Recording");
-            recordingSwitchButton.setTextFill(Color.BLACK);
-        } else {
-            recordSwitchMenuItem.setText("Start Recording");
-            recordingSwitchButton.setTextFill(Color.GRAY);
-        }
-        GlobalSetting.getInstance().recordProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                recordSwitchMenuItem.setText("Stop Recording");
-                recordingSwitchButton.setTextFill(Color.BLACK);
-            } else {
-                recordSwitchMenuItem.setText("Start Recording");
-                recordingSwitchButton.setTextFill(Color.GRAY);
-            }
-        });
+        initToolBar();
+        initRecordSetting();
+        initThrottlingSetting();
         TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
         treeView.setRoot(root);
         treeView.setShowRoot(false);
@@ -226,17 +222,83 @@ public class MainController implements Initializable {
                 ClipboardUtil.copyText(text);
             }
         });
-        clearButton.setOnMouseClicked(event -> {
-            clear();
-            currentRequestId = null;
-            treeView.getRoot().getChildren().clear();
-            listView.getItems().clear();
-            if (null != allNode) {
-                allNode.clear();
-            }
-            infoLabel.setText("");
+    }
+
+    private void initToolBar() {
+        ImageView clearIconView = new ImageView(clearIcon);
+        clearIconView.setFitHeight(16);
+        clearIconView.setFitWidth(16);
+        clearButton.setGraphic(clearIconView);
+        ImageView editIconView = new ImageView(editIcon);
+        editIconView.setFitWidth(16);
+        editIconView.setFitHeight(16);
+        editButton.setGraphic(editIconView);
+        ImageView repeatIconView = new ImageView(repeatIcon);
+        repeatIconView.setFitWidth(16);
+        repeatIconView.setFitHeight(16);
+        repeatButton.setGraphic(repeatIconView);
+    }
+
+    private void initRecordSetting() {
+        recordMenuItem.setSelected(GlobalSetting.getInstance().isRecord());
+        ImageView imageView = new ImageView(GlobalSetting.getInstance().isRecord() ? greenDotIcon : grayDotIcon);
+        imageView.setFitWidth(12);
+        imageView.setFitHeight(12);
+        recordingSwitchButton.setGraphic(imageView);
+        GlobalSetting.getInstance().recordProperty().addListener((observable, oldValue, newValue) -> {
+            recordMenuItem.setSelected(newValue);
+            ImageView view = new ImageView(newValue ? greenDotIcon : grayDotIcon);
+            view.setFitWidth(12);
+            view.setFitHeight(12);
+            recordingSwitchButton.setGraphic(view);
         });
-        editButton.setOnMouseClicked(event -> onSendRequestClicked().setRequestId(currentRequestId));
+    }
+
+    private void initThrottlingSetting() {
+        throttlingMenuItem.setSelected(GlobalSetting.getInstance().isThrottling());
+        ImageView imageView = new ImageView(GlobalSetting.getInstance().isThrottling() ? greenDotIcon : grayDotIcon);
+        imageView.setFitWidth(12);
+        imageView.setFitHeight(12);
+        throttlingSwitchButton.setGraphic(imageView);
+        GlobalSetting.getInstance().throttlingProperty().addListener((observable, oldValue, newValue) -> {
+            throttlingMenuItem.setSelected(newValue);
+            ImageView view = new ImageView(newValue ? greenDotIcon : grayDotIcon);
+            view.setFitWidth(12);
+            view.setFitHeight(12);
+            throttlingSwitchButton.setGraphic(view);
+            ProxyManager.getInternalProxy().setTrafficShaping(newValue);
+            GlobalChannelTrafficShapingHandler handler = ProxyManager.getInternalProxy().getTrafficShapingHandler();
+            handler.setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
+            handler.setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
+            handler.setReadChannelLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
+            handler.setWriteChannelLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
+        });
+        GlobalSetting.getInstance().throttlingReadLimitProperty().addListener((observable, oldValue, newValue) -> ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadLimit(newValue.longValue()));
+        GlobalSetting.getInstance().throttlingWriteLimitProperty().addListener((observable, oldValue, newValue) -> ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteLimit(newValue.longValue()));
+    }
+
+    public void onThrottlingSettingMenuItemClicked() {
+        Stage throttlingSettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/ThrottlingSettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            ThrottlingSettingDialog throttlingSettingDialog = fxmlLoader.getController();
+            throttlingSettingDialog.setStage(throttlingSettingStage);
+            throttlingSettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(throttlingSettingStage, "Lightning");
+            throttlingSettingStage.initModality(Modality.APPLICATION_MODAL);
+            throttlingSettingStage.show();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public void onThrottlingMenuItemClicked() {
+        GlobalSetting.getInstance().setThrottling(!GlobalSetting.getInstance().isThrottling());
+    }
+
+    public void onThrottlingSwitchButtonClicked() {
+        GlobalSetting.getInstance().setThrottling(!GlobalSetting.getInstance().isThrottling());
     }
 
     public void onOpenMenuItemClicked() {
@@ -288,7 +350,7 @@ public class MainController implements Initializable {
         }
     }
 
-    public void onRecordSwitchMenuItemClicked() {
+    public void onRecordMenuItemClicked() {
         GlobalSetting.getInstance().setRecord(!GlobalSetting.getInstance().isRecord());
     }
 
@@ -296,7 +358,7 @@ public class MainController implements Initializable {
         GlobalSetting.getInstance().setRecord(!GlobalSetting.getInstance().isRecord());
     }
 
-    public SendReqController onSendRequestClicked() {
+    public SendReqController onSendRequestMenuItemClicked() {
         Stage sendReqStage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/SendReq.fxml"));
         try {
@@ -312,6 +374,21 @@ public class MainController implements Initializable {
             log.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    public void onEditButtonClicked() {
+        onSendRequestMenuItemClicked().setRequestId(currentRequestId);
+    }
+
+    public void onClearButtonClicked() {
+        clear();
+        currentRequestId = null;
+        treeView.getRoot().getChildren().clear();
+        listView.getItems().clear();
+        if (null != allNode) {
+            allNode.clear();
+        }
+        infoLabel.setText("");
     }
 
     public void onFilterTextFieldEnter(KeyEvent keyEvent) {

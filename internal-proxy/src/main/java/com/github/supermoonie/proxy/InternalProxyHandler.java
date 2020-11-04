@@ -14,6 +14,8 @@ import io.netty.handler.proxy.ProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,6 +186,11 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
+                            ch.pipeline().addLast(new WriteTimeoutHandler(600));
+                            ch.pipeline().addLast(new ReadTimeoutHandler(600));
+                            if (internalProxy.isTrafficShaping()) {
+                                ch.pipeline().addLast("trafficShapingHandler", internalProxy.getTrafficShapingHandler());
+                            }
                             if (connectionInfo.isUseSecondProxy()) {
                                 ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
                                 if (null != proxyHandler) {
@@ -201,9 +208,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                             ch.pipeline().addLast("httpCodec", new HttpClientCodec());
                             ch.pipeline().addLast("decompressor", new HttpContentDecompressor());
                             ch.pipeline().addLast("aggregator", new HttpObjectAggregator(internalProxy.getMaxContentSize()));
-                            if (internalProxy.isTrafficShaping()) {
-                                ch.pipeline().addLast("trafficShapingHandler", internalProxy.getTrafficShapingHandler());
-                            }
                             ch.pipeline().addLast("proxyClientHandle", new ChannelInboundHandlerAdapter() {
 
                                 @Override
@@ -240,6 +244,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                 @Override
                                 public void channelInactive(ChannelHandlerContext ctx) throws Exception {
                                     logger.debug("{}:{} inactive", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
+                                    clientChannel.close();
                                 }
                             });
                         }

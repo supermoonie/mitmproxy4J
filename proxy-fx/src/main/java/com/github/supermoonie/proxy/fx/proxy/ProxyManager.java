@@ -2,6 +2,7 @@ package com.github.supermoonie.proxy.fx.proxy;
 
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.InternalProxy;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 
 /**
  * @author supermoonie
@@ -22,6 +23,9 @@ public final class ProxyManager {
         internalProxy = new InternalProxy(interceptInitializer);
         internalProxy.setPort(port);
         internalProxy.start();
+        internalProxy.getTrafficShapingHandler().setCheckInterval(1_000);
+        internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
+        internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
     }
 
     public static void stop() {

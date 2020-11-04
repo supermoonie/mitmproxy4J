@@ -18,8 +18,10 @@ public class TrafficShapingProxy {
         proxy.setTrafficShaping(true);
         GlobalChannelTrafficShapingHandler handler = proxy.getTrafficShapingHandler();
         handler.setCheckInterval(1_000);
-        handler.setReadLimit(1024L);
-        handler.setWriteLimit(1024L);
+        handler.setReadLimit(50 * 1024L);
+        handler.setReadChannelLimit(50 * 1024L);
+        handler.setWriteLimit(50 * 1024L);
+        handler.setWriteChannelLimit(50 * 1024L);
         TrafficCounter trafficCounter = handler.trafficCounter();
         new Thread(() -> {
             while (true) {

@@ -87,6 +87,7 @@ public class App extends Application {
         initDatabase();
         SettingUtil.load();
         ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
+        ProxyManager.getInternalProxy().setTrafficShaping(GlobalSetting.getInstance().isThrottling());
         systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }

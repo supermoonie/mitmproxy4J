@@ -2,12 +2,14 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -40,9 +42,11 @@
                 </Menu>
                   <Menu mnemonicParsing="false" text="Proxy">
                     <items>
-                      <MenuItem fx:id="recordSwitchMenuItem" mnemonicParsing="false" onAction="#onRecordSwitchMenuItemClicked" text="Stop Record" />
-                        <MenuItem mnemonicParsing="false" text="Start Throttling" />
+                        <CheckMenuItem fx:id="recordMenuItem" mnemonicParsing="false" onAction="#onRecordMenuItemClicked" text="Recording" />
+                        <CheckMenuItem fx:id="throttlingMenuItem" mnemonicParsing="false" onAction="#onThrottlingMenuItemClicked" text="Throttling" />
                         <MenuItem mnemonicParsing="false" text="Open System Proxy" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" onAction="#onThrottlingSettingMenuItemClicked" text="Throttling Setting" />
                         <MenuItem mnemonicParsing="false" text="Proxy Setting" />
                     </items>
                   </Menu>
@@ -51,7 +55,8 @@
                       <MenuItem mnemonicParsing="false" text="Remote Map" />
                         <MenuItem mnemonicParsing="false" text="Black List" />
                         <MenuItem mnemonicParsing="false" text="White List" />
-                        <MenuItem mnemonicParsing="false" onAction="#onSendRequestClicked" text="Send Request" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" onAction="#onSendRequestMenuItemClicked" text="Send Request" />
                     </items>
                   </Menu>
                 <Menu mnemonicParsing="false" text="Help">
@@ -64,22 +69,31 @@
             </MenuBar>
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <Button fx:id="clearButton" mnemonicParsing="false" text="Clear">
+                <Button fx:id="clearButton" mnemonicParsing="false" mouseTransparent="true" onAction="#onClearButtonClicked" text="Clear">
                      <padding>
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="editButton" mnemonicParsing="false" text="Edit">
+                  <Button fx:id="editButton" mnemonicParsing="false" onAction="#onEditButtonClicked" text="Edit">
                      <padding>
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <Button mnemonicParsing="false" text="Throttling">
+                  <Button fx:id="repeatButton" mnemonicParsing="false" text="Repeat">
                      <padding>
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="recordingSwitchButton" mnemonicParsing="false" onAction="#onRecordSwitchButtonClicked" text="Recording" />
+                  <Button fx:id="throttlingSwitchButton" mnemonicParsing="false" onAction="#onThrottlingSwitchButtonClicked" text="Throttling">
+                     <padding>
+                        <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="recordingSwitchButton" mnemonicParsing="false" onAction="#onRecordSwitchButtonClicked" text="Recording">
+                     <padding>
+                        <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
+                     </padding>
+                  </Button>
               </items>
             </ToolBar>
          </children>
