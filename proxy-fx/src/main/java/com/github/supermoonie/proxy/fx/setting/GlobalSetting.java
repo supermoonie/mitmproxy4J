@@ -1,9 +1,10 @@
 package com.github.supermoonie.proxy.fx.setting;
 
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleLongProperty;
+import com.github.supermoonie.proxy.fx.support.BlockUrl;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 
 /**
  * @author supermoonie
@@ -13,7 +14,8 @@ public class GlobalSetting {
 
     private static GlobalSetting instance = new GlobalSetting();
 
-    private GlobalSetting() {}
+    private GlobalSetting() {
+    }
 
     private final SimpleBooleanProperty record = new SimpleBooleanProperty(true);
 
@@ -24,6 +26,10 @@ public class GlobalSetting {
     private final SimpleLongProperty throttlingWriteLimit = new SimpleLongProperty(32 * 1024);
 
     private final SimpleLongProperty throttlingReadLimit = new SimpleLongProperty(64 * 1024);
+
+    private final SimpleBooleanProperty blockUrl = new SimpleBooleanProperty(false);
+
+    private final SimpleListProperty<BlockUrl> blockUrlList = new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public static GlobalSetting getInstance() {
         return instance;
@@ -91,5 +97,29 @@ public class GlobalSetting {
 
     public void setThrottlingReadLimit(long throttlingReadLimit) {
         this.throttlingReadLimit.set(throttlingReadLimit);
+    }
+
+    public boolean isBlockUrl() {
+        return blockUrl.get();
+    }
+
+    public SimpleBooleanProperty blockUrlProperty() {
+        return blockUrl;
+    }
+
+    public void setBlockUrl(boolean blockUrl) {
+        this.blockUrl.set(blockUrl);
+    }
+
+    public ObservableList<BlockUrl> getBlockUrlList() {
+        return blockUrlList.get();
+    }
+
+    public SimpleListProperty<BlockUrl> blockUrlListProperty() {
+        return blockUrlList;
+    }
+
+    public void setBlockUrlList(ObservableList<BlockUrl> blockUrlList) {
+        this.blockUrlList.set(blockUrlList);
     }
 }

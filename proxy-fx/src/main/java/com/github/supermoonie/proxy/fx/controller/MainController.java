@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.controller.dialog.BlockUrlSettingDialog;
 import com.github.supermoonie.proxy.fx.controller.dialog.ProxySettingDialog;
 import com.github.supermoonie.proxy.fx.controller.dialog.ThrottlingSettingDialog;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
@@ -82,6 +83,8 @@ public class MainController implements Initializable {
     protected CheckMenuItem recordMenuItem;
     @FXML
     protected CheckMenuItem throttlingMenuItem;
+    @FXML
+    protected CheckMenuItem blockListMenuItem;
     @FXML
     protected AnchorPane structurePane;
     @FXML
@@ -273,6 +276,26 @@ public class MainController implements Initializable {
         });
         GlobalSetting.getInstance().throttlingReadLimitProperty().addListener((observable, oldValue, newValue) -> ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadLimit(newValue.longValue()));
         GlobalSetting.getInstance().throttlingWriteLimitProperty().addListener((observable, oldValue, newValue) -> ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteLimit(newValue.longValue()));
+    }
+
+    public void onBlockListMenuItemClicked() {
+        Stage blockUrlSettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/BlockUrlSettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            BlockUrlSettingDialog blockUrlSettingDialog = fxmlLoader.getController();
+            blockUrlSettingDialog.setStage(blockUrlSettingStage);
+            blockUrlSettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(blockUrlSettingStage, "Lightning");
+            blockUrlSettingStage.initModality(Modality.APPLICATION_MODAL);
+            blockUrlSettingStage.setResizable(false);
+            blockUrlSettingStage.initStyle(StageStyle.UTILITY);
+            blockUrlSettingStage.showAndWait();
+            boolean enable = (boolean) blockUrlSettingStage.getUserData();
+            blockListMenuItem.setSelected(enable);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     public void onThrottlingSettingMenuItemClicked() {

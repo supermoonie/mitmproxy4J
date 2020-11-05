@@ -2,16 +2,19 @@ package com.github.supermoonie.proxy.fx;
 
 import com.github.supermoonie.proxy.fx.controller.MainController;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
+import com.github.supermoonie.proxy.fx.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import com.github.supermoonie.proxy.fx.tray.SystemTrayManager;
 import com.github.supermoonie.proxy.fx.util.SettingUtil;
 import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -55,6 +58,9 @@ public class App extends Application {
     private InternalProxyInterceptInitializer initializer;
 
     @Resource
+    private DefaultConfigIntercept defaultConfigIntercept;
+
+    @Resource
     private JdbcTemplate jdbcTemplate;
 
     private static Stage primaryStage;
@@ -90,9 +96,22 @@ public class App extends Application {
         SettingUtil.load();
         ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
         ProxyManager.getInternalProxy().setTrafficShaping(GlobalSetting.getInstance().isThrottling());
-        GlobalSetting.getInstance().portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
+        initSetting();
         systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
+    }
+
+    private void initSetting() {
+        GlobalSetting.getInstance().portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
+        GlobalSetting.getInstance().blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlack(newValue));
+        GlobalSetting.getInstance().blockUrlListProperty().addListener((ListChangeListener<BlockUrl>) c -> {
+            ObservableList<BlockUrl> blockUrlList = GlobalSetting.getInstance().getBlockUrlList();
+            for (BlockUrl blockUrl : blockUrlList) {
+                if (blockUrl.isEnable()) {
+                    defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
+                }
+            }
+        });
     }
 
 

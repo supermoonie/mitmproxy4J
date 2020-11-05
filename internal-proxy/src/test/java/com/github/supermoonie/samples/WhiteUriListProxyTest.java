@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.intercept.ConfigurableIntercept;
 import com.github.supermoonie.proxy.intercept.LoggingIntercept;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author supermoonie
@@ -18,7 +19,7 @@ public class WhiteUriListProxyTest {
             requestIntercepts.put("logging", loggingIntercept);
             responseIntercepts.put("logging", loggingIntercept);
             ConfigurableIntercept config = new ConfigurableIntercept();
-            List<String> whiteList = config.getWhiteUriList();
+            Set<String> whiteList = config.getAllowUriList();
             whiteList.add("https://httpbin.org/get");
             requestIntercepts.put("white-intercept", config);
         });

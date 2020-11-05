@@ -4,7 +4,7 @@ import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.intercept.ConfigurableIntercept;
 import com.github.supermoonie.proxy.intercept.LoggingIntercept;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author supermoonie
@@ -18,7 +18,7 @@ public class BlackHostListProxyTest {
             requestIntercepts.put("logging", loggingIntercept);
             responseIntercepts.put("logging", loggingIntercept);
             ConfigurableIntercept config = new ConfigurableIntercept();
-            List<String> blackList = config.getBlackHostList();
+            Set<String> blackList = config.getBlockUriList();
             blackList.add("httpbin.org");
             requestIntercepts.put("block-intercept", config);
         });

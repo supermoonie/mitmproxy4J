@@ -53,8 +53,8 @@
                   <Menu mnemonicParsing="false" text="Tools">
                     <items>
                       <MenuItem mnemonicParsing="false" text="Remote Map" />
-                        <MenuItem mnemonicParsing="false" text="Black List" />
-                        <MenuItem mnemonicParsing="false" text="White List" />
+                        <CheckMenuItem fx:id="blockListMenuItem" mnemonicParsing="false" onAction="#onBlockListMenuItemClicked" text="Block List" />
+                        <CheckMenuItem mnemonicParsing="false" text="Allow List" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#onSendRequestMenuItemClicked" text="Send Request" />
                     </items>
