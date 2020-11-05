@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.controller.dialog.ProxySettingDialog;
 import com.github.supermoonie.proxy.fx.controller.dialog.ThrottlingSettingDialog;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
@@ -32,6 +33,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -39,14 +41,17 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
 import org.bouncycastle.util.encoders.Hex;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
+import org.controlsfx.glyphfont.GlyphFont;
+import org.controlsfx.glyphfont.GlyphFontRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -165,17 +170,10 @@ public class MainController implements Initializable {
     private final KeyCodeCombination macKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN);
     private final KeyCodeCombination winKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
 
-    private final Image xmlIcon = new Image(getClass().getResourceAsStream("/icon/xml.png"), 16, 16, false, true);
+    private final GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
+
     private final Image webIcon = new Image(getClass().getResourceAsStream("/icon/web.png"), 16, 16, false, false);
-    private final Image textIcon = new Image(getClass().getResourceAsStream("/icon/text.png"), 16, 16, false, false);
-    private final Image jsonIcon = new Image(getClass().getResourceAsStream("/icon/json.png"), 16, 16, false, false);
-    private final Image jsIcon = new Image(getClass().getResourceAsStream("/icon/js.png"), 16, 16, false, false);
-    private final Image htmlIcon = new Image(getClass().getResourceAsStream("/icon/html.png"), 16, 16, false, false);
     private final Image folderIcon = new Image(getClass().getResourceAsStream("/icon/folder.png"), 16, 16, false, false);
-    private final Image errorIcon = new Image(getClass().getResourceAsStream("/icon/error.png"), 16, 16, false, false);
-    private final Image cssIcon = new Image(getClass().getResourceAsStream("/icon/css.png"), 16, 16, false, false);
-    private final Image icon404 = new Image(getClass().getResourceAsStream("/icon/404.png"), 16, 16, false, false);
-    private final Image linkIcon = new Image(getClass().getResourceAsStream("/icon/link.png"), 16, 16, false, false);
     private final Image clearIcon = new Image(getClass().getResourceAsStream("/icon/clear.png"), 16, 16, false, false);
     private final Image editIcon = new Image(getClass().getResourceAsStream("/icon/edit.png"), 16, 16, false, false);
     private final Image repeatIcon = new Image(getClass().getResourceAsStream("/icon/repeat.png"), 16, 16, false, false);
@@ -226,16 +224,16 @@ public class MainController implements Initializable {
 
     private void initToolBar() {
         ImageView clearIconView = new ImageView(clearIcon);
-        clearIconView.setFitHeight(16);
-        clearIconView.setFitWidth(16);
+        clearIconView.setFitHeight(12);
+        clearIconView.setFitWidth(12);
         clearButton.setGraphic(clearIconView);
         ImageView editIconView = new ImageView(editIcon);
-        editIconView.setFitWidth(16);
-        editIconView.setFitHeight(16);
+        editIconView.setFitWidth(12);
+        editIconView.setFitHeight(12);
         editButton.setGraphic(editIconView);
         ImageView repeatIconView = new ImageView(repeatIcon);
-        repeatIconView.setFitWidth(16);
-        repeatIconView.setFitHeight(16);
+        repeatIconView.setFitWidth(12);
+        repeatIconView.setFitHeight(12);
         repeatButton.setGraphic(repeatIconView);
     }
 
@@ -287,7 +285,27 @@ public class MainController implements Initializable {
             throttlingSettingStage.setScene(new Scene(parent));
             App.setCommonIcon(throttlingSettingStage, "Lightning");
             throttlingSettingStage.initModality(Modality.APPLICATION_MODAL);
+            throttlingSettingStage.setResizable(false);
+            throttlingSettingStage.initStyle(StageStyle.UTILITY);
             throttlingSettingStage.show();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public void onProxySettingMenuItemClicked() {
+        Stage proxySettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/ProxySettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            ProxySettingDialog proxySettingDialog = fxmlLoader.getController();
+            proxySettingDialog.setStage(proxySettingStage);
+            proxySettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(proxySettingStage, "Lightning");
+            proxySettingStage.initModality(Modality.APPLICATION_MODAL);
+            proxySettingStage.setResizable(false);
+            proxySettingStage.initStyle(StageStyle.UTILITY);
+            proxySettingStage.show();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -596,7 +614,7 @@ public class MainController implements Initializable {
             rootPathNode.setId(flowNode.getId());
             rootPathNode.setUrl("/");
             rootPathNode.setType(EnumFlowType.TARGET);
-            TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, new ImageView(loadIcon(flowNode.getStatus(), flowNode.getContentType())));
+            TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
             rootPathTreeItem.setExpanded(true);
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
         } else {
@@ -611,7 +629,7 @@ public class MainController implements Initializable {
                     node.setUrl(fragment);
                     node.setType(EnumFlowType.TARGET);
                     node.setStatus(flowNode.getStatus());
-                    currentItem.getChildren().add(new TreeItem<>(node, new ImageView(loadIcon(flowNode.getStatus(), flowNode.getContentType()))));
+                    currentItem.getChildren().add(new TreeItem<>(node, loadIcon(flowNode.getStatus(), flowNode.getContentType())));
                 } else {
                     ObservableList<TreeItem<FlowNode>> treeItems = currentItem.getChildren();
                     currentItem = treeItems.stream().filter(item -> item.getValue().getUrl().equals(fragment) && item.getValue().getType().equals(EnumFlowType.PATH))
@@ -647,27 +665,31 @@ public class MainController implements Initializable {
         }
     }
 
-    private Image loadIcon(int status, String contentType) {
-        if (200 == status) {
+    private Node loadIcon(int status, String contentType) {
+        if (HttpStatus.SC_OK == status) {
             if (contentType.startsWith(ContentType.TEXT_CSS)) {
-                return cssIcon;
+                return fontAwesome.create(FontAwesome.Glyph.CSS3);
             } else if (contentType.startsWith(ContentType.TEXT_XML) || contentType.startsWith(ContentType.APPLICATION_XML)) {
-                return xmlIcon;
+                return fontAwesome.create(FontAwesome.Glyph.FILE_CODE_ALT);
             } else if (contentType.startsWith(ContentType.TEXT_PLAIN)) {
-                return textIcon;
+                return fontAwesome.create(FontAwesome.Glyph.FILE_TEXT_ALT);
             } else if (contentType.startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
-                return jsIcon;
+                return fontAwesome.create(FontAwesome.Glyph.CODE);
             } else if (contentType.startsWith(ContentType.TEXT_HTML)) {
-                return htmlIcon;
+                return fontAwesome.create(FontAwesome.Glyph.HTML5);
             } else if (contentType.startsWith(ContentType.APPLICATION_JSON)) {
-                return jsonIcon;
+                return fontAwesome.create(FontAwesome.Glyph.CODE);
+            } else if (contentType.startsWith("image/")) {
+                return fontAwesome.create(FontAwesome.Glyph.PHOTO);
             }
-            return linkIcon;
-        } else if (404 == status) {
-            return icon404;
-        } else {
-            return errorIcon;
+        } else if (HttpStatus.SC_NOT_FOUND == status) {
+            Glyph glyph = fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
+            glyph.setColor(Color.web("#f8aa19"));
+            return glyph;
+        } else if (HttpStatus.SC_INTERNAL_SERVER_ERROR == status){
+            return fontAwesome.create(FontAwesome.Glyph.BOMB);
         }
+        return fontAwesome.create(FontAwesome.Glyph.LINK);
     }
 
 }

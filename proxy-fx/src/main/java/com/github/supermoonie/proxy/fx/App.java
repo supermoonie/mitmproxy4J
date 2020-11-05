@@ -10,6 +10,8 @@ import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -69,7 +71,7 @@ public class App extends Application {
         primaryStage.setScene(new Scene(root));
         setCommonIcon(primaryStage);
         primaryStage.show();
-        primaryStage.toFront();
+//        primaryStage.toFront();
         primaryStage.setOnCloseRequest(windowEvent -> {
             SpringApplication.exit(applicationContext, () -> 0);
             Platform.runLater(() -> {
@@ -88,6 +90,7 @@ public class App extends Application {
         SettingUtil.load();
         ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
         ProxyManager.getInternalProxy().setTrafficShaping(GlobalSetting.getInstance().isThrottling());
+        GlobalSetting.getInstance().portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
         systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }

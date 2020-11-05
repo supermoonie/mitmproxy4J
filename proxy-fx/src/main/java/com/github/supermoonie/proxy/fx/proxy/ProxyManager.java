@@ -28,6 +28,16 @@ public final class ProxyManager {
         internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
     }
 
+    public static void restart(int port, InterceptInitializer interceptInitializer) {
+        internalProxy.close();
+        internalProxy = new InternalProxy(interceptInitializer);
+        internalProxy.setPort(port);
+        internalProxy.start();
+        internalProxy.getTrafficShapingHandler().setCheckInterval(1_000);
+        internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
+        internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
+    }
+
     public static void stop() {
         if (null == internalProxy) {
             return;

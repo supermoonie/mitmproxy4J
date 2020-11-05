@@ -100,11 +100,11 @@
             <artifactId>controlsfx</artifactId>
             <version>11.0.2</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>de.codecentric.centerdevice</groupId>-->
-<!--            <artifactId>centerdevice-nsmenufx</artifactId>-->
-<!--            <version>2.1.7</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>de.codecentric.centerdevice</groupId>-->
+        <!--            <artifactId>centerdevice-nsmenufx</artifactId>-->
+        <!--            <version>2.1.7</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>fluent-hc</artifactId>
@@ -154,8 +154,8 @@
                                 <generateDmg>true</generateDmg>
                                 <generatePkg>true</generatePkg>
                                 <iconSize>128</iconSize>
-                                <volumeIcon>${basedir}/assets/mac/lightning.icns</volumeIcon>
-                                <volumeName>${project.name}</volumeName>
+                                <volumeIcon>${basedir}/assets/mac/proxy-fx.icns</volumeIcon>
+                                <volumeName>${name}</volumeName>
                             </macConfig>
                         </configuration>
                     </execution>
