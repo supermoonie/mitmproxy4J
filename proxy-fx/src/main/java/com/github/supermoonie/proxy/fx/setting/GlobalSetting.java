@@ -21,11 +21,11 @@ public class GlobalSetting {
 
     private final SimpleIntegerProperty port = new SimpleIntegerProperty(10801);
 
-    private final SimpleBooleanProperty throttling = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty throttling = new SimpleBooleanProperty(true);
 
-    private final SimpleLongProperty throttlingWriteLimit = new SimpleLongProperty(32 * 1024);
+    private final SimpleLongProperty throttlingWriteLimit = new SimpleLongProperty(320 * 1024);
 
-    private final SimpleLongProperty throttlingReadLimit = new SimpleLongProperty(64 * 1024);
+    private final SimpleLongProperty throttlingReadLimit = new SimpleLongProperty(640 * 1024);
 
     private final SimpleBooleanProperty blockUrl = new SimpleBooleanProperty(false);
 

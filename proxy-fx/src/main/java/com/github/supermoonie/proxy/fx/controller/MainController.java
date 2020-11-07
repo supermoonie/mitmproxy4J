@@ -181,7 +181,6 @@ public class MainController implements Initializable {
     private final GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
 
     private final Image webIcon = new Image(getClass().getResourceAsStream("/icon/web.png"), 16, 16, false, false);
-    private final Image folderIcon = new Image(getClass().getResourceAsStream("/icon/folder.png"), 16, 16, false, false);
     private final Image blackLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_000.gif"), 16, 16, false, false);
     private final Image whiteLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_fff.gif"), 16, 16, false, false);
     private final Image clearIcon = new Image(getClass().getResourceAsStream("/icon/clear.png"), 16, 16, false, false);
@@ -259,14 +258,8 @@ public class MainController implements Initializable {
         clearIconView.setFitHeight(12);
         clearIconView.setFitWidth(12);
         clearButton.setGraphic(clearIconView);
-        ImageView editIconView = new ImageView(editIcon);
-        editIconView.setFitWidth(12);
-        editIconView.setFitHeight(12);
-        editButton.setGraphic(editIconView);
-        ImageView repeatIconView = new ImageView(repeatIcon);
-        repeatIconView.setFitWidth(12);
-        repeatIconView.setFitHeight(12);
-        repeatButton.setGraphic(repeatIconView);
+        editButton.setGraphic(fontAwesome.create(FontAwesome.Glyph.EDIT));
+        repeatButton.setGraphic(fontAwesome.create(FontAwesome.Glyph.REPEAT));
     }
 
     private void initRecordSetting() {
@@ -277,10 +270,8 @@ public class MainController implements Initializable {
         recordingSwitchButton.setGraphic(imageView);
         GlobalSetting.getInstance().recordProperty().addListener((observable, oldValue, newValue) -> {
             recordMenuItem.setSelected(newValue);
-            ImageView view = new ImageView(newValue ? greenDotIcon : grayDotIcon);
-            view.setFitWidth(12);
-            view.setFitHeight(12);
-            recordingSwitchButton.setGraphic(view);
+            imageView.setImage(newValue ? greenDotIcon : grayDotIcon);
+            recordingSwitchButton.setGraphic(imageView);
         });
     }
 
@@ -292,10 +283,8 @@ public class MainController implements Initializable {
         throttlingSwitchButton.setGraphic(imageView);
         GlobalSetting.getInstance().throttlingProperty().addListener((observable, oldValue, newValue) -> {
             throttlingMenuItem.setSelected(newValue);
-            ImageView view = new ImageView(newValue ? greenDotIcon : grayDotIcon);
-            view.setFitWidth(12);
-            view.setFitHeight(12);
-            throttlingSwitchButton.setGraphic(view);
+            imageView.setImage(newValue ? greenDotIcon : grayDotIcon);
+            throttlingSwitchButton.setGraphic(imageView);
             ProxyManager.getInternalProxy().setTrafficShaping(newValue);
             GlobalChannelTrafficShapingHandler handler = ProxyManager.getInternalProxy().getTrafficShapingHandler();
             handler.setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
@@ -335,8 +324,10 @@ public class MainController implements Initializable {
             blockUrlSettingStage.setResizable(false);
             blockUrlSettingStage.initStyle(StageStyle.UTILITY);
             blockUrlSettingStage.showAndWait();
-            boolean enable = (boolean) blockUrlSettingStage.getUserData();
-            blockListMenuItem.setSelected(enable);
+            if (null != blockUrlSettingStage.getUserData()) {
+                boolean enable = (boolean) blockUrlSettingStage.getUserData();
+                blockListMenuItem.setSelected(enable);
+            }
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -426,7 +417,6 @@ public class MainController implements Initializable {
             String data = JSON.toJsonString(hexContentFlow, true);
             try {
                 String filePath = dir.getAbsolutePath() + File.separator + flow.getRequest().getId() + ".json";
-                log.info("path: " + filePath);
                 FileUtils.writeStringToFile(new File(filePath), data, StandardCharsets.UTF_8);
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
@@ -675,6 +665,7 @@ public class MainController implements Initializable {
             FlowNode baseNode = new FlowNode();
             baseNode.setUrl(baseUri);
             baseNode.setType(EnumFlowType.BASE_URL);
+            fontAwesome.create(FontAwesome.Glyph.LINK);
             TreeItem<FlowNode> item = new TreeItem<>(baseNode, new ImageView(webIcon));
             item.setExpanded(true);
             root.getChildren().add(item);
@@ -708,7 +699,7 @@ public class MainController implements Initializable {
                                 FlowNode node = new FlowNode();
                                 node.setUrl(fragment);
                                 node.setType(EnumFlowType.PATH);
-                                TreeItem<FlowNode> treeItem = new TreeItem<>(node, new ImageView(folderIcon));
+                                TreeItem<FlowNode> treeItem = new TreeItem<>(node, fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT));
                                 treeItems.add(treeItem);
                                 return treeItem;
                             });
@@ -732,7 +723,6 @@ public class MainController implements Initializable {
             flowNode.setId(request.getId());
             flowNode.setRequestTime(request.getTimeCreated());
         }
-        log.info(JSON.toJsonString(flowNode));
         if (null != response) {
             flowNode.setStatus(response.getStatus());
             flowNode.setContentType(response.getContentType());
@@ -740,6 +730,9 @@ public class MainController implements Initializable {
                 QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
                 responseHeaderQueryWrapper.eq("response_id", response.getId());
                 List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
+                if (!CollectionUtils.isEmpty(responseHeaders)) {
+                    responseHeaderTableView.getItems().addAll(responseHeaders);
+                }
                 fillResponseRawTab(response, responseHeaders);
             }
         } else {

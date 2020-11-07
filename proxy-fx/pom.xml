@@ -154,8 +154,8 @@
                                 <generateDmg>true</generateDmg>
                                 <generatePkg>true</generatePkg>
                                 <iconSize>128</iconSize>
-                                <volumeIcon>${basedir}/assets/mac/proxy-fx.icns</volumeIcon>
-                                <volumeName>${name}</volumeName>
+                                <volumeIcon>${basedir}/assets/mac/lightning.icns</volumeIcon>
+                                <volumeName>${project.name}</volumeName>
                             </macConfig>
                         </configuration>
                     </execution>
