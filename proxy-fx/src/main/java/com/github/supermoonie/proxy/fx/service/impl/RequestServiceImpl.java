@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -59,6 +60,7 @@ public class RequestServiceImpl implements RequestService {
         req.setContentType(contentType);
         req.setHost(host);
         req.setPort(port);
+        req.setTimeCreated(new Date());
         if (httpRequest instanceof FullHttpRequest) {
             Content content = contentService.saveContent(((FullHttpRequest) httpRequest).content(), req.getUri());
             req.setContentId(content.getId());

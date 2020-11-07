@@ -56,6 +56,7 @@
                         <CheckMenuItem fx:id="blockListMenuItem" mnemonicParsing="false" onAction="#onBlockListMenuItemClicked" text="Block List" />
                         <CheckMenuItem mnemonicParsing="false" text="Allow List" />
                         <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem fx:id="jsonViewerMenuItem" mnemonicParsing="false" onAction="#onJsonViewerMenuItemClicked" text="JSON Viewer" />
                         <MenuItem mnemonicParsing="false" onAction="#onSendRequestMenuItemClicked" text="Send Request" />
                     </items>
                   </Menu>

@@ -41,6 +41,10 @@ public class InterceptContext {
 
     private final Map<String, ResponseIntercept> responseIntercepts = new LinkedHashMap<>();
 
+    void beforeRequest(HttpRequest request) {
+
+    }
+
     boolean onRequest(HttpRequest request) {
         Set<String> keySet = requestIntercepts.keySet();
         for (String key : keySet) {
@@ -48,6 +52,7 @@ public class InterceptContext {
             FullHttpResponse response = requestIntercept.onRequest(this, request);
             logger.debug("requestIntercept: {}, response: {}", key, response);
             if (null != response) {
+                response = onResponse(request, response);
                 clientChannel.writeAndFlush(response);
                 return false;
             }
@@ -75,6 +80,7 @@ public class InterceptContext {
             FullHttpResponse response = requestIntercept.onException(this, request, cause);
             logger.debug("requestIntercept: {}, response: {}", key, response);
             if (null != response) {
+                response = onResponse(request, response);
                 clientChannel.writeAndFlush(response);
                 return response;
             }
@@ -89,6 +95,7 @@ public class InterceptContext {
             FullHttpResponse httpResponse = responseIntercept.onException(this, request, response, cause);
             logger.debug("responseIntercept: {}, response: {}", key, httpResponse);
             if (null != httpResponse) {
+                httpResponse = onResponse(request, httpResponse);
                 return httpResponse;
             }
         }

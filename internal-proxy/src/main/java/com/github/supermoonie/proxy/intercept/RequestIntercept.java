@@ -19,6 +19,14 @@ public interface RequestIntercept {
      */
     FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request);
 
+    /**
+     * exception occur when send request
+     *
+     * @param ctx     {@link InterceptContext}
+     * @param request request msg
+     * @param cause   exception
+     * @return response
+     */
     default FullHttpResponse onException(InterceptContext ctx, HttpRequest request, Throwable cause) {
         return null;
     }

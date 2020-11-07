@@ -1,6 +1,8 @@
 package com.github.supermoonie.proxy.fx.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
+import com.github.supermoonie.proxy.fx.App;
+import com.github.supermoonie.proxy.fx.controller.MainController;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.ConfigMapper;
 import com.github.supermoonie.proxy.fx.service.RequestService;
@@ -8,6 +10,7 @@ import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
+import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,6 +37,14 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
         if (GlobalSetting.getInstance().isRecord()) {
             Request req = requestService.saveRequest(request);
             ctx.setUserData(req);
+            Platform.runLater(() -> {
+                try {
+                    MainController mainController = App.getMainController();
+                    mainController.addFlow(req, null);
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
+            });
             log.info("request saved, uri: {}", request.uri());
         }
         return null;

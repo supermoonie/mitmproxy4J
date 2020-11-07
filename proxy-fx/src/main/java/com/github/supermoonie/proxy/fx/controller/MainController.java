@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.controller.dialog.BlockUrlSettingDialog;
+import com.github.supermoonie.proxy.fx.controller.dialog.JsonViewerDialog;
 import com.github.supermoonie.proxy.fx.controller.dialog.ProxySettingDialog;
 import com.github.supermoonie.proxy.fx.controller.dialog.ThrottlingSettingDialog;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
@@ -30,6 +31,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -65,9 +67,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.TreeSet;
 
 /**
  * @author supermoonie
@@ -85,6 +88,8 @@ public class MainController implements Initializable {
     protected CheckMenuItem throttlingMenuItem;
     @FXML
     protected CheckMenuItem blockListMenuItem;
+    @FXML
+    protected MenuItem jsonViewerMenuItem;
     @FXML
     protected AnchorPane structurePane;
     @FXML
@@ -177,15 +182,16 @@ public class MainController implements Initializable {
 
     private final Image webIcon = new Image(getClass().getResourceAsStream("/icon/web.png"), 16, 16, false, false);
     private final Image folderIcon = new Image(getClass().getResourceAsStream("/icon/folder.png"), 16, 16, false, false);
+    private final Image blackLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_000.gif"), 16, 16, false, false);
+    private final Image whiteLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_fff.gif"), 16, 16, false, false);
     private final Image clearIcon = new Image(getClass().getResourceAsStream("/icon/clear.png"), 16, 16, false, false);
     private final Image editIcon = new Image(getClass().getResourceAsStream("/icon/edit.png"), 16, 16, false, false);
     private final Image repeatIcon = new Image(getClass().getResourceAsStream("/icon/repeat.png"), 16, 16, false, false);
     private final Image grayDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_gray.png"), 16, 16, false, false);
     private final Image greenDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_green.png"), 16, 16, false, false);
 
-    private ObservableList<FlowNode> allNode;
+    private final ObservableSet<FlowNode> allNode = FXCollections.observableSet(new TreeSet<>(Comparator.comparing(FlowNode::getRequestTime)));
     private String currentRequestId;
-
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -202,6 +208,29 @@ public class MainController implements Initializable {
             }
             FlowNode selectedNode = selectedItem.getValue();
             fillMainView(selectedNode);
+        });
+        treeView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (null != oldValue) {
+                FlowNode node = oldValue.getValue();
+                if (-1 == node.getStatus() && node.getType().equals(EnumFlowType.TARGET)) {
+                    Node oldNode = oldValue.getGraphic();
+                    if (oldNode instanceof ImageView) {
+                        ImageView imageView = (ImageView) oldNode;
+                        imageView.setImage(blackLoadingIcon);
+                    }
+                }
+            }
+            if (null != newValue) {
+                FlowNode node = newValue.getValue();
+                if (-1 != node.getStatus() || !node.getType().equals(EnumFlowType.TARGET)) {
+                    return;
+                }
+                Node newNode = newValue.getGraphic();
+                if (newNode instanceof ImageView) {
+                    ImageView imageView = (ImageView) newNode;
+                    imageView.setImage(whiteLoadingIcon);
+                }
+            }
         });
         listView.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
             FlowNode selectedItem = listView.getSelectionModel().getSelectedItem();
@@ -278,6 +307,21 @@ public class MainController implements Initializable {
         GlobalSetting.getInstance().throttlingWriteLimitProperty().addListener((observable, oldValue, newValue) -> ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteLimit(newValue.longValue()));
     }
 
+    public void onJsonViewerMenuItemClicked() {
+        Stage jsonViewerStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/JsonViewerDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            JsonViewerDialog jsonViewerDialog = fxmlLoader.getController();
+            jsonViewerDialog.setStage(jsonViewerStage);
+            jsonViewerStage.setScene(new Scene(parent));
+            App.setCommonIcon(jsonViewerStage, "JSON Viewer");
+            jsonViewerStage.show();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
     public void onBlockListMenuItemClicked() {
         Stage blockUrlSettingStage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/BlockUrlSettingDialog.fxml"));
@@ -286,7 +330,7 @@ public class MainController implements Initializable {
             BlockUrlSettingDialog blockUrlSettingDialog = fxmlLoader.getController();
             blockUrlSettingDialog.setStage(blockUrlSettingStage);
             blockUrlSettingStage.setScene(new Scene(parent));
-            App.setCommonIcon(blockUrlSettingStage, "Lightning");
+            App.setCommonIcon(blockUrlSettingStage, "Block List Setting");
             blockUrlSettingStage.initModality(Modality.APPLICATION_MODAL);
             blockUrlSettingStage.setResizable(false);
             blockUrlSettingStage.initStyle(StageStyle.UTILITY);
@@ -306,7 +350,7 @@ public class MainController implements Initializable {
             ThrottlingSettingDialog throttlingSettingDialog = fxmlLoader.getController();
             throttlingSettingDialog.setStage(throttlingSettingStage);
             throttlingSettingStage.setScene(new Scene(parent));
-            App.setCommonIcon(throttlingSettingStage, "Lightning");
+            App.setCommonIcon(throttlingSettingStage, "Throttling Setting");
             throttlingSettingStage.initModality(Modality.APPLICATION_MODAL);
             throttlingSettingStage.setResizable(false);
             throttlingSettingStage.initStyle(StageStyle.UTILITY);
@@ -352,7 +396,7 @@ public class MainController implements Initializable {
                 HexContentFlow flow = JSON.parse(data, HexContentFlow.class);
                 flowService.save(flow);
                 addFlow(flow.getRequest(), flow.getResponse());
-            } catch (IOException | URISyntaxException e) {
+            } catch (IOException e) {
                 log.error(e.getMessage(), e);
             }
         }
@@ -426,35 +470,33 @@ public class MainController implements Initializable {
         currentRequestId = null;
         treeView.getRoot().getChildren().clear();
         listView.getItems().clear();
-        if (null != allNode) {
-            allNode.clear();
-        }
+        allNode.clear();
         infoLabel.setText("");
     }
 
     public void onFilterTextFieldEnter(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
-            if (null == allNode || allNode.size() < listView.getItems().size()) {
-                allNode = new FilteredList<>(listView.getItems(), p -> true);
-            }
-            String text = filterTextField.getText();
-            if (!StringUtils.isEmpty(text)) {
-                ObservableList<FlowNode> filterList = FXCollections.observableList(new LinkedList<>());
-                allNode.forEach(node -> {
-                    if (node.getUrl().contains(text)) {
-                        filterList.add(node);
-                    }
-                });
-                listView.setItems(filterList);
-            } else {
-                listView.setItems(allNode);
-            }
-            ObservableList<FlowNode> items = listView.getItems();
-            try {
-                setAllTreeNode(items);
-            } catch (URISyntaxException e) {
-                log.error(e.getMessage(), e);
-            }
+            filter();
+        }
+    }
+
+    private void filter() {
+        String text = filterTextField.getText().trim();
+        listView.getItems().clear();
+        if (!StringUtils.isEmpty(text)) {
+            allNode.forEach(node -> {
+                if (node.getUrl().contains(text)) {
+                    listView.getItems().add(node);
+                }
+            });
+        } else {
+            allNode.forEach(node -> listView.getItems().add(node));
+        }
+        ObservableList<FlowNode> items = listView.getItems();
+        try {
+            setAllTreeNode(items);
+        } catch (URISyntaxException e) {
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -585,29 +627,35 @@ public class MainController implements Initializable {
             List<Header> responseHeaders = flow.getResponseHeaders();
             infoLabel.setText(request.getMethod().toUpperCase() + " " + request.getUri());
             requestHeaderTableView.getItems().addAll(requestHeaders);
-            responseHeaderTableView.getItems().addAll(responseHeaders);
+            if (!CollectionUtils.isEmpty(responseHeaders)) {
+                responseHeaderTableView.getItems().addAll(responseHeaders);
+            }
             fillRequestRawTab(request, requestHeaders);
             fillRequestQueryTab(request);
-            fillResponseRawTab(response, responseHeaders);
+            if (null != response) {
+                fillResponseRawTab(response, responseHeaders);
+            }
         }
     }
 
     private Flow getFlow(String requestId) {
+        Flow flow = new Flow();
         Request request = requestMapper.selectById(requestId);
         QueryWrapper<Header> requestHeaderQueryWrapper = new QueryWrapper<>();
         requestHeaderQueryWrapper.eq("request_id", request.getId());
         List<Header> requestHeaders = headerMapper.selectList(requestHeaderQueryWrapper);
         QueryWrapper<Response> responseQueryWrapper = new QueryWrapper<>();
         responseQueryWrapper.eq("request_id", request.getId());
-        Response response = responseMapper.selectOne(responseQueryWrapper);
-        QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
-        responseHeaderQueryWrapper.eq("response_id", response.getId());
-        List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
-        Flow flow = new Flow();
         flow.setRequest(request);
         flow.setRequestHeaders(requestHeaders);
-        flow.setResponse(response);
-        flow.setResponseHeaders(responseHeaders);
+        Response response = responseMapper.selectOne(responseQueryWrapper);
+        if (null != response) {
+            QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
+            responseHeaderQueryWrapper.eq("response_id", response.getId());
+            List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
+            flow.setResponse(response);
+            flow.setResponseHeaders(responseHeaders);
+        }
         return flow;
     }
 
@@ -670,15 +718,36 @@ public class MainController implements Initializable {
         }
     }
 
-    public void addFlow(Request request, Response response) throws URISyntaxException {
-        FlowNode flowNode = new FlowNode();
-        flowNode.setStatus(response.getStatus());
-        flowNode.setType(EnumFlowType.TARGET);
-        flowNode.setUrl(request.getUri());
-        flowNode.setId(request.getId());
-        flowNode.setContentType(response.getContentType());
-        listView.getItems().add(flowNode);
-        addTreeNode(flowNode);
+    public void addFlow(Request request, Response response) {
+        FlowNode flowNode = null;
+        for (FlowNode node : allNode) {
+            if (node.getId().equals(request.getId())) {
+                flowNode = node;
+            }
+        }
+        if (null == flowNode) {
+            flowNode = new FlowNode();
+            flowNode.setType(EnumFlowType.TARGET);
+            flowNode.setUrl(request.getUri());
+            flowNode.setId(request.getId());
+            flowNode.setRequestTime(request.getTimeCreated());
+        }
+        log.info(JSON.toJsonString(flowNode));
+        if (null != response) {
+            flowNode.setStatus(response.getStatus());
+            flowNode.setContentType(response.getContentType());
+            if (null != currentRequestId && currentRequestId.equals(request.getId())) {
+                QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
+                responseHeaderQueryWrapper.eq("response_id", response.getId());
+                List<Header> responseHeaders = headerMapper.selectList(responseHeaderQueryWrapper);
+                fillResponseRawTab(response, responseHeaders);
+            }
+        } else {
+            flowNode.setStatus(-1);
+            flowNode.setContentType("");
+        }
+        allNode.add(flowNode);
+        filter();
     }
 
     private void appendTab(TabPane tabPane, Tab tab) {
@@ -689,6 +758,12 @@ public class MainController implements Initializable {
     }
 
     private Node loadIcon(int status, String contentType) {
+        if (status == -1) {
+            ImageView imageView = new ImageView(blackLoadingIcon);
+            imageView.setFitHeight(16);
+            imageView.setFitWidth(16);
+            return imageView;
+        }
         if (HttpStatus.SC_OK == status) {
             if (contentType.startsWith(ContentType.TEXT_CSS)) {
                 return fontAwesome.create(FontAwesome.Glyph.CSS3);
@@ -709,7 +784,7 @@ public class MainController implements Initializable {
             Glyph glyph = fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
             glyph.setColor(Color.web("#f8aa19"));
             return glyph;
-        } else if (HttpStatus.SC_INTERNAL_SERVER_ERROR == status){
+        } else if (HttpStatus.SC_INTERNAL_SERVER_ERROR == status) {
             return fontAwesome.create(FontAwesome.Glyph.BOMB);
         }
         return fontAwesome.create(FontAwesome.Glyph.LINK);

@@ -78,6 +78,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         connectionInfo.setClientHost(clientHost);
         connectionInfo.setClientPort(clientPort);
         interceptContext.setConnectionInfo(connectionInfo);
+
     }
 
     @Override

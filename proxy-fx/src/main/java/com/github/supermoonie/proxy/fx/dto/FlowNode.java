@@ -2,7 +2,9 @@ package com.github.supermoonie.proxy.fx.dto;
 
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author supermoonie
@@ -19,6 +21,8 @@ public class FlowNode {
     private EnumFlowType type;
 
     private String contentType;
+
+    private Date requestTime;
 
     private List<FlowNode> children;
 
@@ -70,8 +74,32 @@ public class FlowNode {
         this.contentType = contentType;
     }
 
+    public Date getRequestTime() {
+        return requestTime;
+    }
+
+    public void setRequestTime(Date requestTime) {
+        this.requestTime = requestTime;
+    }
+
     @Override
     public String toString() {
         return url;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (null == obj) {
+            return false;
+        }
+        if (!(obj instanceof FlowNode)) {
+            return false;
+        }
+        return Objects.deepEquals(this, obj);
     }
 }
