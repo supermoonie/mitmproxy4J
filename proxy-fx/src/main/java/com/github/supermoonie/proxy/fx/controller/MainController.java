@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
-import com.github.supermoonie.proxy.fx.controller.dialog.BlockUrlSettingDialog;
-import com.github.supermoonie.proxy.fx.controller.dialog.JsonViewerDialog;
-import com.github.supermoonie.proxy.fx.controller.dialog.ProxySettingDialog;
-import com.github.supermoonie.proxy.fx.controller.dialog.ThrottlingSettingDialog;
+import com.github.supermoonie.proxy.fx.controller.dialog.*;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.Content;
@@ -31,6 +28,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -87,6 +86,8 @@ public class MainController implements Initializable {
     protected CheckMenuItem throttlingMenuItem;
     @FXML
     protected CheckMenuItem blockListMenuItem;
+    @FXML
+    protected CheckMenuItem allowListMenuItem;
     @FXML
     protected MenuItem jsonViewerMenuItem;
     @FXML
@@ -254,50 +255,53 @@ public class MainController implements Initializable {
         });
     }
 
-    private void initFlowListContextMenu() {
-        copyMenuItem.setOnAction(event -> {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
+    private final EventHandler<ActionEvent> copyMenuItemHandler = event -> {
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        FlowNode node = selectedItem.getValue();
+        if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+            List<String> list = new LinkedList<>();
+            TreeItem<FlowNode> current = selectedItem;
+            while (current != treeView.getRoot()) {
+                list.add(current.getValue().getUrl());
+                current = current.getParent();
             }
-            FlowNode node = selectedItem.getValue();
-            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-                List<String> list = new LinkedList<>();
-                TreeItem<FlowNode> current = selectedItem;
-                while (current != treeView.getRoot()) {
-                    list.add(current.getValue().getUrl());
-                    current = current.getParent();
-                }
-                Collections.reverse(list);
-                String url = String.join("/", list);
-                ClipboardUtil.copyText(url);
-            } else {
-                ClipboardUtil.copyText(node.getUrl());
-            }
+            Collections.reverse(list);
+            String url = String.join("/", list);
+            ClipboardUtil.copyText(url);
+        } else {
+            ClipboardUtil.copyText(node.getUrl());
+        }
+    };
 
-        });
-        copyResponseMenuItem.setOnAction(event -> {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            FlowNode node = selectedItem.getValue();
-            Request request = requestMapper.selectById(node.getId());
-            QueryWrapper<Response> resQuery = new QueryWrapper<>();
-            resQuery.eq("request_id", request.getId());
-            Response response = responseMapper.selectOne(resQuery);
-            String contentType = response.getContentType();
-            Content content = contentMapper.selectById(response.getContentId());
-            if (null != content && null != content.getContent() && content.getContent().length > 0) {
-                if (contentType.startsWith("image/")) {
-                    ClipboardUtil.copyImage(new Image(new ByteArrayInputStream(content.getContent())));
-                } else {
-                    ClipboardUtil.copyText(new String(content.getContent(), StandardCharsets.UTF_8));
-                }
+    private final EventHandler<ActionEvent> copyResponseMenuItemHandler = event -> {
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        FlowNode node = selectedItem.getValue();
+        Request request = requestMapper.selectById(node.getId());
+        QueryWrapper<Response> resQuery = new QueryWrapper<>();
+        resQuery.eq("request_id", request.getId());
+        Response response = responseMapper.selectOne(resQuery);
+        String contentType = response.getContentType();
+        Content content = contentMapper.selectById(response.getContentId());
+        if (null != content && null != content.getContent() && content.getContent().length > 0) {
+            if (contentType.startsWith("image/")) {
+                ClipboardUtil.copyImage(new Image(new ByteArrayInputStream(content.getContent())));
             } else {
-                ClipboardUtil.copyText("");
+                ClipboardUtil.copyText(new String(content.getContent(), StandardCharsets.UTF_8));
             }
-        });
+        } else {
+            ClipboardUtil.copyText("");
+        }
+    };
+
+    private void initFlowListContextMenu() {
+        copyMenuItem.setOnAction(copyMenuItemHandler);
+        copyResponseMenuItem.setOnAction(copyResponseMenuItemHandler);
         repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
         contextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
         contextMenu.setOnShowing(event -> {
@@ -375,6 +379,28 @@ public class MainController implements Initializable {
             jsonViewerStage.setScene(new Scene(parent));
             App.setCommonIcon(jsonViewerStage, "JSON Viewer");
             jsonViewerStage.show();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public void onAllowListMenuItemClicked() {
+        Stage allowListSettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/AllowListSettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            AllowListSettingDialog allowListSettingDialog = fxmlLoader.getController();
+            allowListSettingDialog.setStage(allowListSettingStage);
+            allowListSettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(allowListSettingStage, "Allow List Setting");
+            allowListSettingStage.initModality(Modality.APPLICATION_MODAL);
+            allowListSettingStage.setResizable(false);
+            allowListSettingStage.initStyle(StageStyle.UTILITY);
+            allowListSettingStage.showAndWait();
+            if (null != allowListSettingStage.getUserData()) {
+                boolean enable = (boolean) allowListSettingStage.getUserData();
+                allowListMenuItem.setSelected(enable);
+            }
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }

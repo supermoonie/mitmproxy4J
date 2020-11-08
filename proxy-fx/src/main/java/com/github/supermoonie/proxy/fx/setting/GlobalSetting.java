@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.fx.setting;
 
+import com.github.supermoonie.proxy.fx.support.AllowUrl;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -30,6 +31,10 @@ public class GlobalSetting {
     private final SimpleBooleanProperty blockUrl = new SimpleBooleanProperty(false);
 
     private final SimpleListProperty<BlockUrl> blockUrlList = new SimpleListProperty<>(FXCollections.observableArrayList());
+
+    private final SimpleBooleanProperty allowUrl = new SimpleBooleanProperty(false);
+
+    private final SimpleListProperty<AllowUrl> allowUrlList = new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public static GlobalSetting getInstance() {
         return instance;
@@ -121,5 +126,29 @@ public class GlobalSetting {
 
     public void setBlockUrlList(ObservableList<BlockUrl> blockUrlList) {
         this.blockUrlList.set(blockUrlList);
+    }
+
+    public boolean isAllowUrl() {
+        return allowUrl.get();
+    }
+
+    public SimpleBooleanProperty allowUrlProperty() {
+        return allowUrl;
+    }
+
+    public void setAllowUrl(boolean allowUrl) {
+        this.allowUrl.set(allowUrl);
+    }
+
+    public ObservableList<AllowUrl> getAllowUrlList() {
+        return allowUrlList.get();
+    }
+
+    public SimpleListProperty<AllowUrl> allowUrlListProperty() {
+        return allowUrlList;
+    }
+
+    public void setAllowUrlList(ObservableList<AllowUrl> allowUrlList) {
+        this.allowUrlList.set(allowUrlList);
     }
 }

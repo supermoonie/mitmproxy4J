@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.support.AllowUrl;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import com.github.supermoonie.proxy.fx.tray.SystemTrayManager;
 import com.github.supermoonie.proxy.fx.util.SettingUtil;
@@ -13,7 +14,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
 import javafx.collections.ListChangeListener;
-import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -103,12 +103,21 @@ public class App extends Application {
 
     private void initSetting() {
         GlobalSetting.getInstance().portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
-        GlobalSetting.getInstance().blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlack(newValue));
+        GlobalSetting.getInstance().blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlockList(newValue));
         GlobalSetting.getInstance().blockUrlListProperty().addListener((ListChangeListener<BlockUrl>) c -> {
             ObservableList<BlockUrl> blockUrlList = GlobalSetting.getInstance().getBlockUrlList();
             for (BlockUrl blockUrl : blockUrlList) {
                 if (blockUrl.isEnable()) {
                     defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
+                }
+            }
+        });
+        GlobalSetting.getInstance().allowUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setAllowFlag(newValue));
+        GlobalSetting.getInstance().allowUrlListProperty().addListener((ListChangeListener<AllowUrl>) c -> {
+            ObservableList<AllowUrl> blockUrlList = GlobalSetting.getInstance().getAllowUrlList();
+            for (AllowUrl allowUrl : blockUrlList) {
+                if (allowUrl.isEnable()) {
+                    defaultConfigIntercept.getBlockUriList().add(allowUrl.getUrlRegex());
                 }
             }
         });

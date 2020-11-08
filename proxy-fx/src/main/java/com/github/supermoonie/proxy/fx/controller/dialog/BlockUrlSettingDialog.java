@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -12,6 +13,7 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 import java.net.URL;
@@ -96,5 +98,6 @@ public class BlockUrlSettingDialog implements Initializable {
 
     public void setStage(Stage stage) {
         this.stage = stage;
+        this.stage.setOnCloseRequest(windowEvent -> onCancelButtonClicked());
     }
 }
