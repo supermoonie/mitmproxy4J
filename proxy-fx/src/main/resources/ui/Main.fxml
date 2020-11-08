@@ -80,7 +80,7 @@
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="repeatButton" mnemonicParsing="false" text="Repeat">
+                  <Button fx:id="repeatButton" mnemonicParsing="false" onAction="#onRepeatButtonClicked" text="Repeat">
                      <padding>
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
@@ -302,7 +302,7 @@
                                       <content>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                              <children>
-                                                <TextArea fx:id="responseTextArea" layoutX="6.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                <TextArea fx:id="responseTextArea" editable="false" layoutX="6.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                              </children>
                                           </AnchorPane>
                                       </content>

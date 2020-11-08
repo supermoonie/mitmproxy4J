@@ -15,9 +15,11 @@ import com.github.supermoonie.proxy.fx.mapper.ContentMapper;
 import com.github.supermoonie.proxy.fx.mapper.HeaderMapper;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.PropertyPair;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
+import com.github.supermoonie.proxy.fx.util.HttpClientUtil;
 import com.github.supermoonie.proxy.fx.util.UrlUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -251,14 +253,6 @@ public class SendReqController implements Initializable {
         });
     }
 
-    public static HttpClientBuilder createTrustAllApacheHttpClientBuilder() throws Exception {
-        SSLContextBuilder builder = new SSLContextBuilder();
-        builder.loadTrustMaterial(null, (chain, authType) -> true);
-        SSLConnectionSocketFactory sslsf = new
-                SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
-        return HttpClients.custom().setSSLSocketFactory(sslsf);
-    }
-
     public void onSendButtonClicked() {
         String sending = "Sending...";
         if (sending.equals(sendButton.getText())) {
@@ -272,8 +266,8 @@ public class SendReqController implements Initializable {
         if (!StringUtils.isEmpty(requestId)) {
             App.EXECUTOR.execute(() -> {
                 String rawText = requestBodyTextArea.getText();
-                try (CloseableHttpClient httpClient = createTrustAllApacheHttpClientBuilder()
-                        .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
+                try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
+                        .setProxy(new HttpHost("127.0.0.1", GlobalSetting.getInstance().getPort()))
                         .build()) {
                     RequestBuilder requestBuilder = RequestBuilder.create(method).setUri(urlStr);
                     headers.forEach(header -> {
@@ -296,8 +290,8 @@ public class SendReqController implements Initializable {
             });
         } else {
             App.EXECUTOR.execute(() -> {
-                try (CloseableHttpClient httpClient = createTrustAllApacheHttpClientBuilder()
-                        .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
+                try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
+                        .setProxy(new HttpHost("127.0.0.1", GlobalSetting.getInstance().getPort()))
                         .build()) {
                     RequestBuilder requestBuilder = RequestBuilder.create(method).setUri(urlStr);
                     headers.forEach(header -> {

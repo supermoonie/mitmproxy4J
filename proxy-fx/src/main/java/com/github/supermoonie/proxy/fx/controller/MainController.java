@@ -23,12 +23,10 @@ import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.Flow;
 import com.github.supermoonie.proxy.fx.support.HexContentFlow;
-import com.github.supermoonie.proxy.fx.util.AlertUtil;
-import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
-import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
-import com.github.supermoonie.proxy.fx.util.JSON;
+import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -49,7 +47,11 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.bouncycastle.util.encoders.Hex;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
@@ -67,10 +69,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Comparator;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author supermoonie
@@ -169,6 +168,15 @@ public class MainController implements Initializable {
     @FXML
     protected Button recordingSwitchButton;
 
+    private final ContextMenu contextMenu = new ContextMenu();
+    private final MenuItem copyMenuItem = new MenuItem("Copy URL");
+    private final MenuItem copyResponseMenuItem = new MenuItem("Copy Response");
+    private final MenuItem saveResponseMenuItem = new MenuItem("Save Response");
+    private final MenuItem repeatMenuItem = new MenuItem("Repeat");
+    private final MenuItem editMenuItem = new MenuItem("Edit");
+    private final MenuItem blockMenuItem = new MenuItem("Block List");
+    private final MenuItem allowMenuItem = new MenuItem("Allow List");
+
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
     private final ResponseMapper responseMapper = ApplicationContextUtil.getBean(ResponseMapper.class);
@@ -180,12 +188,9 @@ public class MainController implements Initializable {
 
     private final GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
 
-    private final Image webIcon = new Image(getClass().getResourceAsStream("/icon/web.png"), 16, 16, false, false);
     private final Image blackLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_000.gif"), 16, 16, false, false);
     private final Image whiteLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_fff.gif"), 16, 16, false, false);
     private final Image clearIcon = new Image(getClass().getResourceAsStream("/icon/clear.png"), 16, 16, false, false);
-    private final Image editIcon = new Image(getClass().getResourceAsStream("/icon/edit.png"), 16, 16, false, false);
-    private final Image repeatIcon = new Image(getClass().getResourceAsStream("/icon/repeat.png"), 16, 16, false, false);
     private final Image grayDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_gray.png"), 16, 16, false, false);
     private final Image greenDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_green.png"), 16, 16, false, false);
 
@@ -197,9 +202,25 @@ public class MainController implements Initializable {
         initToolBar();
         initRecordSetting();
         initThrottlingSetting();
+        initFlowListContextMenu();
+        initTreeView();
+        listView.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
+            FlowNode selectedItem = listView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            fillMainView(selectedItem);
+        });
+        initResponseJsonWebView();
+        clear();
+    }
+
+    private void initTreeView() {
         TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
         treeView.setRoot(root);
         treeView.setShowRoot(false);
+        treeView.setContextMenu(contextMenu);
+        treeView.contextMenuProperty().bind(Bindings.when(treeView.getSelectionModel().selectedItemProperty().isNull()).then((ContextMenu) null).otherwise(contextMenu));
         treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
             if (null == selectedItem) {
@@ -231,17 +252,65 @@ public class MainController implements Initializable {
                 }
             }
         });
-        listView.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
-            FlowNode selectedItem = listView.getSelectionModel().getSelectedItem();
+    }
+
+    private void initFlowListContextMenu() {
+        copyMenuItem.setOnAction(event -> {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
             if (null == selectedItem) {
                 return;
             }
-            fillMainView(selectedItem);
+            FlowNode node = selectedItem.getValue();
+            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+                List<String> list = new LinkedList<>();
+                TreeItem<FlowNode> current = selectedItem;
+                while (current != treeView.getRoot()) {
+                    list.add(current.getValue().getUrl());
+                    current = current.getParent();
+                }
+                Collections.reverse(list);
+                String url = String.join("/", list);
+                ClipboardUtil.copyText(url);
+            } else {
+                ClipboardUtil.copyText(node.getUrl());
+            }
+
         });
-        requestTabPane.getTabs().removeIf(tab -> tab.getText().equals(requestFormTab.getText()));
-        requestTabPane.getTabs().removeIf(tab -> tab.getText().equals(requestQueryTab.getText()));
-        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
-        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
+        copyResponseMenuItem.setOnAction(event -> {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            FlowNode node = selectedItem.getValue();
+            Request request = requestMapper.selectById(node.getId());
+            QueryWrapper<Response> resQuery = new QueryWrapper<>();
+            resQuery.eq("request_id", request.getId());
+            Response response = responseMapper.selectOne(resQuery);
+            String contentType = response.getContentType();
+            Content content = contentMapper.selectById(response.getContentId());
+            if (null != content && null != content.getContent() && content.getContent().length > 0) {
+                if (contentType.startsWith("image/")) {
+                    ClipboardUtil.copyImage(new Image(new ByteArrayInputStream(content.getContent())));
+                } else {
+                    ClipboardUtil.copyText(new String(content.getContent(), StandardCharsets.UTF_8));
+                }
+            } else {
+                ClipboardUtil.copyText("");
+            }
+        });
+        repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
+        contextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
+        contextMenu.setOnShowing(event -> {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            FlowNode node = selectedItem.getValue();
+            copyResponseMenuItem.setDisable(node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET));
+        });
+    }
+
+    private void initResponseJsonWebView() {
         responseJsonWebView.setContextMenuEnabled(false);
         responseJsonWebView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
         responseJsonWebView.setOnKeyPressed(keyEvent -> {
@@ -433,6 +502,29 @@ public class MainController implements Initializable {
         GlobalSetting.getInstance().setRecord(!GlobalSetting.getInstance().isRecord());
     }
 
+    public void onRepeatButtonClicked() {
+        if (null == currentRequestId) {
+            return;
+        }
+        final Flow flow = getFlow(currentRequestId);
+        App.EXECUTOR.execute(() -> {
+            try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
+                    .setProxy(new HttpHost("127.0.0.1", GlobalSetting.getInstance().getPort()))
+                    .build()) {
+                Request request = flow.getRequest();
+                RequestBuilder requestBuilder = RequestBuilder.create(request.getMethod()).setUri(request.getUri());
+                flow.getRequestHeaders().forEach(header -> requestBuilder.addHeader(header.getName(), header.getValue()));
+                if (null != request.getContentId()) {
+                    Content content = contentMapper.selectById(request.getContentId());
+                    requestBuilder.setEntity(new ByteArrayEntity(content.getContent()));
+                }
+                httpClient.execute(requestBuilder.build()).close();
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
+    }
+
     public SendReqController onSendRequestMenuItemClicked() {
         Stage sendReqStage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/SendReq.fxml"));
@@ -467,6 +559,13 @@ public class MainController implements Initializable {
     public void onFilterTextFieldEnter(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             filter();
+            if (null != currentRequestId) {
+                ObservableList<FlowNode> flowNodes = listView.getItems();
+                boolean present = flowNodes.stream().anyMatch(node -> node.getId().equals(currentRequestId));
+                if (!present) {
+                    currentRequestId = null;
+                }
+            }
         }
     }
 
@@ -498,8 +597,14 @@ public class MainController implements Initializable {
         responseHeaderTableView.getItems().clear();
         responseRawTextArea.clear();
         responseTextArea.clear();
-        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
-        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
+        removeTabByTitle(requestTabPane, requestQueryTab);
+        removeTabByTitle(requestTabPane, requestFormTab);
+        removeTabByTitle(responseTabPane, responseImageTab);
+        removeTabByTitle(responseTabPane, responseContentTab);
+    }
+
+    private void removeTabByTitle(TabPane tabPane, Tab tabToRemove) {
+        tabPane.getTabs().removeIf(tab -> tab.getText().equals(tabToRemove.getText()));
     }
 
     private void fillRequestRawTab(Request request, List<Header> requestHeaders) {
@@ -665,8 +770,8 @@ public class MainController implements Initializable {
             FlowNode baseNode = new FlowNode();
             baseNode.setUrl(baseUri);
             baseNode.setType(EnumFlowType.BASE_URL);
-            fontAwesome.create(FontAwesome.Glyph.LINK);
-            TreeItem<FlowNode> item = new TreeItem<>(baseNode, new ImageView(webIcon));
+            baseNode.setContentType(flowNode.getContentType());
+            TreeItem<FlowNode> item = new TreeItem<>(baseNode, fontAwesome.create(FontAwesome.Glyph.GLOBE));
             item.setExpanded(true);
             root.getChildren().add(item);
             return item;
@@ -676,6 +781,7 @@ public class MainController implements Initializable {
             rootPathNode.setId(flowNode.getId());
             rootPathNode.setUrl("/");
             rootPathNode.setType(EnumFlowType.TARGET);
+            rootPathNode.setContentType(flowNode.getContentType());
             TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
             rootPathTreeItem.setExpanded(true);
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
@@ -691,6 +797,7 @@ public class MainController implements Initializable {
                     node.setUrl(fragment);
                     node.setType(EnumFlowType.TARGET);
                     node.setStatus(flowNode.getStatus());
+                    node.setContentType(flowNode.getContentType());
                     currentItem.getChildren().add(new TreeItem<>(node, loadIcon(flowNode.getStatus(), flowNode.getContentType())));
                 } else {
                     ObservableList<TreeItem<FlowNode>> treeItems = currentItem.getChildren();
@@ -699,6 +806,7 @@ public class MainController implements Initializable {
                                 FlowNode node = new FlowNode();
                                 node.setUrl(fragment);
                                 node.setType(EnumFlowType.PATH);
+                                node.setContentType(flowNode.getContentType());
                                 TreeItem<FlowNode> treeItem = new TreeItem<>(node, fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT));
                                 treeItems.add(treeItem);
                                 return treeItem;
@@ -757,7 +865,7 @@ public class MainController implements Initializable {
             imageView.setFitWidth(16);
             return imageView;
         }
-        if (HttpStatus.SC_OK == status) {
+        if (status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES) {
             if (contentType.startsWith(ContentType.TEXT_CSS)) {
                 return fontAwesome.create(FontAwesome.Glyph.CSS3);
             } else if (contentType.startsWith(ContentType.TEXT_XML) || contentType.startsWith(ContentType.APPLICATION_XML)) {
@@ -773,11 +881,15 @@ public class MainController implements Initializable {
             } else if (contentType.startsWith("image/")) {
                 return fontAwesome.create(FontAwesome.Glyph.PHOTO);
             }
-        } else if (HttpStatus.SC_NOT_FOUND == status) {
-            Glyph glyph = fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
+        } else if (status >= HttpStatus.SC_MULTIPLE_CHOICES && status < HttpStatus.SC_BAD_REQUEST) {
+            Glyph glyph = fontAwesome.create(FontAwesome.Glyph.SHARE);
             glyph.setColor(Color.web("#f8aa19"));
             return glyph;
-        } else if (HttpStatus.SC_INTERNAL_SERVER_ERROR == status) {
+        } else if (status >= HttpStatus.SC_BAD_REQUEST && status < HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+            Glyph glyph = fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
+            glyph.setColor(Color.web("#cccccc"));
+            return glyph;
+        } else if (status >= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
             return fontAwesome.create(FontAwesome.Glyph.BOMB);
         }
         return fontAwesome.create(FontAwesome.Glyph.LINK);
