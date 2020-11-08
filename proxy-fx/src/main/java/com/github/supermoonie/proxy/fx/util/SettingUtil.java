@@ -38,7 +38,7 @@ public class SettingUtil {
         }
     }
 
-    public static void save(GlobalSetting globalSetting) {
+    public synchronized static void save(GlobalSetting globalSetting) {
         File settingHome = new File(System.getProperty("user.home") + File.separator + ".mitmproxy4J");
         if (!settingHome.exists() && !settingHome.mkdir()) {
             AlertUtil.warning("Fail make setting home!");
@@ -48,7 +48,6 @@ public class SettingUtil {
             FileUtils.writeStringToFile(settingFile, JSON.toJsonString(globalSetting), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
-            AlertUtil.error(e);
         }
     }
 }

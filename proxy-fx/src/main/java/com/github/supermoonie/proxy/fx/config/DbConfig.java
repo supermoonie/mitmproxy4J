@@ -24,7 +24,7 @@ public class DbConfig {
 
     private String dbPath() {
         String homeDir = System.getProperty("user.home");
-        File dbDir = new File(homeDir + File.separator + "db");
+        File dbDir = new File(homeDir + File.separator + ".proxy_fx");
         if (!dbDir.exists() && !dbDir.mkdir()) {
             throw new RuntimeException(dbDir.getAbsolutePath() + " create fail!");
         }

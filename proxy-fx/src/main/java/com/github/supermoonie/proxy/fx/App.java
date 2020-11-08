@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
@@ -94,6 +95,7 @@ public class App extends Application {
         SpringApplication.run(getClass()).getAutowireCapableBeanFactory().autowireBean(this);
         initDatabase();
         SettingUtil.load();
+        EXECUTOR.scheduleAtFixedRate(() -> SettingUtil.save(GlobalSetting.getInstance()), 10, 30, TimeUnit.SECONDS);
         ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
         ProxyManager.getInternalProxy().setTrafficShaping(GlobalSetting.getInstance().isThrottling());
         initSetting();
