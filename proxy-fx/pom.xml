@@ -150,6 +150,9 @@
                             <generateInstaller>true</generateInstaller>
                             <administratorRequired>false</administratorRequired>
                             <platform>auto</platform>
+                            <winConfig>
+                                <generateMsi>false</generateMsi>
+                            </winConfig>
                             <macConfig>
                                 <generateDmg>true</generateDmg>
                                 <generatePkg>true</generatePkg>
