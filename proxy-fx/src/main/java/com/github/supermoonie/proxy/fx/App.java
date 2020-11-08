@@ -78,14 +78,13 @@ public class App extends Application {
         primaryStage.setScene(new Scene(root));
         setCommonIcon(primaryStage);
         primaryStage.show();
-//        primaryStage.toFront();
         primaryStage.setOnCloseRequest(windowEvent -> {
             SpringApplication.exit(applicationContext, () -> 0);
+            SwingUtilities.invokeLater(() -> systemTrayManager.destroy());
+            EXECUTOR.shutdown();
             Platform.runLater(() -> {
-                SwingUtilities.invokeLater(() -> systemTrayManager.destroy());
+                Platform.exit();
                 System.exit(0);
-//                ProxyManager.stop();
-//                Platform.exit();
             });
         });
     }
@@ -94,7 +93,7 @@ public class App extends Application {
     public void init() throws Exception {
         SpringApplication.run(getClass()).getAutowireCapableBeanFactory().autowireBean(this);
         initDatabase();
-        SettingUtil.load();
+        Platform.runLater(SettingUtil::load);
         EXECUTOR.scheduleAtFixedRate(() -> SettingUtil.save(GlobalSetting.getInstance()), 10, 30, TimeUnit.SECONDS);
         ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
         ProxyManager.getInternalProxy().setTrafficShaping(GlobalSetting.getInstance().isThrottling());

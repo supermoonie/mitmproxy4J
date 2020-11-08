@@ -50,10 +50,9 @@ public class SystemTrayManager {
             destroy();
             SpringApplication.exit(applicationContext, () -> 0);
             Platform.runLater(() -> {
-                App.getPrimaryStage().close();
+                App.EXECUTOR.shutdown();
+                Platform.exit();
                 System.exit(0);
-//                ProxyManager.stop();
-//                Platform.exit();
             });
         });
         popupMenu.add(quitItem);

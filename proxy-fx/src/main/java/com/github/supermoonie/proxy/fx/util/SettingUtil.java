@@ -1,6 +1,8 @@
 package com.github.supermoonie.proxy.fx.util;
 
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.setting.SerializeGlobalSetting;
+import javafx.collections.FXCollections;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * @author supermoonie
@@ -31,7 +35,17 @@ public class SettingUtil {
         }
         try {
             String settings = FileUtils.readFileToString(settingFile, StandardCharsets.UTF_8);
-            GlobalSetting.setInstance(JSON.parse(settings, GlobalSetting.class));
+            SerializeGlobalSetting globalSetting = JSON.parse(settings, SerializeGlobalSetting.class);
+            GlobalSetting instance = GlobalSetting.getInstance();
+            instance.setRecord(Objects.requireNonNullElse(globalSetting.getRecord(), true));
+            instance.setPort(Objects.requireNonNullElse(globalSetting.getPort(), 10801));
+            instance.setThrottling(Objects.requireNonNullElse(globalSetting.getThrottling(), false));
+            instance.setThrottlingWriteLimit(Objects.requireNonNullElse(globalSetting.getThrottlingWriteLimit(), 320L));
+            instance.setThrottlingReadLimit(Objects.requireNonNullElse(globalSetting.getThrottlingReadLimit(), 640L));
+            instance.setBlockUrl(Objects.requireNonNullElse(globalSetting.getBlockUrl(), false));
+            instance.setBlockUrlList(FXCollections.observableList(Objects.requireNonNullElse(globalSetting.getBlockUrlList(), new ArrayList<>())));
+            instance.setAllowUrl(Objects.requireNonNullElse(globalSetting.getAllowUrl(), false));
+            instance.setAllowUrlList(FXCollections.observableList(Objects.requireNonNullElse(globalSetting.getAllowUrlList(), new ArrayList<>())));
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             AlertUtil.error(e);

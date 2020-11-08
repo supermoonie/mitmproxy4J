@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy.fx.support;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -22,7 +21,6 @@ public class BlockUrl {
         return enable;
     }
 
-    @JsonProperty
     public void setEnable(boolean enable) {
         this.enable.set(enable);
     }
@@ -35,7 +33,6 @@ public class BlockUrl {
         return urlRegex;
     }
 
-    @JsonProperty
     public void setUrlRegex(String urlRegex) {
         this.urlRegex.set(urlRegex);
     }

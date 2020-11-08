@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy.fx.setting;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.supermoonie.proxy.fx.support.AllowUrl;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -43,10 +42,6 @@ public class GlobalSetting {
         return instance;
     }
 
-    public synchronized static void setInstance(GlobalSetting instance) {
-        GlobalSetting.instance = instance;
-    }
-
     public boolean isRecord() {
         return record.get();
     }
@@ -55,7 +50,6 @@ public class GlobalSetting {
         return record;
     }
 
-    @JsonProperty
     public void setRecord(boolean record) {
         this.record.set(record);
     }
@@ -68,7 +62,6 @@ public class GlobalSetting {
         return port;
     }
 
-    @JsonProperty
     public void setPort(int port) {
         this.port.set(port);
     }
@@ -81,7 +74,6 @@ public class GlobalSetting {
         return throttling;
     }
 
-    @JsonProperty
     public void setThrottling(boolean throttling) {
         this.throttling.set(throttling);
     }
@@ -94,7 +86,6 @@ public class GlobalSetting {
         return throttlingWriteLimit;
     }
 
-    @JsonProperty
     public void setThrottlingWriteLimit(long throttlingWriteLimit) {
         this.throttlingWriteLimit.set(throttlingWriteLimit);
     }
@@ -107,7 +98,6 @@ public class GlobalSetting {
         return throttlingReadLimit;
     }
 
-    @JsonProperty
     public void setThrottlingReadLimit(long throttlingReadLimit) {
         this.throttlingReadLimit.set(throttlingReadLimit);
     }
@@ -120,7 +110,6 @@ public class GlobalSetting {
         return blockUrl;
     }
 
-    @JsonProperty
     public void setBlockUrl(boolean blockUrl) {
         this.blockUrl.set(blockUrl);
     }
@@ -133,7 +122,6 @@ public class GlobalSetting {
         return blockUrlList;
     }
 
-    @JsonProperty
     public void setBlockUrlList(ObservableList<BlockUrl> blockUrlList) {
         this.blockUrlList.set(blockUrlList);
     }
@@ -146,7 +134,6 @@ public class GlobalSetting {
         return allowUrl;
     }
 
-    @JsonProperty
     public void setAllowUrl(boolean allowUrl) {
         this.allowUrl.set(allowUrl);
     }
@@ -159,7 +146,6 @@ public class GlobalSetting {
         return allowUrlList;
     }
 
-    @JsonProperty
     public void setAllowUrlList(ObservableList<AllowUrl> allowUrlList) {
         this.allowUrlList.set(allowUrlList);
     }
