@@ -136,10 +136,10 @@ public class App extends Application {
         });
         instance.allowUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setAllowFlag(newValue));
         instance.allowUrlListProperty().addListener((observable, oldValue, newValue) -> {
-            defaultConfigIntercept.getBlockUriList().clear();
+            defaultConfigIntercept.getAllowUriList().clear();
             for (AllowUrl allowUrl : newValue) {
                 if (allowUrl.isEnable()) {
-                    defaultConfigIntercept.getBlockUriList().add(allowUrl.getUrlRegex());
+                    defaultConfigIntercept.getAllowUriList().add(allowUrl.getUrlRegex());
                 }
             }
         });

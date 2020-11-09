@@ -14,6 +14,14 @@ public class AllowUrl {
 
     private final SimpleStringProperty urlRegex = new SimpleStringProperty();
 
+    public AllowUrl() {
+    }
+
+    public AllowUrl(boolean enable, String urlRegex) {
+        this.enable.set(enable);
+        this.urlRegex.set(urlRegex);
+    }
+
     public boolean isEnable() {
         return enable.get();
     }

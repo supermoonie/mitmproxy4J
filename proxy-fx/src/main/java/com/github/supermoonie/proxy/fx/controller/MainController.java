@@ -18,6 +18,7 @@ import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.support.AllowUrl;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import com.github.supermoonie.proxy.fx.support.Flow;
 import com.github.supermoonie.proxy.fx.support.HexContentFlow;
@@ -377,6 +378,7 @@ public class MainController implements Initializable {
         }
         GlobalSetting setting = GlobalSetting.getInstance();
         FlowNode node = selectedItem.getValue();
+        String url;
         if (!node.getType().equals(EnumFlowType.BASE_URL)) {
             List<String> list = new LinkedList<>();
             TreeItem<FlowNode> current = selectedItem;
@@ -385,11 +387,38 @@ public class MainController implements Initializable {
                 current = current.getParent();
             }
             Collections.reverse(list);
-            String url = String.join("/", list);
-            setting.getBlockUrlList().add(new BlockUrl(true, url));
+            url = String.join("/", list);
         } else {
-            setting.getBlockUrlList().add(new BlockUrl(true, node.getUrl()));
+            url = node.getUrl();
         }
+        BlockUrl blockUrl = new BlockUrl(true, url);
+        setting.getBlockUrlList().remove(blockUrl);
+        setting.getBlockUrlList().add(blockUrl);
+    };
+
+    private final EventHandler<ActionEvent> addAllowListMenuItemHandler = event -> {
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        GlobalSetting setting = GlobalSetting.getInstance();
+        FlowNode node = selectedItem.getValue();
+        String url;
+        if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+            List<String> list = new LinkedList<>();
+            TreeItem<FlowNode> current = selectedItem;
+            while (current != treeView.getRoot()) {
+                list.add(current.getValue().getUrl());
+                current = current.getParent();
+            }
+            Collections.reverse(list);
+            url = String.join("/", list);
+        } else {
+            url = node.getUrl();
+        }
+        AllowUrl allowUrl = new AllowUrl(true, url);
+        setting.getAllowUrlList().remove(allowUrl);
+        setting.getAllowUrlList().add(allowUrl);
     };
 
     private void initFlowListContextMenu() {
@@ -399,6 +428,7 @@ public class MainController implements Initializable {
         editMenuItem.setOnAction(editMenuItemHandler);
         repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
         blockMenuItem.setOnAction(addBlockListMenuItemHandler);
+        allowMenuItem.setOnAction(addAllowListMenuItemHandler);
         contextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
         contextMenu.setOnShowing(event -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();

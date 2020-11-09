@@ -28,9 +28,9 @@ public final class ResponseUtils {
         buf.append("<!DOCTYPE html>\r\n");
         buf.append("<html><head><title>");
         buf.append("mitmproxy4J");
-        buf.append("</title></head><body>\r\n");
+        buf.append("</title></head><body>\r\n<h1>\r\n");
         buf.append(body);
-        buf.append("\r\n</body></html>\r\n");
+        buf.append("\r\n</h1>\r\n</body></html>\r\n");
         ByteBuf content = Unpooled.copiedBuffer(buf, CharsetUtil.UTF_8);
         FullHttpResponse response =
                 new DefaultFullHttpResponse(HTTP_1_1, status, content);
