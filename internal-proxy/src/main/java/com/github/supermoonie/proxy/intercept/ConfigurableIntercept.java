@@ -22,7 +22,7 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigurableIntercept.class);
 
-    private boolean blockList = false;
+    private boolean blockFlag = false;
     private final Set<String> blockUriList = new HashSet<>();
     private boolean allowFlag = false;
     private final Set<String> allowUriList = new HashSet<>();
@@ -34,7 +34,7 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
         String uri = request.uri();
-        if (blockList) {
+        if (blockFlag) {
             for (String reg : blockUriList) {
                 if (uri.matches(reg)) {
                     return ResponseUtils.htmlResponse("Uri Blocked!", HttpResponseStatus.OK);
@@ -92,12 +92,12 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
         return notUseSecondProxyHostList;
     }
 
-    public boolean isBlockList() {
-        return blockList;
+    public boolean isBlockFlag() {
+        return blockFlag;
     }
 
-    public void setBlockList(boolean blockList) {
-        this.blockList = blockList;
+    public void setBlockFlag(boolean blockFlag) {
+        this.blockFlag = blockFlag;
     }
 
     public void setAllowFlag(boolean allowFlag) {

@@ -13,8 +13,10 @@ import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -22,6 +24,8 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.commons.io.IOUtils;
 import org.mybatis.spring.annotation.MapperScan;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -38,10 +42,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
+ * @author supermoonie
  */
 @SpringBootApplication
 @MapperScan(basePackages = "com.github.supermoonie.proxy.fx.mapper")
 public class App extends Application {
+
+    private final Logger log = LoggerFactory.getLogger(App.class);
 
     public static final ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(5);
 
@@ -83,6 +90,7 @@ public class App extends Application {
             SwingUtilities.invokeLater(() -> systemTrayManager.destroy());
             EXECUTOR.shutdown();
             Platform.runLater(() -> {
+                SettingUtil.save(GlobalSetting.getInstance());
                 Platform.exit();
                 System.exit(0);
             });
@@ -95,28 +103,41 @@ public class App extends Application {
         initDatabase();
         Platform.runLater(SettingUtil::load);
         EXECUTOR.scheduleAtFixedRate(() -> SettingUtil.save(GlobalSetting.getInstance()), 10, 30, TimeUnit.SECONDS);
-        ProxyManager.start(GlobalSetting.getInstance().getPort(), initializer);
-        ProxyManager.getInternalProxy().setTrafficShaping(GlobalSetting.getInstance().isThrottling());
         initSetting();
         systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }
 
     private void initSetting() {
-        GlobalSetting.getInstance().portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
-        GlobalSetting.getInstance().blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlockList(newValue));
-        GlobalSetting.getInstance().blockUrlListProperty().addListener((ListChangeListener<BlockUrl>) c -> {
-            ObservableList<BlockUrl> blockUrlList = GlobalSetting.getInstance().getBlockUrlList();
-            for (BlockUrl blockUrl : blockUrlList) {
+        GlobalSetting instance = GlobalSetting.getInstance();
+        ProxyManager.start(instance.getPort(), initializer);
+        ProxyManager.getInternalProxy().setTrafficShaping(instance.isThrottling());
+        defaultConfigIntercept.setAllowFlag(instance.isAllowUrl());
+        defaultConfigIntercept.setBlockFlag(instance.isBlockUrl());
+        for (AllowUrl allowUrl : instance.getAllowUrlList()) {
+            if (allowUrl.isEnable()) {
+                defaultConfigIntercept.getAllowUriList().add(allowUrl.getUrlRegex());
+            }
+        }
+        for (BlockUrl blockUrl : instance.getBlockUrlList()) {
+            if (blockUrl.isEnable()) {
+                defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
+            }
+        }
+        instance.portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
+        instance.blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlockFlag(newValue));
+        instance.blockUrlListProperty().addListener((observable, oldValue, newValue) -> {
+            defaultConfigIntercept.getBlockUriList().clear();
+            for (BlockUrl blockUrl : newValue) {
                 if (blockUrl.isEnable()) {
                     defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
                 }
             }
         });
-        GlobalSetting.getInstance().allowUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setAllowFlag(newValue));
-        GlobalSetting.getInstance().allowUrlListProperty().addListener((ListChangeListener<AllowUrl>) c -> {
-            ObservableList<AllowUrl> blockUrlList = GlobalSetting.getInstance().getAllowUrlList();
-            for (AllowUrl allowUrl : blockUrlList) {
+        instance.allowUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setAllowFlag(newValue));
+        instance.allowUrlListProperty().addListener((observable, oldValue, newValue) -> {
+            defaultConfigIntercept.getBlockUriList().clear();
+            for (AllowUrl allowUrl : newValue) {
                 if (allowUrl.isEnable()) {
                     defaultConfigIntercept.getBlockUriList().add(allowUrl.getUrlRegex());
                 }

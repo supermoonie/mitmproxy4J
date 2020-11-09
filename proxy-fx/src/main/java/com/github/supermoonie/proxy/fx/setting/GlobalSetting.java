@@ -2,12 +2,12 @@ package com.github.supermoonie.proxy.fx.setting;
 
 import com.github.supermoonie.proxy.fx.support.AllowUrl;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
+
+import java.util.HashSet;
 
 /**
  * @author supermoonie
@@ -32,11 +32,11 @@ public class GlobalSetting {
 
     private final SimpleBooleanProperty blockUrl = new SimpleBooleanProperty(false);
 
-    private final SimpleListProperty<BlockUrl> blockUrlList = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final SimpleSetProperty<BlockUrl> blockUrlList = new SimpleSetProperty<>(FXCollections.observableSet(new HashSet<>()));
 
     private final SimpleBooleanProperty allowUrl = new SimpleBooleanProperty(false);
 
-    private final SimpleListProperty<AllowUrl> allowUrlList = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final SimpleSetProperty<AllowUrl> allowUrlList = new SimpleSetProperty<>(FXCollections.observableSet(new HashSet<>()));
 
     public static GlobalSetting getInstance() {
         return instance;
@@ -114,15 +114,15 @@ public class GlobalSetting {
         this.blockUrl.set(blockUrl);
     }
 
-    public ObservableList<BlockUrl> getBlockUrlList() {
+    public ObservableSet<BlockUrl> getBlockUrlList() {
         return blockUrlList.get();
     }
 
-    public SimpleListProperty<BlockUrl> blockUrlListProperty() {
+    public SimpleSetProperty<BlockUrl> blockUrlListProperty() {
         return blockUrlList;
     }
 
-    public void setBlockUrlList(ObservableList<BlockUrl> blockUrlList) {
+    public void setBlockUrlList(ObservableSet<BlockUrl> blockUrlList) {
         this.blockUrlList.set(blockUrlList);
     }
 
@@ -138,15 +138,15 @@ public class GlobalSetting {
         this.allowUrl.set(allowUrl);
     }
 
-    public ObservableList<AllowUrl> getAllowUrlList() {
+    public ObservableSet<AllowUrl> getAllowUrlList() {
         return allowUrlList.get();
     }
 
-    public SimpleListProperty<AllowUrl> allowUrlListProperty() {
+    public SimpleSetProperty<AllowUrl> allowUrlListProperty() {
         return allowUrlList;
     }
 
-    public void setAllowUrlList(ObservableList<AllowUrl> allowUrlList) {
+    public void setAllowUrlList(ObservableSet<AllowUrl> allowUrlList) {
         this.allowUrlList.set(allowUrlList);
     }
 }

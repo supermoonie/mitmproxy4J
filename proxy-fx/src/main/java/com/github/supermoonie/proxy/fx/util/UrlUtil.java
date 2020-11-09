@@ -1,8 +1,12 @@
 package com.github.supermoonie.proxy.fx.util;
 
-import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.support.PropertyPair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,7 +16,32 @@ import java.util.List;
  */
 public final class UrlUtil {
 
-    private UrlUtil() {}
+    private static final Logger log = LoggerFactory.getLogger(UrlUtil.class);
+
+    private UrlUtil() {
+    }
+
+    public static String getLastFragment(String url) {
+        try {
+            URI uri = new URI(url);
+            String path = uri.getPath();
+            if (null == path) {
+                return null;
+            }
+            String[] fragment = path.split("/");
+            if (fragment.length == 0) {
+                return null;
+            }
+            String last = fragment[fragment.length - 1];
+            if (StringUtils.isEmpty(last)) {
+                return null;
+            }
+            return last;
+        } catch (URISyntaxException e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+    }
 
     public static List<PropertyPair> queryToList(String query) {
         List<PropertyPair> list = new LinkedList<>();

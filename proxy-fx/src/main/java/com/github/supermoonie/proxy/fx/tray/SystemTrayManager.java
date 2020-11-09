@@ -2,6 +2,8 @@ package com.github.supermoonie.proxy.fx.tray;
 
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
+import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.util.SettingUtil;
 import com.sun.javafx.PlatformUtil;
 import javafx.application.Platform;
 import org.springframework.boot.SpringApplication;
@@ -50,6 +52,7 @@ public class SystemTrayManager {
             destroy();
             SpringApplication.exit(applicationContext, () -> 0);
             Platform.runLater(() -> {
+                SettingUtil.save(GlobalSetting.getInstance());
                 App.EXECUTOR.shutdown();
                 Platform.exit();
                 System.exit(0);

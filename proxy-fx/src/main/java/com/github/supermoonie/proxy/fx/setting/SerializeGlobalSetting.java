@@ -3,7 +3,7 @@ package com.github.supermoonie.proxy.fx.setting;
 import com.github.supermoonie.proxy.fx.support.AllowUrl;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author supermoonie
@@ -23,11 +23,11 @@ public class SerializeGlobalSetting {
 
     private Boolean blockUrl;
 
-    private List<BlockUrl> blockUrlList;
+    private Set<BlockUrl> blockUrlList;
 
     private Boolean allowUrl;
 
-    private List<AllowUrl> allowUrlList;
+    private Set<AllowUrl> allowUrlList;
 
     public Boolean getRecord() {
         return record;
@@ -77,11 +77,11 @@ public class SerializeGlobalSetting {
         this.blockUrl = blockUrl;
     }
 
-    public List<BlockUrl> getBlockUrlList() {
+    public Set<BlockUrl> getBlockUrlList() {
         return blockUrlList;
     }
 
-    public void setBlockUrlList(List<BlockUrl> blockUrlList) {
+    public void setBlockUrlList(Set<BlockUrl> blockUrlList) {
         this.blockUrlList = blockUrlList;
     }
 
@@ -93,11 +93,11 @@ public class SerializeGlobalSetting {
         this.allowUrl = allowUrl;
     }
 
-    public List<AllowUrl> getAllowUrlList() {
+    public Set<AllowUrl> getAllowUrlList() {
         return allowUrlList;
     }
 
-    public void setAllowUrlList(List<AllowUrl> allowUrlList) {
+    public void setAllowUrlList(Set<AllowUrl> allowUrlList) {
         this.allowUrlList = allowUrlList;
     }
 }

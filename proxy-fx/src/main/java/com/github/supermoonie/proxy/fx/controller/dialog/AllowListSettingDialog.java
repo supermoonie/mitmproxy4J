@@ -2,7 +2,9 @@ package com.github.supermoonie.proxy.fx.controller.dialog;
 
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.AllowUrl;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -12,6 +14,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.ResourceBundle;
 
 /**
@@ -69,7 +72,9 @@ public class AllowListSettingDialog implements Initializable {
         GlobalSetting setting = GlobalSetting.getInstance();
         boolean enable = enableCheckBox.isSelected();
         setting.setAllowUrl(enable);
-        setting.setAllowUrlList(settingTableView.getItems());
+        ObservableSet<AllowUrl> allowUrls = FXCollections.observableSet(new HashSet<>());
+        allowUrls.addAll(settingTableView.getItems());
+        setting.setAllowUrlList(allowUrls);
         stage.setUserData(enable);
         stage.close();
     }

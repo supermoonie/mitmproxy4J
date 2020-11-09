@@ -3,6 +3,8 @@ package com.github.supermoonie.proxy.fx.support;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+import java.util.Objects;
+
 /**
  * @author supermoonie
  * @date 2020-11-08
@@ -34,5 +36,22 @@ public class AllowUrl {
 
     public void setUrlRegex(String urlRegex) {
         this.urlRegex.set(urlRegex);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AllowUrl allowUrl = (AllowUrl) o;
+        return Objects.equals(urlRegex.get(), allowUrl.urlRegex.get());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(urlRegex.get());
     }
 }

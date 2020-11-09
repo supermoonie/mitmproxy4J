@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
 
 /**
@@ -43,9 +44,9 @@ public class SettingUtil {
             instance.setThrottlingWriteLimit(Objects.requireNonNullElse(globalSetting.getThrottlingWriteLimit(), 320L));
             instance.setThrottlingReadLimit(Objects.requireNonNullElse(globalSetting.getThrottlingReadLimit(), 640L));
             instance.setBlockUrl(Objects.requireNonNullElse(globalSetting.getBlockUrl(), false));
-            instance.setBlockUrlList(FXCollections.observableList(Objects.requireNonNullElse(globalSetting.getBlockUrlList(), new ArrayList<>())));
+            instance.setBlockUrlList(FXCollections.observableSet(Objects.requireNonNullElse(globalSetting.getBlockUrlList(), new HashSet<>())));
             instance.setAllowUrl(Objects.requireNonNullElse(globalSetting.getAllowUrl(), false));
-            instance.setAllowUrlList(FXCollections.observableList(Objects.requireNonNullElse(globalSetting.getAllowUrlList(), new ArrayList<>())));
+            instance.setAllowUrlList(FXCollections.observableSet(Objects.requireNonNullElse(globalSetting.getAllowUrlList(), new HashSet<>())));
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             AlertUtil.error(e);

@@ -4,7 +4,9 @@ import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -17,6 +19,7 @@ import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -81,7 +84,9 @@ public class BlockUrlSettingDialog implements Initializable {
         GlobalSetting setting = GlobalSetting.getInstance();
         boolean enable = enableCheckBox.isSelected();
         setting.setBlockUrl(enable);
-        setting.setBlockUrlList(settingTableView.getItems());
+        ObservableSet<BlockUrl> blockUrls = FXCollections.observableSet(new HashSet<>());
+        blockUrls.addAll(settingTableView.getItems());
+        setting.setBlockUrlList(blockUrls);
         stage.setUserData(enable);
         stage.close();
     }

@@ -18,12 +18,15 @@ import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import com.github.supermoonie.proxy.fx.support.Flow;
 import com.github.supermoonie.proxy.fx.support.HexContentFlow;
 import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -200,6 +203,8 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        blockListMenuItem.setSelected(GlobalSetting.getInstance().isBlockUrl());
+        allowListMenuItem.setSelected(GlobalSetting.getInstance().isAllowUrl());
         initToolBar();
         initRecordSetting();
         initThrottlingSetting();
@@ -230,26 +235,53 @@ public class MainController implements Initializable {
             FlowNode selectedNode = selectedItem.getValue();
             fillMainView(selectedNode);
         });
+        treeView.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            Node node = selectedItem.getGraphic();
+            FlowNode flowNode = selectedItem.getValue();
+            if (!newValue) {
+                if (flowNode.getType().equals(EnumFlowType.TARGET) && node instanceof Glyph) {
+                    Glyph glyph = (Glyph) node;
+                    glyph.setColor((Color) Objects.requireNonNullElse(glyph.getUserData(), Color.BLACK));
+                }
+            } else {
+                if (flowNode.getType().equals(EnumFlowType.TARGET) && node instanceof Glyph) {
+                    Glyph glyph = (Glyph) node;
+                    glyph.setColor(Color.WHITE);
+                }
+            }
+        });
         treeView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (null != oldValue) {
                 FlowNode node = oldValue.getValue();
+                Node oldNode = oldValue.getGraphic();
+                if (node.getType().equals(EnumFlowType.TARGET) && oldNode instanceof Glyph) {
+                    Glyph glyph = (Glyph) oldNode;
+                    glyph.setColor((Color) Objects.requireNonNullElse(glyph.getUserData(), Color.BLACK));
+                }
                 if (-1 == node.getStatus() && node.getType().equals(EnumFlowType.TARGET)) {
-                    Node oldNode = oldValue.getGraphic();
                     if (oldNode instanceof ImageView) {
                         ImageView imageView = (ImageView) oldNode;
                         imageView.setImage(blackLoadingIcon);
                     }
                 }
+
             }
             if (null != newValue) {
                 FlowNode node = newValue.getValue();
-                if (-1 != node.getStatus() || !node.getType().equals(EnumFlowType.TARGET)) {
-                    return;
-                }
                 Node newNode = newValue.getGraphic();
-                if (newNode instanceof ImageView) {
-                    ImageView imageView = (ImageView) newNode;
-                    imageView.setImage(whiteLoadingIcon);
+                if (-1 == node.getStatus() && node.getType().equals(EnumFlowType.TARGET)) {
+                    if (newNode instanceof ImageView) {
+                        ImageView imageView = (ImageView) newNode;
+                        imageView.setImage(whiteLoadingIcon);
+                    }
+                }
+                if (node.getType().equals(EnumFlowType.TARGET) && newNode instanceof Glyph) {
+                    Glyph glyph = (Glyph) newNode;
+                    glyph.setColor(Color.WHITE);
                 }
             }
         });
@@ -292,6 +324,7 @@ public class MainController implements Initializable {
             if (contentType.startsWith("image/")) {
                 ClipboardUtil.copyImage(new Image(new ByteArrayInputStream(content.getContent())));
             } else {
+                // TODO contentType 与 文件映射
                 ClipboardUtil.copyText(new String(content.getContent(), StandardCharsets.UTF_8));
             }
         } else {
@@ -299,10 +332,73 @@ public class MainController implements Initializable {
         }
     };
 
+    private final EventHandler<ActionEvent> saveResponseMenuItemHandler = event -> {
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        FlowNode node = selectedItem.getValue();
+        Request request = requestMapper.selectById(node.getId());
+        QueryWrapper<Response> resQuery = new QueryWrapper<>();
+        resQuery.eq("request_id", request.getId());
+        Response response = responseMapper.selectOne(resQuery);
+        Content content = contentMapper.selectById(response.getContentId());
+        if (null != content && null != content.getContent() && content.getContent().length > 0) {
+            FileChooser fileChooser = new FileChooser();
+            String lastFragment = UrlUtil.getLastFragment(request.getUri());
+            if (null != lastFragment) {
+                fileChooser.setInitialFileName(lastFragment);
+            }
+            File file = fileChooser.showSaveDialog(App.getPrimaryStage());
+            try {
+                FileUtils.writeByteArrayToFile(file, content.getContent());
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+                AlertUtil.error(e);
+            }
+        } else {
+            AlertUtil.info("Empty Response!");
+        }
+    };
+
+    private final EventHandler<ActionEvent> editMenuItemHandler = event -> {
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        FlowNode node = selectedItem.getValue();
+        onSendRequestMenuItemClicked().setRequestId(node.getId());
+    };
+
+    private final EventHandler<ActionEvent> addBlockListMenuItemHandler = event -> {
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        GlobalSetting setting = GlobalSetting.getInstance();
+        FlowNode node = selectedItem.getValue();
+        if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+            List<String> list = new LinkedList<>();
+            TreeItem<FlowNode> current = selectedItem;
+            while (current != treeView.getRoot()) {
+                list.add(current.getValue().getUrl());
+                current = current.getParent();
+            }
+            Collections.reverse(list);
+            String url = String.join("/", list);
+            setting.getBlockUrlList().add(new BlockUrl(true, url));
+        } else {
+            setting.getBlockUrlList().add(new BlockUrl(true, node.getUrl()));
+        }
+    };
+
     private void initFlowListContextMenu() {
         copyMenuItem.setOnAction(copyMenuItemHandler);
         copyResponseMenuItem.setOnAction(copyResponseMenuItemHandler);
+        saveResponseMenuItem.setOnAction(saveResponseMenuItemHandler);
+        editMenuItem.setOnAction(editMenuItemHandler);
         repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
+        blockMenuItem.setOnAction(addBlockListMenuItemHandler);
         contextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
         contextMenu.setOnShowing(event -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
@@ -310,7 +406,9 @@ public class MainController implements Initializable {
                 return;
             }
             FlowNode node = selectedItem.getValue();
-            copyResponseMenuItem.setDisable(node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET));
+            boolean disable = node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET);
+            copyResponseMenuItem.setDisable(disable);
+            saveResponseMenuItem.setDisable(disable);
         });
     }
 
@@ -415,8 +513,8 @@ public class MainController implements Initializable {
             blockUrlSettingDialog.setStage(blockUrlSettingStage);
             blockUrlSettingStage.setScene(new Scene(parent));
             App.setCommonIcon(blockUrlSettingStage, "Block List Setting");
-            blockUrlSettingStage.initModality(Modality.APPLICATION_MODAL);
             blockUrlSettingStage.setResizable(false);
+            blockUrlSettingStage.initModality(Modality.APPLICATION_MODAL);
             blockUrlSettingStage.initStyle(StageStyle.UTILITY);
             blockUrlSettingStage.showAndWait();
             if (null != blockUrlSettingStage.getUserData()) {
@@ -539,7 +637,12 @@ public class MainController implements Initializable {
                     .build()) {
                 Request request = flow.getRequest();
                 RequestBuilder requestBuilder = RequestBuilder.create(request.getMethod()).setUri(request.getUri());
-                flow.getRequestHeaders().forEach(header -> requestBuilder.addHeader(header.getName(), header.getValue()));
+                List<String> autoCalculateHeaders = List.of("Host", "Content-Length", "host", "content-length");
+                flow.getRequestHeaders().forEach(header -> {
+                    if (!autoCalculateHeaders.contains(header.getName())) {
+                        requestBuilder.addHeader(header.getName(), header.getValue());
+                    }
+                });
                 if (null != request.getContentId()) {
                     Content content = contentMapper.selectById(request.getContentId());
                     requestBuilder.setEntity(new ByteArrayEntity(content.getContent()));
@@ -893,15 +996,24 @@ public class MainController implements Initializable {
         }
         if (status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES) {
             if (contentType.startsWith(ContentType.TEXT_CSS)) {
-                return fontAwesome.create(FontAwesome.Glyph.CSS3);
+                Color color = Color.web("#3077b8");
+                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.CSS3).color(color);
+                glyph.setUserData(color);
+                return glyph;
             } else if (contentType.startsWith(ContentType.TEXT_XML) || contentType.startsWith(ContentType.APPLICATION_XML)) {
+                Color color = Color.web("#ee8745");
+                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.FILE_CODE_ALT).color(color);
+                glyph.setUserData(color);
                 return fontAwesome.create(FontAwesome.Glyph.FILE_CODE_ALT);
             } else if (contentType.startsWith(ContentType.TEXT_PLAIN)) {
                 return fontAwesome.create(FontAwesome.Glyph.FILE_TEXT_ALT);
             } else if (contentType.startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
                 return fontAwesome.create(FontAwesome.Glyph.CODE);
             } else if (contentType.startsWith(ContentType.TEXT_HTML)) {
-                return fontAwesome.create(FontAwesome.Glyph.HTML5);
+                Color color = Color.web("#d65a26");
+                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.HTML5).color(color);
+                glyph.setUserData(color);
+                return glyph;
             } else if (contentType.startsWith(ContentType.APPLICATION_JSON)) {
                 return fontAwesome.create(FontAwesome.Glyph.CODE);
             } else if (contentType.startsWith("image/")) {
