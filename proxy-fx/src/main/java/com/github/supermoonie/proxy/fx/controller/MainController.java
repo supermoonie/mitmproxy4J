@@ -26,8 +26,6 @@ import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -73,6 +71,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -202,6 +201,7 @@ public class MainController implements Initializable {
     private final Image greenDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_green.png"), 16, 16, false, false);
 
     private final ObservableSet<FlowNode> allNode = FXCollections.observableSet(new TreeSet<>(Comparator.comparing(FlowNode::getRequestTime)));
+    private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     private String currentRequestId;
 
     @Override
@@ -226,7 +226,6 @@ public class MainController implements Initializable {
     }
 
     private void initTreeView() {
-        TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
         treeView.setRoot(root);
         treeView.setShowRoot(false);
         treeView.setContextMenu(contextMenu);
@@ -629,7 +628,7 @@ public class MainController implements Initializable {
                 HexContentFlow flow = JSON.parse(data, HexContentFlow.class);
                 flowService.save(flow);
                 addFlow(flow.getRequest(), flow.getResponse());
-            } catch (IOException e) {
+            } catch (IOException | URISyntaxException e) {
                 log.error(e.getMessage(), e);
             }
         }
@@ -736,6 +735,7 @@ public class MainController implements Initializable {
 
     public void onFilterTextFieldEnter(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
+            treeViewFilter();
             filter();
             if (null != currentRequestId) {
                 ObservableList<FlowNode> flowNodes = listView.getItems();
@@ -759,12 +759,7 @@ public class MainController implements Initializable {
         } else {
             allNode.forEach(node -> listView.getItems().add(node));
         }
-        ObservableList<FlowNode> items = listView.getItems();
-        try {
-            setAllTreeNode(items);
-        } catch (URISyntaxException e) {
-            log.error(e.getMessage(), e);
-        }
+
     }
 
     private void clear() {
@@ -932,86 +927,153 @@ public class MainController implements Initializable {
         return flow;
     }
 
-    private void setAllTreeNode(ObservableList<FlowNode> allListNode) throws URISyntaxException {
-        treeView.getRoot().getChildren().clear();
-        for (FlowNode flowNode : allListNode) {
-            addTreeNode(flowNode);
-        }
-    }
-
     private void addTreeNode(FlowNode flowNode) throws URISyntaxException {
         URI uri = new URI(flowNode.getUrl());
         String baseUri = uri.getScheme() + "://" + uri.getAuthority();
-        TreeItem<FlowNode> root = treeView.getRoot();
         ObservableList<TreeItem<FlowNode>> children = root.getChildren();
         TreeItem<FlowNode> baseNodeTreeItem = children.stream().filter(item -> item.getValue().getUrl().equals(baseUri)).findFirst().orElseGet(() -> {
             FlowNode baseNode = new FlowNode();
             baseNode.setUrl(baseUri);
             baseNode.setType(EnumFlowType.BASE_URL);
-            baseNode.setContentType(flowNode.getContentType());
+            baseNode.setCurrentUrl(baseUri);
+            baseNode.setStatus(flowNode.getStatus());
             TreeItem<FlowNode> item = new TreeItem<>(baseNode, fontAwesome.create(FontAwesome.Glyph.GLOBE));
-            item.setExpanded(true);
             root.getChildren().add(item);
             return item;
         });
+        FlowNode currentParent = baseNodeTreeItem.getValue();
         if ("".equals(uri.getPath()) || "/".equals(uri.getPath())) {
             FlowNode rootPathNode = new FlowNode();
+            rootPathNode.setParent(currentParent);
             rootPathNode.setId(flowNode.getId());
             rootPathNode.setUrl("/");
+            rootPathNode.setCurrentUrl(flowNode.getUrl());
             rootPathNode.setType(EnumFlowType.TARGET);
-            rootPathNode.setContentType(flowNode.getContentType());
             TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
-            rootPathTreeItem.setExpanded(true);
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
         } else {
             String[] array = (uri.getPath() + " ").split("/");
             int len = array.length;
             TreeItem<FlowNode> currentItem = baseNodeTreeItem;
+            StringBuilder currentUrl = new StringBuilder(baseUri);
             for (int i = 1; i < len; i++) {
                 String fragment = "".equals(array[i].trim()) ? "/" : array[i].trim();
+                currentUrl.append("/").append(fragment);
                 if (i == (len - 1)) {
                     FlowNode node = new FlowNode();
+                    node.setParent(currentParent);
                     node.setId(flowNode.getId());
                     node.setUrl(fragment);
+                    node.setCurrentUrl(flowNode.getUrl());
                     node.setType(EnumFlowType.TARGET);
                     node.setStatus(flowNode.getStatus());
-                    node.setContentType(flowNode.getContentType());
-                    currentItem.getChildren().add(new TreeItem<>(node, loadIcon(flowNode.getStatus(), flowNode.getContentType())));
+                    TreeItem<FlowNode> treeItem = new TreeItem<>(node, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
+                    currentItem.getChildren().add(treeItem);
                 } else {
                     ObservableList<TreeItem<FlowNode>> treeItems = currentItem.getChildren();
+                    final FlowNode finalCurrentParent = currentParent;
                     currentItem = treeItems.stream().filter(item -> item.getValue().getUrl().equals(fragment) && item.getValue().getType().equals(EnumFlowType.PATH))
                             .findFirst().orElseGet(() -> {
                                 FlowNode node = new FlowNode();
                                 node.setUrl(fragment);
+                                node.setParent(finalCurrentParent);
                                 node.setType(EnumFlowType.PATH);
                                 node.setContentType(flowNode.getContentType());
+                                node.setCurrentUrl(currentUrl.toString());
                                 TreeItem<FlowNode> treeItem = new TreeItem<>(node, fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT));
                                 treeItems.add(treeItem);
                                 return treeItem;
                             });
+                    currentParent = currentItem.getValue();
                 }
-                currentItem.setExpanded(true);
             }
         }
     }
 
-    public void addFlow(Request request, Response response) {
-        FlowNode flowNode = null;
-        for (FlowNode node : allNode) {
-            if (node.getId().equals(request.getId())) {
-                flowNode = node;
+    private void updateTreeItem(FlowNode flowNode) throws URISyntaxException {
+        URI uri = new URI(flowNode.getUrl());
+        String baseUri = uri.getScheme() + "://" + uri.getAuthority();
+        ObservableList<TreeItem<FlowNode>> children = root.getChildren();
+        Queue<TreeItem<FlowNode>> queue = children.stream().filter(item -> item.getValue().getUrl().equals(baseUri)).collect(Collectors.toCollection(LinkedList::new));
+        TreeItem<FlowNode> item = null;
+        while (!queue.isEmpty()) {
+            TreeItem<FlowNode> treeItem = queue.poll();
+            FlowNode node = treeItem.getValue();
+            if (null != node.getId() && node.getId().equals(flowNode.getId())) {
+                item = treeItem;
+                break;
+            }
+            ObservableList<TreeItem<FlowNode>> itemChildren = treeItem.getChildren();
+            if (!CollectionUtils.isEmpty(itemChildren)) {
+                queue.addAll(itemChildren);
             }
         }
-        if (null == flowNode) {
-            flowNode = new FlowNode();
-            flowNode.setType(EnumFlowType.TARGET);
-            flowNode.setUrl(request.getUri());
-            flowNode.setId(request.getId());
-            flowNode.setRequestTime(request.getTimeCreated());
+        if (null != item) {
+            item.setGraphic(loadIcon(flowNode.getStatus(), flowNode.getContentType()));
         }
-        if (null != response) {
+    }
+
+    private void treeViewFilter() {
+        String text = filterTextField.getText().trim();
+        if (StringUtils.isEmpty(text)) {
+            treeView.setRoot(root);
+            return;
+        }
+        TreeItem<FlowNode> filterRoot = new TreeItem<>(new FlowNode());
+        List<TreeItem<FlowNode>> treeItems = find(text);
+        for (TreeItem<FlowNode> treeItem : treeItems) {
+            List<TreeItem<FlowNode>> list = new LinkedList<>();
+            TreeItem<FlowNode> current = treeItem;
+            while (!current.equals(root)) {
+                list.add(current);
+                current = current.getParent();
+            }
+            Collections.reverse(list);
+            ObservableList<TreeItem<FlowNode>> children = filterRoot.getChildren();
+            for (TreeItem<FlowNode> item : list) {
+                TreeItem<FlowNode> ti = new TreeItem<>(item.getValue());
+                ti.setGraphic(item.getGraphic());
+                ti.setExpanded(true);
+                children.add(ti);
+                children = ti.getChildren();
+            }
+        }
+        treeView.setRoot(filterRoot);
+    }
+
+    private List<TreeItem<FlowNode>> find(String text) {
+        ObservableList<TreeItem<FlowNode>> children = root.getChildren();
+        Queue<TreeItem<FlowNode>> queue = new LinkedList<>(children);
+        List<TreeItem<FlowNode>> list = new LinkedList<>();
+        while (!queue.isEmpty()) {
+            TreeItem<FlowNode> treeItem = queue.poll();
+            ObservableList<TreeItem<FlowNode>> itemChildren = treeItem.getChildren();
+            if (!CollectionUtils.isEmpty(itemChildren)) {
+                queue.addAll(itemChildren);
+            } else {
+                FlowNode node = treeItem.getValue();
+                if (node.getType().equals(EnumFlowType.TARGET) && node.getCurrentUrl().contains(text)) {
+                    list.add(treeItem);
+                }
+            }
+        }
+        return list;
+    }
+
+    public void addFlow(Request request, Response response) throws URISyntaxException {
+        FlowNode flowNode = new FlowNode();
+        flowNode.setId(request.getId());
+        flowNode.setType(EnumFlowType.TARGET);
+        flowNode.setUrl(request.getUri());
+        flowNode.setRequestTime(request.getTimeCreated());
+        if (null == response) {
+            flowNode.setStatus(-1);
+            flowNode.setRequestTime(request.getTimeCreated());
+            addTreeNode(flowNode);
+        } else {
             flowNode.setStatus(response.getStatus());
             flowNode.setContentType(response.getContentType());
+            updateTreeItem(flowNode);
             if (null != currentRequestId && currentRequestId.equals(request.getId())) {
                 QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
                 responseHeaderQueryWrapper.eq("response_id", response.getId());
@@ -1021,10 +1083,8 @@ public class MainController implements Initializable {
                 }
                 fillResponseRawTab(response, responseHeaders);
             }
-        } else {
-            flowNode.setStatus(-1);
-            flowNode.setContentType("");
         }
+        treeViewFilter();
         allNode.add(flowNode);
         filter();
     }

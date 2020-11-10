@@ -24,7 +24,13 @@ public class FlowNode {
 
     private Date requestTime;
 
+    private FlowNode parent;
+
     private List<FlowNode> children;
+
+    private Boolean expanded;
+
+    private String currentUrl;
 
     public String getId() {
         return id;
@@ -58,6 +64,14 @@ public class FlowNode {
         this.type = type;
     }
 
+    public FlowNode getParent() {
+        return parent;
+    }
+
+    public void setParent(FlowNode parent) {
+        this.parent = parent;
+    }
+
     public List<FlowNode> getChildren() {
         return children;
     }
@@ -80,6 +94,22 @@ public class FlowNode {
 
     public void setRequestTime(Date requestTime) {
         this.requestTime = requestTime;
+    }
+
+    public void setExpanded(Boolean expanded) {
+        this.expanded = expanded;
+    }
+
+    public Boolean getExpanded() {
+        return expanded;
+    }
+
+    public String getCurrentUrl() {
+        return currentUrl;
+    }
+
+    public void setCurrentUrl(String currentUrl) {
+        this.currentUrl = currentUrl;
     }
 
     @Override
