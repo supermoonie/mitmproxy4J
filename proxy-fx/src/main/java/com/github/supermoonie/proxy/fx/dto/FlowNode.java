@@ -88,18 +88,19 @@ public class FlowNode {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        FlowNode flowNode = (FlowNode) o;
+        return Objects.equals(id, flowNode.id);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (null == obj) {
-            return false;
-        }
-        if (!(obj instanceof FlowNode)) {
-            return false;
-        }
-        return Objects.deepEquals(this, obj);
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

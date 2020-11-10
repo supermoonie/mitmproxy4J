@@ -89,6 +89,8 @@ public class MainController implements Initializable {
     @FXML
     protected CheckMenuItem throttlingMenuItem;
     @FXML
+    protected CheckMenuItem systemProxyMenuItem;
+    @FXML
     protected CheckMenuItem blockListMenuItem;
     @FXML
     protected CheckMenuItem allowListMenuItem;
@@ -206,6 +208,7 @@ public class MainController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         blockListMenuItem.setSelected(GlobalSetting.getInstance().isBlockUrl());
         allowListMenuItem.setSelected(GlobalSetting.getInstance().isAllowUrl());
+        systemProxyMenuItem.setSelected(GlobalSetting.getInstance().isSystemProxy());
         initToolBar();
         initRecordSetting();
         initThrottlingSetting();
@@ -589,6 +592,22 @@ public class MainController implements Initializable {
             proxySettingStage.show();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
+        }
+    }
+
+    public void onSystemProxyMenuItemClicked() {
+        try {
+            GlobalSetting setting = GlobalSetting.getInstance();
+            if (setting.isSystemProxy()) {
+                ProxyManager.disableSystemProxy();
+            } else {
+                ProxyManager.enableSystemProxy();
+            }
+            setting.setSystemProxy(!setting.isSystemProxy());
+            systemProxyMenuItem.setSelected(setting.isSystemProxy());
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            AlertUtil.error(e);
         }
     }
 
@@ -1023,6 +1042,9 @@ public class MainController implements Initializable {
             imageView.setFitHeight(16);
             imageView.setFitWidth(16);
             return imageView;
+        }
+        if (null == contentType) {
+            return fontAwesome.create(FontAwesome.Glyph.LINK);
         }
         if (status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES) {
             if (contentType.startsWith(ContentType.TEXT_CSS)) {

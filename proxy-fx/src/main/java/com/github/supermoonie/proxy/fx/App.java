@@ -13,10 +13,6 @@ import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -42,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
+ *
  * @author supermoonie
  */
 @SpringBootApplication
@@ -123,6 +120,13 @@ public class App extends Application {
             if (blockUrl.isEnable()) {
                 defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
             }
+        }
+        try {
+            if (instance.isSystemProxy()) {
+                ProxyManager.enableSystemProxy();
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
         }
         instance.portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
         instance.blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlockFlag(newValue));

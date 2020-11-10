@@ -15,7 +15,7 @@ import java.util.HashSet;
  */
 public class GlobalSetting {
 
-    private static GlobalSetting instance = new GlobalSetting();
+    private static final GlobalSetting instance = new GlobalSetting();
 
     private GlobalSetting() {
     }
@@ -23,6 +23,12 @@ public class GlobalSetting {
     private final SimpleBooleanProperty record = new SimpleBooleanProperty(true);
 
     private final SimpleIntegerProperty port = new SimpleIntegerProperty(10801);
+
+    private final SimpleStringProperty username = new SimpleStringProperty();
+
+    private final SimpleStringProperty password = new SimpleStringProperty();
+
+    private final SimpleBooleanProperty systemProxy = new SimpleBooleanProperty(false);
 
     private final SimpleBooleanProperty throttling = new SimpleBooleanProperty(true);
 
@@ -64,6 +70,42 @@ public class GlobalSetting {
 
     public void setPort(int port) {
         this.port.set(port);
+    }
+
+    public String getUsername() {
+        return username.get();
+    }
+
+    public SimpleStringProperty usernameProperty() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username.set(username);
+    }
+
+    public String getPassword() {
+        return password.get();
+    }
+
+    public SimpleStringProperty passwordProperty() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password.set(password);
+    }
+
+    public boolean isSystemProxy() {
+        return systemProxy.get();
+    }
+
+    public SimpleBooleanProperty systemProxyProperty() {
+        return systemProxy;
+    }
+
+    public void setSystemProxy(boolean systemProxy) {
+        this.systemProxy.set(systemProxy);
     }
 
     public boolean isThrottling() {
