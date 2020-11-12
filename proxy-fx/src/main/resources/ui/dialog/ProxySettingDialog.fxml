@@ -11,9 +11,9 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import org.controlsfx.control.ToggleSwitch?>
 
-
-<AnchorPane maxHeight="210.0" maxWidth="315.0" minHeight="210.0" minWidth="315.0" prefHeight="210.0" prefWidth="315.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.dialog.ProxySettingDialog">
+<AnchorPane maxWidth="315.0" minWidth="315.0" prefHeight="260.0" prefWidth="315.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.dialog.ProxySettingDialog">
    <children>
       <VBox fx:id="container" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -29,13 +29,16 @@
                   <Insets left="10.0" />
                </padding>
             </HBox>
-            <GridPane hgap="10.0" prefHeight="123.0" prefWidth="300.0" style="-fx-border-color: #ccc;" VBox.vgrow="ALWAYS">
+            <GridPane hgap="10.0" prefHeight="130.0" prefWidth="300.0" style="-fx-border-color: #ccc;" VBox.vgrow="ALWAYS">
               <columnConstraints>
                 <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="113.0" minWidth="10.0" prefWidth="87.0" />
                 <ColumnConstraints hgrow="SOMETIMES" maxWidth="199.0" minWidth="10.0" prefWidth="196.0" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
                   <Label text="Port : ">
@@ -48,6 +51,32 @@
                         <TextField fx:id="portTextField" />
                      </children>
                   </HBox>
+                  <Label text="Username :" GridPane.rowIndex="2">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+                  <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <children>
+                        <TextField fx:id="usernameTextField" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <children>
+                        <TextField fx:id="passwordTextField" />
+                     </children>
+                  </HBox>
+                  <Label text="Password :" GridPane.rowIndex="3">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+                  <Label text="Auth : " GridPane.rowIndex="1" />
+                  <ToggleSwitch fx:id="authToggleSwitch" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <GridPane.margin>
+                        <Insets left="-20.0" />
+                     </GridPane.margin>
+                  </ToggleSwitch>
                </children>
                <padding>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

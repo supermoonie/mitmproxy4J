@@ -15,6 +15,8 @@ public class SerializeGlobalSetting {
 
     private Integer port;
 
+    private Boolean auth;
+
     private String username;
 
     private String password;
@@ -41,6 +43,14 @@ public class SerializeGlobalSetting {
 
     public void setRecord(Boolean record) {
         this.record = record;
+    }
+
+    public Boolean getAuth() {
+        return auth;
+    }
+
+    public void setAuth(Boolean auth) {
+        this.auth = auth;
     }
 
     public Integer getPort() {

@@ -21,26 +21,28 @@ public final class ProxyManager {
 
     }
 
-    public static void start(int port, InterceptInitializer interceptInitializer) {
+    public static void start(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
         if (null != internalProxy) {
             return;
         }
+        newHttpProxy(port, auth, username, password, interceptInitializer);
+    }
+
+    private static void newHttpProxy(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
         internalProxy = new InternalProxy(interceptInitializer);
         internalProxy.setPort(port);
+        internalProxy.setAuth(auth);
+        internalProxy.setUsername(username);
+        internalProxy.setPassword(password);
         internalProxy.start();
         internalProxy.getTrafficShapingHandler().setCheckInterval(1_000);
         internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
         internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
     }
 
-    public static void restart(int port, InterceptInitializer interceptInitializer) {
+    public static void restart(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
         internalProxy.close();
-        internalProxy = new InternalProxy(interceptInitializer);
-        internalProxy.setPort(port);
-        internalProxy.start();
-        internalProxy.getTrafficShapingHandler().setCheckInterval(1_000);
-        internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
-        internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
+        newHttpProxy(port, auth, username, password, interceptInitializer);
     }
 
     public static void enableSystemProxy() throws IOException {

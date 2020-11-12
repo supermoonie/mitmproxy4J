@@ -2,10 +2,12 @@ package com.github.supermoonie.proxy;
 
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
+import com.github.supermoonie.proxy.util.ResponseUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,11 +83,12 @@ public class InterceptContext {
             logger.debug("requestIntercept: {}, response: {}", key, response);
             if (null != response) {
                 response = onResponse(request, response);
-                clientChannel.writeAndFlush(response);
                 return response;
             }
         }
-        return null;
+        FullHttpResponse httpResponse = ResponseUtils.htmlResponse("Error: " + cause.getMessage(), HttpResponseStatus.OK);
+        httpResponse = onResponse(request, httpResponse);
+        return httpResponse;
     }
 
     FullHttpResponse onResponseException(HttpRequest request, FullHttpResponse response, Throwable cause) {
@@ -99,7 +102,9 @@ public class InterceptContext {
                 return httpResponse;
             }
         }
-        return null;
+        FullHttpResponse httpResponse = ResponseUtils.htmlResponse("Error: " + cause.getMessage(), HttpResponseStatus.OK);
+        httpResponse = onResponse(request, httpResponse);
+        return httpResponse;
     }
 
     public ChannelHandlerContext getNettyClientContext() {

@@ -42,22 +42,18 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     private ChannelFuture remoteChannelFuture;
     private final InternalProxy internalProxy;
     private ConnectionInfo connectionInfo;
-    private String auth;
 
     public InternalProxyHandler(InternalProxy internalProxy,
                                 InterceptInitializer initializer) {
         this.internalProxy = internalProxy;
-        if (null != this.internalProxy.getUsername() && null != this.internalProxy.getPassword()) {
-            auth = "Basic " + Base64.getEncoder().encodeToString((this.internalProxy.getUsername() + ":" + this.internalProxy.getPassword()).getBytes(StandardCharsets.UTF_8));
-            logger.debug("auth: {}", auth);
-        }
         if (null != initializer) {
             initializer.initIntercept(interceptContext.getRequestIntercepts(), interceptContext.getResponseIntercepts());
         }
     }
 
     private void verifyAuth(HttpRequest request) {
-        if (null != auth) {
+        if (this.internalProxy.isAuth() && null != this.internalProxy.getUsername() && null != this.internalProxy.getPassword()) {
+            String auth = "Basic " + Base64.getEncoder().encodeToString((this.internalProxy.getUsername() + ":" + this.internalProxy.getPassword()).getBytes(StandardCharsets.UTF_8));
             String authorization = request.headers().get(HttpHeaderNames.PROXY_AUTHORIZATION);
             if (null == authorization || !authorization.equals(auth)) {
                 throw new AuthorizationFailedException("Authorization Failed!");
@@ -238,8 +234,12 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                                 @Override
                                 public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                                    // TODO
-                                    interceptContext.onResponseException(request, null, cause);
+                                    FullHttpResponse response = interceptContext.onResponseException(request, null, cause);
+                                    if (null == response) {
+                                        ResponseUtils.sendError(clientChannel, cause.getMessage());
+                                    } else {
+                                        clientChannel.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                                    }
                                 }
 
                                 @Override

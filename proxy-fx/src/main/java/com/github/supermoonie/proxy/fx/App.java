@@ -107,7 +107,7 @@ public class App extends Application {
 
     private void initSetting() {
         GlobalSetting instance = GlobalSetting.getInstance();
-        ProxyManager.start(instance.getPort(), initializer);
+        ProxyManager.start(instance.getPort(), instance.isAuth(), instance.getUsername(), instance.getPassword(), initializer);
         ProxyManager.getInternalProxy().setTrafficShaping(instance.isThrottling());
         defaultConfigIntercept.setAllowFlag(instance.isAllowUrl());
         defaultConfigIntercept.setBlockFlag(instance.isBlockUrl());

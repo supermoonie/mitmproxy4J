@@ -121,20 +121,20 @@
                   <VBox layoutX="32.0" layoutY="60.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
                         <TextField fx:id="filterTextField" onKeyPressed="#onFilterTextFieldEnter" />
-                        <TabPane maxHeight="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                        <TabPane fx:id="tabPane" maxHeight="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
                           <tabs>
-                            <Tab text="Structure">
+                            <Tab fx:id="structureTab" text="Structure">
                               <content>
-                                <AnchorPane fx:id="structurePane">
+                                <AnchorPane>
                                        <children>
                                           <TreeView fx:id="treeView" layoutX="1.0" layoutY="6.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                        </children>
                                     </AnchorPane>
                               </content>
                             </Tab>
-                            <Tab text="Sequence">
+                            <Tab fx:id="sequenceTab" text="Sequence">
                               <content>
-                                <AnchorPane fx:id="sequencePane">
+                                <AnchorPane>
                                        <children>
                                           <ListView fx:id="listView" layoutX="1.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                        </children>

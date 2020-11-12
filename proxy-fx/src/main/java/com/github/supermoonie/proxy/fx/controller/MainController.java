@@ -26,9 +26,9 @@ import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -42,7 +42,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -96,9 +95,11 @@ public class MainController implements Initializable {
     @FXML
     protected MenuItem jsonViewerMenuItem;
     @FXML
-    protected AnchorPane structurePane;
+    protected TabPane tabPane;
     @FXML
-    protected AnchorPane sequencePane;
+    protected Tab structureTab;
+    @FXML
+    protected Tab sequenceTab;
     @FXML
     protected TreeView<FlowNode> treeView;
     @FXML
@@ -174,7 +175,7 @@ public class MainController implements Initializable {
     @FXML
     protected Button recordingSwitchButton;
 
-    private final ContextMenu contextMenu = new ContextMenu();
+    private final ContextMenu treeContextMenu = new ContextMenu();
     private final MenuItem copyMenuItem = new MenuItem("Copy URL");
     private final MenuItem copyResponseMenuItem = new MenuItem("Copy Response");
     private final MenuItem saveResponseMenuItem = new MenuItem("Save Response");
@@ -182,6 +183,15 @@ public class MainController implements Initializable {
     private final MenuItem editMenuItem = new MenuItem("Edit");
     private final MenuItem blockMenuItem = new MenuItem("Block List");
     private final MenuItem allowMenuItem = new MenuItem("Allow List");
+
+    private final ContextMenu listContextMenu = new ContextMenu();
+    private final MenuItem copyMi = new MenuItem("Copy URL");
+    private final MenuItem copyResponseMi = new MenuItem("Copy Response");
+    private final MenuItem saveResponseMi = new MenuItem("Save Response");
+    private final MenuItem repeatMi = new MenuItem("Repeat");
+    private final MenuItem editMi = new MenuItem("Edit");
+    private final MenuItem blockMi = new MenuItem("Block List");
+    private final MenuItem allowMi = new MenuItem("Allow List");
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
@@ -200,7 +210,7 @@ public class MainController implements Initializable {
     private final Image grayDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_gray.png"), 16, 16, false, false);
     private final Image greenDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_green.png"), 16, 16, false, false);
 
-    private final ObservableSet<FlowNode> allNode = FXCollections.observableSet(new TreeSet<>(Comparator.comparing(FlowNode::getRequestTime)));
+    private final ObservableList<FlowNode> allNode = FXCollections.observableList(new LinkedList<>());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     private String currentRequestId;
 
@@ -212,8 +222,36 @@ public class MainController implements Initializable {
         initToolBar();
         initRecordSetting();
         initThrottlingSetting();
-        initFlowListContextMenu();
+        initContextMenu();
         initTreeView();
+        initListView();
+        initResponseJsonWebView();
+        clear();
+    }
+
+    private void initListView() {
+        listView.setCellFactory(param -> new ListCell<>() {
+            private final ChangeListener<Number> statusChangeListener = (observable, oldValue, newValue) -> {
+                if (null == newValue || null == getItem()) {
+                    return;
+                }
+                setGraphic(loadIcon(getItem().getStatus(), getItem().getContentType(), false));
+            };
+
+            @Override
+            protected void updateItem(FlowNode item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.getUrl());
+                    setGraphic(loadIcon(item.getStatus(), item.getContentType(), false));
+                    item.statusPropertyProperty().removeListener(statusChangeListener);
+                    item.statusPropertyProperty().addListener(statusChangeListener);
+                }
+            }
+        });
         listView.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
             FlowNode selectedItem = listView.getSelectionModel().getSelectedItem();
             if (null == selectedItem) {
@@ -221,15 +259,14 @@ public class MainController implements Initializable {
             }
             fillMainView(selectedItem);
         });
-        initResponseJsonWebView();
-        clear();
+        listView.setContextMenu(listContextMenu);
     }
 
     private void initTreeView() {
         treeView.setRoot(root);
         treeView.setShowRoot(false);
-        treeView.setContextMenu(contextMenu);
-        treeView.contextMenuProperty().bind(Bindings.when(treeView.getSelectionModel().selectedItemProperty().isNull()).then((ContextMenu) null).otherwise(contextMenu));
+        treeView.setContextMenu(treeContextMenu);
+        treeView.contextMenuProperty().bind(Bindings.when(treeView.getSelectionModel().selectedItemProperty().isNull()).then((ContextMenu) null).otherwise(treeContextMenu));
         treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
             if (null == selectedItem) {
@@ -291,32 +328,51 @@ public class MainController implements Initializable {
     }
 
     private final EventHandler<ActionEvent> copyMenuItemHandler = event -> {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
-            return;
-        }
-        FlowNode node = selectedItem.getValue();
-        if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-            List<String> list = new LinkedList<>();
-            TreeItem<FlowNode> current = selectedItem;
-            while (current != treeView.getRoot()) {
-                list.add(current.getValue().getUrl());
-                current = current.getParent();
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
             }
-            Collections.reverse(list);
-            String url = String.join("/", list);
-            ClipboardUtil.copyText(url);
+            FlowNode node = selectedItem.getValue();
+            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+                List<String> list = new LinkedList<>();
+                TreeItem<FlowNode> current = selectedItem;
+                while (current != treeView.getRoot()) {
+                    list.add(current.getValue().getUrl());
+                    current = current.getParent();
+                }
+                Collections.reverse(list);
+                String url = String.join("/", list);
+                ClipboardUtil.copyText(url);
+            } else {
+                ClipboardUtil.copyText(node.getUrl());
+            }
         } else {
+            FlowNode node = listView.getSelectionModel().getSelectedItem();
+            if (null == node) {
+                return;
+            }
             ClipboardUtil.copyText(node.getUrl());
         }
+
     };
 
     private final EventHandler<ActionEvent> copyResponseMenuItemHandler = event -> {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
-            return;
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        FlowNode node;
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            node = selectedItem.getValue();
+        } else {
+            node = listView.getSelectionModel().getSelectedItem();
+            if (node == null) {
+                return;
+            }
         }
-        FlowNode node = selectedItem.getValue();
         Request request = requestMapper.selectById(node.getId());
         QueryWrapper<Response> resQuery = new QueryWrapper<>();
         resQuery.eq("request_id", request.getId());
@@ -336,11 +392,20 @@ public class MainController implements Initializable {
     };
 
     private final EventHandler<ActionEvent> saveResponseMenuItemHandler = event -> {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
-            return;
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        FlowNode node;
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            node = selectedItem.getValue();
+        } else {
+            node = listView.getSelectionModel().getSelectedItem();
+            if (node == null) {
+                return;
+            }
         }
-        FlowNode node = selectedItem.getValue();
         Request request = requestMapper.selectById(node.getId());
         QueryWrapper<Response> resQuery = new QueryWrapper<>();
         resQuery.eq("request_id", request.getId());
@@ -365,79 +430,119 @@ public class MainController implements Initializable {
     };
 
     private final EventHandler<ActionEvent> editMenuItemHandler = event -> {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
-            return;
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        FlowNode node;
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            node = selectedItem.getValue();
+        } else {
+            node = listView.getSelectionModel().getSelectedItem();
+            if (node == null) {
+                return;
+            }
         }
-        FlowNode node = selectedItem.getValue();
         onSendRequestMenuItemClicked().setRequestId(node.getId());
     };
 
     private final EventHandler<ActionEvent> addBlockListMenuItemHandler = event -> {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
-            return;
-        }
         GlobalSetting setting = GlobalSetting.getInstance();
-        FlowNode node = selectedItem.getValue();
-        String url;
-        if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-            List<String> list = new LinkedList<>();
-            TreeItem<FlowNode> current = selectedItem;
-            while (current != treeView.getRoot()) {
-                list.add(current.getValue().getUrl());
-                current = current.getParent();
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        FlowNode node;
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
             }
-            Collections.reverse(list);
-            url = String.join("/", list);
+            node = selectedItem.getValue();
+            String url;
+            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+                List<String> list = new LinkedList<>();
+                TreeItem<FlowNode> current = selectedItem;
+                while (current != treeView.getRoot()) {
+                    list.add(current.getValue().getUrl());
+                    current = current.getParent();
+                }
+                Collections.reverse(list);
+                url = String.join("/", list);
+            } else {
+                url = node.getUrl();
+            }
+            BlockUrl blockUrl = new BlockUrl(true, url);
+            setting.getBlockUrlList().add(blockUrl);
         } else {
-            url = node.getUrl();
+            node = listView.getSelectionModel().getSelectedItem();
+            if (node == null) {
+                return;
+            }
+            BlockUrl blockUrl = new BlockUrl(true, node.getUrl());
+            setting.getBlockUrlList().add(blockUrl);
         }
-        BlockUrl blockUrl = new BlockUrl(true, url);
-        setting.getBlockUrlList().remove(blockUrl);
-        setting.getBlockUrlList().add(blockUrl);
     };
 
     private final EventHandler<ActionEvent> addAllowListMenuItemHandler = event -> {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
-            return;
-        }
         GlobalSetting setting = GlobalSetting.getInstance();
-        FlowNode node = selectedItem.getValue();
-        String url;
-        if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-            List<String> list = new LinkedList<>();
-            TreeItem<FlowNode> current = selectedItem;
-            while (current != treeView.getRoot()) {
-                list.add(current.getValue().getUrl());
-                current = current.getParent();
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        FlowNode node;
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
             }
-            Collections.reverse(list);
-            url = String.join("/", list);
+            node = selectedItem.getValue();
+            String url;
+            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
+                List<String> list = new LinkedList<>();
+                TreeItem<FlowNode> current = selectedItem;
+                while (current != treeView.getRoot()) {
+                    list.add(current.getValue().getUrl());
+                    current = current.getParent();
+                }
+                Collections.reverse(list);
+                url = String.join("/", list);
+            } else {
+                url = node.getUrl();
+            }
+            AllowUrl allowUrl = new AllowUrl(true, url);
+            setting.getAllowUrlList().add(allowUrl);
         } else {
-            url = node.getUrl();
+            node = listView.getSelectionModel().getSelectedItem();
+            if (node == null) {
+                return;
+            }
+            AllowUrl allowUrl = new AllowUrl(true, node.getUrl());
+            setting.getAllowUrlList().add(allowUrl);
         }
-        AllowUrl allowUrl = new AllowUrl(true, url);
-        setting.getAllowUrlList().remove(allowUrl);
-        setting.getAllowUrlList().add(allowUrl);
+
     };
 
-    private void initFlowListContextMenu() {
+    private void initContextMenu() {
         copyMenuItem.setOnAction(copyMenuItemHandler);
         copyResponseMenuItem.setOnAction(copyResponseMenuItemHandler);
         saveResponseMenuItem.setOnAction(saveResponseMenuItemHandler);
-        editMenuItem.setOnAction(editMenuItemHandler);
         repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
+        editMenuItem.setOnAction(editMenuItemHandler);
         blockMenuItem.setOnAction(addBlockListMenuItemHandler);
         allowMenuItem.setOnAction(addAllowListMenuItemHandler);
-        contextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
-        contextMenu.setOnShowing(event -> {
+        treeContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
+        listContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
+        treeContextMenu.setOnShowing(event -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
             if (null == selectedItem) {
                 return;
             }
             FlowNode node = selectedItem.getValue();
+            boolean disable = node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET);
+            copyResponseMenuItem.setDisable(disable);
+            saveResponseMenuItem.setDisable(disable);
+        });
+        listContextMenu.setOnShowing(event -> {
+            FlowNode node = listView.getSelectionModel().getSelectedItem();
+            if (null == node) {
+                return;
+            }
             boolean disable = node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET);
             copyResponseMenuItem.setDisable(disable);
             saveResponseMenuItem.setDisable(disable);
@@ -736,7 +841,7 @@ public class MainController implements Initializable {
     public void onFilterTextFieldEnter(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             treeViewFilter();
-            filter();
+            listViewFilter();
             if (null != currentRequestId) {
                 ObservableList<FlowNode> flowNodes = listView.getItems();
                 boolean present = flowNodes.stream().anyMatch(node -> node.getId().equals(currentRequestId));
@@ -747,7 +852,7 @@ public class MainController implements Initializable {
         }
     }
 
-    private void filter() {
+    private void listViewFilter() {
         String text = filterTextField.getText().trim();
         listView.getItems().clear();
         if (!StringUtils.isEmpty(text)) {
@@ -759,7 +864,6 @@ public class MainController implements Initializable {
         } else {
             allNode.forEach(node -> listView.getItems().add(node));
         }
-
     }
 
     private void clear() {
@@ -1009,7 +1113,10 @@ public class MainController implements Initializable {
             }
         }
         if (null != item) {
-            item.setGraphic(loadIcon(flowNode.getStatus(), flowNode.getContentType()));
+            item.getValue().setStatus(flowNode.getStatus());
+            item.getValue().setContentType(flowNode.getContentType());
+            Node node = loadIcon(flowNode.getStatus(), flowNode.getContentType());
+            item.setGraphic(node);
         }
     }
 
@@ -1020,10 +1127,10 @@ public class MainController implements Initializable {
             return;
         }
         TreeItem<FlowNode> filterRoot = new TreeItem<>(new FlowNode());
-        List<TreeItem<FlowNode>> treeItems = find(text);
-        for (TreeItem<FlowNode> treeItem : treeItems) {
+        List<TreeItem<FlowNode>> leafItems = findInTree(text);
+        for (TreeItem<FlowNode> leafItem : leafItems) {
             List<TreeItem<FlowNode>> list = new LinkedList<>();
-            TreeItem<FlowNode> current = treeItem;
+            TreeItem<FlowNode> current = leafItem;
             while (!current.equals(root)) {
                 list.add(current);
                 current = current.getParent();
@@ -1031,8 +1138,17 @@ public class MainController implements Initializable {
             Collections.reverse(list);
             ObservableList<TreeItem<FlowNode>> children = filterRoot.getChildren();
             for (TreeItem<FlowNode> item : list) {
-                TreeItem<FlowNode> ti = new TreeItem<>(item.getValue());
-                ti.setGraphic(item.getGraphic());
+                FlowNode value = item.getValue();
+                TreeItem<FlowNode> ti = new TreeItem<>(value);
+                Node node;
+                if (value.getType().equals(EnumFlowType.TARGET)) {
+                    node = loadIcon(item.getValue().getStatus(), item.getValue().getContentType());
+                } else if (value.getType().equals(EnumFlowType.PATH)) {
+                    node = fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT);
+                } else {
+                    node = fontAwesome.create(FontAwesome.Glyph.GLOBE);
+                }
+                ti.setGraphic(node);
                 ti.setExpanded(true);
                 children.add(ti);
                 children = ti.getChildren();
@@ -1041,7 +1157,7 @@ public class MainController implements Initializable {
         treeView.setRoot(filterRoot);
     }
 
-    private List<TreeItem<FlowNode>> find(String text) {
+    private List<TreeItem<FlowNode>> findInTree(String text) {
         ObservableList<TreeItem<FlowNode>> children = root.getChildren();
         Queue<TreeItem<FlowNode>> queue = new LinkedList<>(children);
         List<TreeItem<FlowNode>> list = new LinkedList<>();
@@ -1070,9 +1186,15 @@ public class MainController implements Initializable {
             flowNode.setStatus(-1);
             flowNode.setRequestTime(request.getTimeCreated());
             addTreeNode(flowNode);
+            allNode.add(flowNode);
         } else {
             flowNode.setStatus(response.getStatus());
             flowNode.setContentType(response.getContentType());
+            allNode.stream().filter(item -> item.getId().equals(flowNode.getId())).findFirst().ifPresent(node -> {
+                node.setContentType(response.getContentType());
+                node.setStatus(response.getStatus());
+                node.setStatusProperty(response.getStatus());
+            });
             updateTreeItem(flowNode);
             if (null != currentRequestId && currentRequestId.equals(request.getId())) {
                 QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
@@ -1085,8 +1207,7 @@ public class MainController implements Initializable {
             }
         }
         treeViewFilter();
-        allNode.add(flowNode);
-        filter();
+        listViewFilter();
     }
 
     private void appendTab(TabPane tabPane, Tab tab) {
@@ -1097,34 +1218,41 @@ public class MainController implements Initializable {
     }
 
     private Node loadIcon(int status, String contentType) {
+        return loadIcon(status, contentType, true);
+    }
+
+    private Node loadIcon(int status, String contentType, boolean coloring) {
         if (status == -1) {
             ImageView imageView = new ImageView(blackLoadingIcon);
             imageView.setFitHeight(16);
             imageView.setFitWidth(16);
             return imageView;
         }
-        if (null == contentType) {
-            return fontAwesome.create(FontAwesome.Glyph.LINK);
-        }
         if (status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES) {
+            if (null == contentType) {
+                return fontAwesome.create(FontAwesome.Glyph.LINK);
+            }
             if (contentType.startsWith(ContentType.TEXT_CSS)) {
-                Color color = Color.web("#3077b8");
-                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.CSS3).color(color);
-                glyph.setUserData(color);
+                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.CSS3);
+                if (coloring) {
+                    Color color = Color.web("#3077b8");
+                    glyph.color(color);
+                    glyph.setUserData(color);
+                }
                 return glyph;
             } else if (contentType.startsWith(ContentType.TEXT_XML) || contentType.startsWith(ContentType.APPLICATION_XML)) {
-                Color color = Color.web("#ee8745");
-                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.FILE_CODE_ALT).color(color);
-                glyph.setUserData(color);
-                return fontAwesome.create(FontAwesome.Glyph.FILE_CODE_ALT);
+                return fontAwesome.create(FontAwesome.Glyph.CODE);
             } else if (contentType.startsWith(ContentType.TEXT_PLAIN)) {
                 return fontAwesome.create(FontAwesome.Glyph.FILE_TEXT_ALT);
             } else if (contentType.startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
                 return fontAwesome.create(FontAwesome.Glyph.CODE);
             } else if (contentType.startsWith(ContentType.TEXT_HTML)) {
-                Color color = Color.web("#d65a26");
-                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.HTML5).color(color);
-                glyph.setUserData(color);
+                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.HTML5);
+                if (coloring) {
+                    Color color = Color.web("#d65a26");
+                    glyph.color(color);
+                    glyph.setUserData(color);
+                }
                 return glyph;
             } else if (contentType.startsWith(ContentType.APPLICATION_JSON)) {
                 return fontAwesome.create(FontAwesome.Glyph.CODE);
@@ -1133,12 +1261,14 @@ public class MainController implements Initializable {
             }
         } else if (status >= HttpStatus.SC_MULTIPLE_CHOICES && status < HttpStatus.SC_BAD_REQUEST) {
             Glyph glyph = fontAwesome.create(FontAwesome.Glyph.SHARE);
-            glyph.setColor(Color.web("#f8aa19"));
+            if (coloring) {
+                Color color = Color.web("#f8aa19");
+                glyph.color(color);
+                glyph.setUserData(color);
+            }
             return glyph;
         } else if (status >= HttpStatus.SC_BAD_REQUEST && status < HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-            Glyph glyph = fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
-            glyph.setColor(Color.web("#cccccc"));
-            return glyph;
+            return fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
         } else if (status >= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
             return fontAwesome.create(FontAwesome.Glyph.BOMB);
         }

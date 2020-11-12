@@ -22,6 +22,8 @@ public class GlobalSetting {
 
     private final SimpleBooleanProperty record = new SimpleBooleanProperty(true);
 
+    private final SimpleBooleanProperty auth = new SimpleBooleanProperty(false);
+
     private final SimpleIntegerProperty port = new SimpleIntegerProperty(10801);
 
     private final SimpleStringProperty username = new SimpleStringProperty();
@@ -70,6 +72,18 @@ public class GlobalSetting {
 
     public void setPort(int port) {
         this.port.set(port);
+    }
+
+    public boolean isAuth() {
+        return auth.get();
+    }
+
+    public SimpleBooleanProperty authProperty() {
+        return auth;
+    }
+
+    public void setAuth(boolean auth) {
+        this.auth.set(auth);
     }
 
     public String getUsername() {

@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.fx.dto;
 
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import javafx.beans.property.SimpleIntegerProperty;
 
 import java.util.Date;
 import java.util.List;
@@ -17,6 +18,8 @@ public class FlowNode {
     private String url;
 
     private int status;
+
+    private final SimpleIntegerProperty statusProperty = new SimpleIntegerProperty(-1);
 
     private EnumFlowType type;
 
@@ -54,6 +57,18 @@ public class FlowNode {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public int getStatusProperty() {
+        return statusProperty.get();
+    }
+
+    public SimpleIntegerProperty statusPropertyProperty() {
+        return statusProperty;
+    }
+
+    public void setStatusProperty(int statusProperty) {
+        this.statusProperty.set(statusProperty);
     }
 
     public EnumFlowType getType() {

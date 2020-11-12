@@ -16,7 +16,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 public final class ResponseUtils {
 
     public static void sendError(Channel channel, String error) {
-        error = "<h1>Error: " + error + "</h1>";
+        error = "Error: " + error;
         HttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
         // Close the connection as soon as the error message is sent.
         channel.writeAndFlush(response)

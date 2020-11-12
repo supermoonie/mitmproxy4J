@@ -48,6 +48,7 @@ public class InternalProxy {
     private NioEventLoopGroup proxyThreads;
     private int maxContentSize = DEFAULT_MAX_CONTENT_SIZE;
     private int port = DEFAULT_PORT;
+    private volatile boolean auth = false;
     private String username;
     private String password;
     private String caPath;
@@ -310,6 +311,14 @@ public class InternalProxy {
 
     public CertificateConfig getCertificateConfig() {
         return certificateConfig;
+    }
+
+    public boolean isAuth() {
+        return auth;
+    }
+
+    public void setAuth(boolean auth) {
+        this.auth = auth;
     }
 
     public String getUsername() {

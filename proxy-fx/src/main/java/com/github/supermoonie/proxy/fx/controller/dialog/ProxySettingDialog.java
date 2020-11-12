@@ -7,19 +7,16 @@ import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import org.controlsfx.control.NotificationPane;
-import org.controlsfx.glyphfont.FontAwesome;
-import org.controlsfx.glyphfont.Glyph;
-import org.controlsfx.glyphfont.GlyphFont;
-import org.controlsfx.glyphfont.GlyphFontRegistry;
+import org.controlsfx.control.ToggleSwitch;
+import org.springframework.util.StringUtils;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -37,18 +34,40 @@ public class ProxySettingDialog implements Initializable {
     protected TextField portTextField;
 
     @FXML
+    protected ToggleSwitch authToggleSwitch;
+
+    @FXML
+    protected TextField usernameTextField;
+
+    @FXML
+    protected TextField passwordTextField;
+
+    @FXML
     protected Button confirmButton;
 
     @FXML
     protected Button cancelButton;
-
-    private final GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
 
     private Stage stage;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         portTextField.setText(String.valueOf(GlobalSetting.getInstance().getPort()));
+        if (GlobalSetting.getInstance().isAuth()) {
+            authToggleSwitch.setSelected(true);
+            usernameTextField.setDisable(false);
+            passwordTextField.setDisable(false);
+        } else {
+            authToggleSwitch.setSelected(false);
+            usernameTextField.setDisable(true);
+            passwordTextField.setDisable(true);
+        }
+        authToggleSwitch.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            usernameTextField.setDisable(!newValue);
+            passwordTextField.setDisable(!newValue);
+        });
+        usernameTextField.setText(GlobalSetting.getInstance().getUsername());
+        passwordTextField.setText(GlobalSetting.getInstance().getPassword());
     }
 
     public void onConfirmButtonClicked() {
@@ -61,15 +80,34 @@ public class ProxySettingDialog implements Initializable {
             portTextField.requestFocus();
             return;
         }
-        if (GlobalSetting.getInstance().getPort() != port) {
+        String username = usernameTextField.getText();
+        String password = passwordTextField.getText();
+        if (authToggleSwitch.isSelected()) {
+            if (StringUtils.isEmpty(username)) {
+                AlertUtil.warning("Username Is Empty !");
+                usernameTextField.requestFocus();
+                return;
+            }
+            if (StringUtils.isEmpty(password)) {
+                AlertUtil.warning("Password Is Empty !");
+                passwordTextField.requestFocus();
+                return;
+            }
+        }
+        final GlobalSetting instance = GlobalSetting.getInstance();
+        boolean restartFlag = instance.getPort() != port || authToggleSwitch.isSelected() != instance.isAuth() || !username.equals(instance.getUsername()) || !password.equals(instance.getPassword());
+        if (restartFlag) {
             confirmButton.setText("Restarting...");
             confirmButton.setDisable(true);
             cancelButton.setDisable(true);
             App.EXECUTOR.execute(() -> {
                 InternalProxyInterceptInitializer initializer = ApplicationContextUtil.getBean(InternalProxyInterceptInitializer.class);
-                ProxyManager.restart(port, initializer);
+                ProxyManager.restart(port, authToggleSwitch.isSelected(), username, password, initializer);
                 Platform.runLater(() -> {
-                    GlobalSetting.getInstance().setPort(port);
+                    instance.setPort(port);
+                    instance.setAuth(authToggleSwitch.isSelected());
+                    instance.setUsername(username);
+                    instance.setPassword(password);
                     confirmButton.setText("Confirm");
                     confirmButton.setDisable(false);
                     cancelButton.setDisable(false);
