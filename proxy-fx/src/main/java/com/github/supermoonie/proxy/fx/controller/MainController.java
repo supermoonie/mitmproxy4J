@@ -27,6 +27,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -216,6 +217,13 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        tabPane.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (structureTab.equals(newValue)) {
+                filterTextField.setPromptText("Domain Filter");
+            } else if (sequenceTab.equals(newValue)) {
+                filterTextField.setPromptText("Filter");
+            }
+        });
         blockListMenuItem.setSelected(GlobalSetting.getInstance().isBlockUrl());
         allowListMenuItem.setSelected(GlobalSetting.getInstance().isAllowUrl());
         systemProxyMenuItem.setSelected(GlobalSetting.getInstance().isSystemProxy());
@@ -1127,34 +1135,30 @@ public class MainController implements Initializable {
             return;
         }
         TreeItem<FlowNode> filterRoot = new TreeItem<>(new FlowNode());
-        List<TreeItem<FlowNode>> leafItems = findInTree(text);
-        for (TreeItem<FlowNode> leafItem : leafItems) {
-            List<TreeItem<FlowNode>> list = new LinkedList<>();
-            TreeItem<FlowNode> current = leafItem;
-            while (!current.equals(root)) {
-                list.add(current);
-                current = current.getParent();
-            }
-            Collections.reverse(list);
-            ObservableList<TreeItem<FlowNode>> children = filterRoot.getChildren();
-            for (TreeItem<FlowNode> item : list) {
-                FlowNode value = item.getValue();
-                TreeItem<FlowNode> ti = new TreeItem<>(value);
-                Node node;
-                if (value.getType().equals(EnumFlowType.TARGET)) {
-                    node = loadIcon(item.getValue().getStatus(), item.getValue().getContentType());
-                } else if (value.getType().equals(EnumFlowType.PATH)) {
-                    node = fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT);
-                } else {
-                    node = fontAwesome.create(FontAwesome.Glyph.GLOBE);
-                }
-                ti.setGraphic(node);
-                ti.setExpanded(true);
-                children.add(ti);
-                children = ti.getChildren();
+        ObservableList<TreeItem<FlowNode>> children = root.getChildren();
+        for (TreeItem<FlowNode> item : children) {
+            if (item.getValue().getUrl().contains(text)) {
+                filterRoot.getChildren().add(item);
             }
         }
         treeView.setRoot(filterRoot);
+    }
+
+    private List<TreeItem<FlowNode>> getLayer(TreeItem<FlowNode> root, int index) {
+        List<TreeItem<FlowNode>> layer = new LinkedList<>();
+        layer.add(root);
+        for (int i = 0; i < index; i ++) {
+            List<TreeItem<FlowNode>> temp = new LinkedList<>();
+            for (TreeItem<FlowNode> treeItem : layer) {
+                ObservableList<TreeItem<FlowNode>> children = treeItem.getChildren();
+                if (!CollectionUtils.isEmpty(children)) {
+                    temp.addAll(children);
+                }
+            }
+            layer.clear();
+            layer.addAll(temp);
+        }
+        return layer;
     }
 
     private List<TreeItem<FlowNode>> findInTree(String text) {
