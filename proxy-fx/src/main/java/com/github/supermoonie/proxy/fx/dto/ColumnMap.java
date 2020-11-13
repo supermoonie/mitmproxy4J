@@ -1,5 +1,7 @@
 package com.github.supermoonie.proxy.fx.dto;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -41,7 +43,7 @@ public class ColumnMap {
         if (form.length == 1) {
             return new ColumnMap(form[0], "");
         } else if (form.length == 2) {
-            return new ColumnMap(form[0], form[1]);
+            return new ColumnMap(form[0], URLDecoder.decode(form[1], StandardCharsets.UTF_8));
         }
         return null;
     }

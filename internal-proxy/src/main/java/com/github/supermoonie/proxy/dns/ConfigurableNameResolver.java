@@ -31,14 +31,15 @@ public class ConfigurableNameResolver extends InetNameResolver {
 
     @Override
     protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
-        logger.debug("resolve " + inetHost);
         InetAddress inetAddress = DNS_MAP.get(inetHost);
         if (null != inetAddress) {
             promise.setSuccess(inetAddress);
             return;
         }
         try {
-            promise.setSuccess(SocketUtils.addressByName(inetHost));
+            inetAddress = SocketUtils.addressByName(inetHost);
+            logger.debug("resolve {}, result: {}", inetHost, inetAddress);
+            promise.setSuccess(inetAddress);
         } catch (UnknownHostException e) {
             promise.setFailure(e);
         }

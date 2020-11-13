@@ -19,7 +19,7 @@ public class SecondProxyTest {
         });
         InternalProxy.SecondProxyConfig secondProxyConfig = new InternalProxy.SecondProxyConfig();
         secondProxyConfig.setHost("127.0.0.1");
-        secondProxyConfig.setPort(7890);
+        secondProxyConfig.setPort(8888);
         secondProxyConfig.setProxyType(ProxyType.HTTP);
         proxy.setSecondProxyConfig(secondProxyConfig);
         proxy.setWorkerThreads(new NioEventLoopGroup(16));

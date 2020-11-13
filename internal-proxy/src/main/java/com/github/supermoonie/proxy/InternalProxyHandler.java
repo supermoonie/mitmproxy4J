@@ -101,7 +101,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     ctx.pipeline().remove("aggregator");
                     ReferenceCountUtil.release(msg);
                     status = ConnectionStatus.CONNECTED_WITH_CLIENT;
-//                    ReferenceCountUtil.release(msg);
                     return;
                 }
             }
@@ -109,8 +108,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             verifyAuth(request);
             String separator = "/";
             if (request.uri().startsWith(separator)) {
-                // TODO Host 与 URL 不一致
-                request.setUri((connectionInfo.isHttps() ? "https://" : "http://") + request.headers().get(HttpHeaderNames.HOST) + request.uri());
+                connectionInfo.setUrl((connectionInfo.isHttps() ? "https://" : "http://") + connectionInfo.getRemoteHost() + request.uri());
             }
             logger.debug("url: " + request.uri());
             if (connectionInfo.isHttps()) {

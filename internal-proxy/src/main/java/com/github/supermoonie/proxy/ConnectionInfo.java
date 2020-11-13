@@ -6,6 +6,8 @@ package com.github.supermoonie.proxy;
  */
 public class ConnectionInfo {
 
+    private String url;
+
     private String hostHeader;
 
     private String remoteHost;
@@ -21,6 +23,14 @@ public class ConnectionInfo {
     private boolean useSecondProxy = true;
 
     private volatile boolean finished = false;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public String getRemoteHost() {
         return remoteHost;
@@ -89,7 +99,8 @@ public class ConnectionInfo {
     @Override
     public String toString() {
         return "ConnectionInfo{" +
-                "hostHeader='" + hostHeader + '\'' +
+                "url='" + url + '\'' +
+                ", hostHeader='" + hostHeader + '\'' +
                 ", remoteHost='" + remoteHost + '\'' +
                 ", remotePort=" + remotePort +
                 ", clientHost='" + clientHost + '\'' +

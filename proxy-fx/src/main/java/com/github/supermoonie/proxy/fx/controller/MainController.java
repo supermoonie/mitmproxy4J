@@ -186,13 +186,6 @@ public class MainController implements Initializable {
     private final MenuItem allowMenuItem = new MenuItem("Allow List");
 
     private final ContextMenu listContextMenu = new ContextMenu();
-    private final MenuItem copyMi = new MenuItem("Copy URL");
-    private final MenuItem copyResponseMi = new MenuItem("Copy Response");
-    private final MenuItem saveResponseMi = new MenuItem("Save Response");
-    private final MenuItem repeatMi = new MenuItem("Repeat");
-    private final MenuItem editMi = new MenuItem("Edit");
-    private final MenuItem blockMi = new MenuItem("Block List");
-    private final MenuItem allowMi = new MenuItem("Allow List");
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
@@ -838,6 +831,8 @@ public class MainController implements Initializable {
     }
 
     public void onClearButtonClicked() {
+        root.getChildren().clear();
+        allNode.clear();
         clear();
         currentRequestId = null;
         treeView.getRoot().getChildren().clear();

@@ -41,8 +41,8 @@ public class SettingUtil {
             instance.setRecord(Objects.requireNonNullElse(globalSetting.getRecord(), true));
             instance.setPort(Objects.requireNonNullElse(globalSetting.getPort(), 10801));
             instance.setAuth(Objects.requireNonNullElse(globalSetting.getAuth(), false));
-            instance.setUsername(globalSetting.getUsername());
-            instance.setPassword(globalSetting.getPassword());
+            instance.setUsername(Objects.requireNonNullElse(globalSetting.getUsername(), ""));
+            instance.setPassword(Objects.requireNonNullElse(globalSetting.getPassword(), ""));
             instance.setSystemProxy(Objects.requireNonNullElse(globalSetting.getSystemProxy(), false));
             instance.setThrottling(Objects.requireNonNullElse(globalSetting.getThrottling(), false));
             instance.setThrottlingWriteLimit(Objects.requireNonNullElse(globalSetting.getThrottlingWriteLimit(), 320L));

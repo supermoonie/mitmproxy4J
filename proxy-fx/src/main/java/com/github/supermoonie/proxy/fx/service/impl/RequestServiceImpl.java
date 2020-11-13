@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.fx.service.impl;
 
 import com.github.supermoonie.proxy.ConnectionInfo;
+import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
@@ -44,8 +45,8 @@ public class RequestServiceImpl implements RequestService {
 
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
-    public Request saveRequest(HttpRequest httpRequest) {
-        ConnectionInfo connectionInfo = RequestUtils.parseRemoteInfo(httpRequest, null);
+    public Request saveRequest(InterceptContext ctx, HttpRequest httpRequest) {
+        ConnectionInfo connectionInfo = ctx.getConnectionInfo();
         Assert.notNull(connectionInfo, "ConnectionInfo is null!");
         String host = connectionInfo.getRemoteHost();
         int port = connectionInfo.getRemotePort();
@@ -54,7 +55,7 @@ public class RequestServiceImpl implements RequestService {
         String contentType = httpRequest.headers().get(HttpHeaders.CONTENT_TYPE);
         Request req = new Request();
         req.setId(UUID.randomUUID().toString());
-        req.setUri(httpRequest.uri());
+        req.setUri(connectionInfo.getUrl());
         req.setMethod(method.name());
         req.setHttpVersion(httpVersion.text());
         req.setContentType(contentType);

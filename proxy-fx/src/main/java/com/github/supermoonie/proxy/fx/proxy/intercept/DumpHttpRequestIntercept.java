@@ -35,7 +35,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
         if (GlobalSetting.getInstance().isRecord()) {
-            Request req = requestService.saveRequest(request);
+            Request req = requestService.saveRequest(ctx, request);
             ctx.setUserData(req);
             Platform.runLater(() -> {
                 try {

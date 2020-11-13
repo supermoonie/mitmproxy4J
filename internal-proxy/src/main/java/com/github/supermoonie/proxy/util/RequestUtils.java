@@ -92,7 +92,6 @@ public final class RequestUtils {
                 } else {
                     return null;
                 }
-
             }
         }
         return info;
