@@ -40,7 +40,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
             Platform.runLater(() -> {
                 try {
                     MainController mainController = App.getMainController();
-                    mainController.addFlow(req, null);
+                    mainController.addFlow(ctx.getConnectionInfo(), req, null);
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
                 }

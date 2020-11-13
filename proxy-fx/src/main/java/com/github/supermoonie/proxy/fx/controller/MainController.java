@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.fx.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
@@ -18,14 +19,12 @@ import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
-import com.github.supermoonie.proxy.fx.support.AllowUrl;
-import com.github.supermoonie.proxy.fx.support.BlockUrl;
-import com.github.supermoonie.proxy.fx.support.Flow;
-import com.github.supermoonie.proxy.fx.support.HexContentFlow;
+import com.github.supermoonie.proxy.fx.support.*;
 import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -47,6 +46,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.*;
+import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -70,6 +70,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -107,6 +108,16 @@ public class MainController implements Initializable {
     protected ListView<FlowNode> listView;
     @FXML
     protected Label infoLabel;
+    @FXML
+    protected Tab overviewTab;
+    @FXML
+    protected Tab contentsTab;
+    @FXML
+    protected TreeTableView<PropertyPair> overviewTreeTableView;
+    @FXML
+    protected TreeTableColumn<PropertyPair, String> overviewNameColumn;
+    @FXML
+    protected TreeTableColumn<PropertyPair, String> overviewValueColumn;
     @FXML
     protected TabPane requestTabPane;
     @FXML
@@ -176,6 +187,8 @@ public class MainController implements Initializable {
     @FXML
     protected Button recordingSwitchButton;
 
+    private final TreeItem<PropertyPair> overviewRoot = new TreeItem<>(new PropertyPair());
+
     private final ContextMenu treeContextMenu = new ContextMenu();
     private final MenuItem copyMenuItem = new MenuItem("Copy URL");
     private final MenuItem copyResponseMenuItem = new MenuItem("Copy Response");
@@ -228,6 +241,11 @@ public class MainController implements Initializable {
         initListView();
         initResponseJsonWebView();
         clear();
+        overviewNameColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getKey()));
+        overviewValueColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getValue()));
+        overviewRoot.setExpanded(true);
+        overviewTreeTableView.setRoot(overviewRoot);
+        overviewTreeTableView.setShowRoot(false);
     }
 
     private void initListView() {
@@ -258,7 +276,7 @@ public class MainController implements Initializable {
             if (null == selectedItem) {
                 return;
             }
-            fillMainView(selectedItem);
+            fillContentsTab(selectedItem);
         });
         listView.setContextMenu(listContextMenu);
     }
@@ -274,7 +292,14 @@ public class MainController implements Initializable {
                 return;
             }
             FlowNode selectedNode = selectedItem.getValue();
-            fillMainView(selectedNode);
+            if (null == selectedNode) {
+                return;
+            }
+            if (!selectedNode.getType().equals(EnumFlowType.TARGET)) {
+                return;
+            }
+            fillContentsTab(selectedNode);
+            fillOverviewTab(selectedNode);
         });
         treeView.focusedProperty().addListener((observable, oldValue, newValue) -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
@@ -733,7 +758,9 @@ public class MainController implements Initializable {
                 String data = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                 HexContentFlow flow = JSON.parse(data, HexContentFlow.class);
                 flowService.save(flow);
-                addFlow(flow.getRequest(), flow.getResponse());
+                ConnectionInfo connectionInfo = new ConnectionInfo();
+                connectionInfo.setUrl(flow.getRequest().getUri());
+                addFlow(connectionInfo, flow.getRequest(), flow.getResponse());
             } catch (IOException | URISyntaxException e) {
                 log.error(e.getMessage(), e);
             }
@@ -831,7 +858,7 @@ public class MainController implements Initializable {
     }
 
     public void onClearButtonClicked() {
-        root.getChildren().clear();
+        overviewRoot.getChildren().clear();
         allNode.clear();
         clear();
         currentRequestId = null;
@@ -988,7 +1015,22 @@ public class MainController implements Initializable {
         responseRawTextArea.appendText(responseRawBuilder.toString());
     }
 
-    private void fillMainView(FlowNode selectedNode) {
+    private void fillOverviewTab(FlowNode selectedNode) {
+        overviewRoot.getChildren().clear();
+        Request request = requestMapper.selectById(selectedNode.getId());
+        overviewTreeTableView.setUserData(selectedNode.getId());
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Url", request.getUri())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Status", selectedNode.getStatus() == -1 ? "Loading" : "Complete")));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Response Code", selectedNode.getStatus() == -1 ? "" : String.valueOf(selectedNode.getStatus()))));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Protocol", request.getHttpVersion())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Method", request.getMethod())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Host", request.getHost())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Port", String.valueOf(request.getPort()))));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Content-Type", request.getContentType())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Request time", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(request.getTimeCreated()))));
+    }
+
+    private void fillContentsTab(FlowNode selectedNode) {
         if (EnumFlowType.TARGET.equals(selectedNode.getType())) {
             if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
                 return;
@@ -1058,7 +1100,7 @@ public class MainController implements Initializable {
             rootPathNode.setCurrentUrl(flowNode.getUrl());
             rootPathNode.setType(EnumFlowType.TARGET);
             TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
-            rootPathTreeItem.setExpanded(CollectionUtils.isEmpty(root.getChildren()));
+            rootPathTreeItem.setExpanded(CollectionUtils.isEmpty(overviewRoot.getChildren()));
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
         } else {
             String[] array = (uri.getPath() + " ").split("/");
@@ -1178,11 +1220,11 @@ public class MainController implements Initializable {
         return list;
     }
 
-    public void addFlow(Request request, Response response) throws URISyntaxException {
+    public void addFlow(ConnectionInfo connectionInfo, Request request, Response response) throws URISyntaxException {
         FlowNode flowNode = new FlowNode();
         flowNode.setId(request.getId());
         flowNode.setType(EnumFlowType.TARGET);
-        flowNode.setUrl(request.getUri());
+        flowNode.setUrl(connectionInfo.getUrl());
         flowNode.setRequestTime(request.getTimeCreated());
         if (null == response) {
             flowNode.setStatus(-1);
@@ -1197,6 +1239,7 @@ public class MainController implements Initializable {
                 node.setStatus(response.getStatus());
                 node.setStatusProperty(response.getStatus());
             });
+            fillOverviewTab(flowNode);
             updateTreeItem(flowNode);
             if (null != currentRequestId && currentRequestId.equals(request.getId())) {
                 QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();

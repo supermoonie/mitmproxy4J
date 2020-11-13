@@ -86,7 +86,7 @@ public class InterceptContext {
                 return response;
             }
         }
-        FullHttpResponse httpResponse = ResponseUtils.htmlResponse("Error: " + cause.getMessage(), HttpResponseStatus.OK);
+        FullHttpResponse httpResponse = ResponseUtils.htmlResponse("Error: " + cause.getMessage(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
         httpResponse = onResponse(request, httpResponse);
         return httpResponse;
     }
@@ -102,7 +102,7 @@ public class InterceptContext {
                 return httpResponse;
             }
         }
-        FullHttpResponse httpResponse = ResponseUtils.htmlResponse("Error: " + cause.getMessage(), HttpResponseStatus.OK);
+        FullHttpResponse httpResponse = ResponseUtils.htmlResponse("Error: " + cause.getMessage(), HttpResponseStatus.SERVICE_UNAVAILABLE);
         httpResponse = onResponse(request, httpResponse);
         return httpResponse;
     }

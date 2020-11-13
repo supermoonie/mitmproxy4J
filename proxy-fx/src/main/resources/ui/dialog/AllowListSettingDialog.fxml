@@ -50,7 +50,7 @@
                     <children>
                         <TableView fx:id="settingTableView" editable="true" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                             <placeholder>
-                                <Label text="No Data !" />
+                                <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Nothing in the table !" />
                             </placeholder>
                             <columns>
                                 <TableColumn fx:id="enableColumn" prefWidth="55.0" sortable="false" />

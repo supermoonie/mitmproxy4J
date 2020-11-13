@@ -16,9 +16,17 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 public final class ResponseUtils {
 
-    public static void sendError(Channel channel, String error) {
+    public static void sendInternalServerError(Channel channel, String error) {
+        sendError(channel, error, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    public static void sendServiceUnavailableError(Channel channel, String error) {
+        sendError(channel, error, HttpResponseStatus.SERVICE_UNAVAILABLE);
+    }
+
+    private static void sendError(Channel channel, String error, HttpResponseStatus status) {
         error = "Error: " + error;
-        FullHttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
+        FullHttpResponse response = htmlResponse(error, status);
         // Close the connection as soon as the error message is sent.
         channel.writeAndFlush(response)
                 .addListener(ChannelFutureListener.CLOSE);

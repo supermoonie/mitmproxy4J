@@ -109,6 +109,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             String separator = "/";
             if (request.uri().startsWith(separator)) {
                 connectionInfo.setUrl((connectionInfo.isHttps() ? "https://" : "http://") + connectionInfo.getRemoteHost() + request.uri());
+            } else {
+                connectionInfo.setUrl(request.uri());
             }
             logger.debug("url: " + request.uri());
             if (connectionInfo.isHttps()) {
@@ -165,7 +167,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         FullHttpResponse response = interceptContext.onRequestException(interceptContext.getRequest(), cause);
         if (null == response) {
-            ResponseUtils.sendError(ctx.channel(), cause.getMessage());
+            ResponseUtils.sendInternalServerError(ctx.channel(), cause.getMessage());
         } else {
             ctx.channel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
@@ -240,7 +242,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                 public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
                                     FullHttpResponse response = interceptContext.onResponseException(request, null, cause);
                                     if (null == response) {
-                                        ResponseUtils.sendError(clientChannel, cause.getMessage());
+                                        ResponseUtils.sendServiceUnavailableError(clientChannel, cause.getMessage());
                                     } else {
                                         clientChannel.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                                         ReferenceCountUtil.release(response);
@@ -259,7 +261,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
                             FullHttpResponse response = interceptContext.onResponseException(request, interceptContext.getFullHttpResponse(), cause);
                             if (null == response) {
-                                ResponseUtils.sendError(clientChannel, cause.getMessage());
+                                ResponseUtils.sendServiceUnavailableError(clientChannel, cause.getMessage());
                             } else {
                                 clientChannel.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                             }
@@ -286,7 +288,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     }
                     FullHttpResponse response = interceptContext.onResponseException(request, interceptContext.getFullHttpResponse(), future.cause());
                     if (null == response) {
-                        ResponseUtils.sendError(clientChannel, future.cause().getMessage());
+                        ResponseUtils.sendServiceUnavailableError(clientChannel, future.cause().getMessage());
                     } else {
                         clientChannel.writeAndFlush(response).addListener((ChannelFutureListener) f -> clientChannel.close());
                     }

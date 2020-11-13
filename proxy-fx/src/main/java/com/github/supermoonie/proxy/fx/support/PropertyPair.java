@@ -9,9 +9,17 @@ import javafx.beans.property.SimpleStringProperty;
  */
 public class PropertyPair {
 
-    private Property<String> key = new SimpleStringProperty();
+    private final Property<String> key = new SimpleStringProperty();
 
-    private Property<String> value = new SimpleStringProperty();
+    private final Property<String> value = new SimpleStringProperty();
+
+    public PropertyPair() {
+    }
+
+    public PropertyPair(String key, String value) {
+        this.key.setValue(key);
+        this.value.setValue(value);
+    }
 
     public String getKey() {
         return key.getValue();
