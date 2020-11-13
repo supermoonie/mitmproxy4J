@@ -6,6 +6,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -17,10 +18,11 @@ public final class ResponseUtils {
 
     public static void sendError(Channel channel, String error) {
         error = "Error: " + error;
-        HttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
+        FullHttpResponse response = htmlResponse(error, HttpResponseStatus.OK);
         // Close the connection as soon as the error message is sent.
         channel.writeAndFlush(response)
                 .addListener(ChannelFutureListener.CLOSE);
+        ReferenceCountUtil.release(response);
     }
 
     public static FullHttpResponse htmlResponse(String body, HttpResponseStatus status) {

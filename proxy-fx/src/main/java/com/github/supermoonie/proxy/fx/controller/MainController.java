@@ -1050,6 +1050,7 @@ public class MainController implements Initializable {
             baseNode.setCurrentUrl(baseUri);
             baseNode.setStatus(flowNode.getStatus());
             TreeItem<FlowNode> item = new TreeItem<>(baseNode, fontAwesome.create(FontAwesome.Glyph.GLOBE));
+            item.setExpanded(CollectionUtils.isEmpty(root.getChildren()));
             root.getChildren().add(item);
             return item;
         });
@@ -1062,6 +1063,7 @@ public class MainController implements Initializable {
             rootPathNode.setCurrentUrl(flowNode.getUrl());
             rootPathNode.setType(EnumFlowType.TARGET);
             TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
+            rootPathTreeItem.setExpanded(CollectionUtils.isEmpty(root.getChildren()));
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
         } else {
             String[] array = (uri.getPath() + " ").split("/");
@@ -1093,6 +1095,7 @@ public class MainController implements Initializable {
                                 node.setContentType(flowNode.getContentType());
                                 node.setCurrentUrl(currentUrl.toString());
                                 TreeItem<FlowNode> treeItem = new TreeItem<>(node, fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT));
+                                treeItem.setExpanded(true);
                                 treeItems.add(treeItem);
                                 return treeItem;
                             });

@@ -86,6 +86,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (status.equals(ConnectionStatus.NOT_CONNECTED)) {
                 ConnectionInfo info = RequestUtils.parseRemoteInfo(request, this.connectionInfo);
                 if (null == info) {
+                    ReferenceCountUtil.release(msg);
                     throw new BadRequestException("Bad Request!");
                 }
                 status = ConnectionStatus.CONNECTING;
@@ -100,6 +101,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     ctx.pipeline().remove("aggregator");
                     ReferenceCountUtil.release(msg);
                     status = ConnectionStatus.CONNECTED_WITH_CLIENT;
+//                    ReferenceCountUtil.release(msg);
                     return;
                 }
             }
@@ -118,6 +120,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             }
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
+                ReferenceCountUtil.release(msg);
                 return;
             }
             logger.debug(connectionInfo.toString());
@@ -224,6 +227,9 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         FullHttpResponse response = (FullHttpResponse) msg;
                                         interceptContext.setFullHttpResponse(response);
                                         FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
+                                        if ("bytes".equals(httpResponse.headers().get(HttpHeaderNames.ACCEPT_RANGES))) {
+                                            httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, httpResponse.content().readableBytes());
+                                        }
                                         clientChannel.writeAndFlush(httpResponse);
                                     } else {
                                         clientChannel.writeAndFlush(msg);
@@ -239,6 +245,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         ResponseUtils.sendError(clientChannel, cause.getMessage());
                                     } else {
                                         clientChannel.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                                        ReferenceCountUtil.release(response);
                                     }
                                 }
 
