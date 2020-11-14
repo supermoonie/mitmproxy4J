@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy;
 
+import java.net.InetAddress;
 import java.security.cert.Certificate;
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class ConnectionInfo {
     private String clientHost;
 
     private int clientPort;
+
+    private List<InetAddress> remoteAddressList;
 
     private boolean isHttps = false;
 
@@ -85,6 +88,14 @@ public class ConnectionInfo {
 
     public void setClientPort(int clientPort) {
         this.clientPort = clientPort;
+    }
+
+    public List<InetAddress> getRemoteAddressList() {
+        return remoteAddressList;
+    }
+
+    public void setRemoteAddressList(List<InetAddress> remoteAddressList) {
+        this.remoteAddressList = remoteAddressList;
     }
 
     public boolean isHttps() {

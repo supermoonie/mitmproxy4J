@@ -236,7 +236,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         connectionInfo.setServerProtocol(session.getProtocol());
                                         connectionInfo.setServerCipherSuite(session.getCipherSuite());
                                         connectionInfo.setServerCertificates(List.of(session.getPeerCertificates()));
-                                        logger.debug(connectionInfo.toString());
                                     }
                                     logger.debug("received: " + msg);
                                     if (msg instanceof FullHttpResponse) {
@@ -286,7 +285,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         }
                     });
             logger.debug("connect to {}:{}", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
-            bootstrap.resolver(IntervalAddressResolverGroup.INSTANCE);
+            bootstrap.resolver(new IntervalAddressResolverGroup(internalProxy.getProxyThreads().next(), connectionInfo));
             remoteChannelFuture = bootstrap.connect(connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
             remoteChannelFuture.addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
