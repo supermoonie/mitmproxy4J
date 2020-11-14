@@ -1239,7 +1239,6 @@ public class MainController implements Initializable {
                 node.setStatus(response.getStatus());
                 node.setStatusProperty(response.getStatus());
             });
-            fillOverviewTab(flowNode);
             updateTreeItem(flowNode);
             if (null != currentRequestId && currentRequestId.equals(request.getId())) {
                 QueryWrapper<Header> responseHeaderQueryWrapper = new QueryWrapper<>();
@@ -1249,6 +1248,7 @@ public class MainController implements Initializable {
                     responseHeaderTableView.getItems().addAll(responseHeaders);
                 }
                 fillResponseRawTab(response, responseHeaders);
+                fillOverviewTab(flowNode);
             }
         }
         treeViewFilter();

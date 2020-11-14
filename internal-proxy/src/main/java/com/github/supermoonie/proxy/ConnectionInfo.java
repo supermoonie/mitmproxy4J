@@ -22,6 +22,10 @@ public class ConnectionInfo {
 
     private boolean useSecondProxy = true;
 
+    private String secondProxyHost;
+
+    private int secondProxyPort;
+
     private volatile boolean finished = false;
 
     public String getUrl() {
@@ -86,6 +90,22 @@ public class ConnectionInfo {
 
     public void setUseSecondProxy(boolean useSecondProxy) {
         this.useSecondProxy = useSecondProxy;
+    }
+
+    public String getSecondProxyHost() {
+        return secondProxyHost;
+    }
+
+    public void setSecondProxyHost(String secondProxyHost) {
+        this.secondProxyHost = secondProxyHost;
+    }
+
+    public int getSecondProxyPort() {
+        return secondProxyPort;
+    }
+
+    public void setSecondProxyPort(int secondProxyPort) {
+        this.secondProxyPort = secondProxyPort;
     }
 
     public boolean isFinished() {

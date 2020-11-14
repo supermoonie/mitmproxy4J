@@ -17,12 +17,15 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.util.ReferenceCountUtil;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.util.Base64;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -74,7 +77,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         connectionInfo.setClientHost(clientHost);
         connectionInfo.setClientPort(clientPort);
         interceptContext.setConnectionInfo(connectionInfo);
-
     }
 
     @Override
@@ -116,7 +118,12 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             if (connectionInfo.isHttps()) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                 SSLSession session = sslHandler.engine().getSession();
-                logger.debug("client session: {}, {}", session.getProtocol(), session.getCipherSuite());
+                PublicKey publicKey = session.getLocalCertificates()[0].getPublicKey();
+                logger.debug("client session: {} | {} | {} | {} | {} | {}",
+                        Hex.toHexString(session.getId()),
+                        session.getProtocol(), session.getCipherSuite(),
+                        session.getLocalPrincipal().toString(),
+                        publicKey.getAlgorithm(), publicKey.getFormat());
             }
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
@@ -165,6 +172,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.error(cause.getMessage(), cause);
         FullHttpResponse response = interceptContext.onRequestException(interceptContext.getRequest(), cause);
         if (null == response) {
             ResponseUtils.sendInternalServerError(ctx.channel(), cause.getMessage());
