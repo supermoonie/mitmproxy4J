@@ -35,14 +35,14 @@ public class HttpProxyTest {
     @Before
     public void before() throws Exception {
         httpClient = createTrustAllHttpClientBuilder()
-                .setProxy(new HttpHost("127.0.0.1", 10801))
+                .setProxy(new HttpHost("127.0.0.1", 8888))
                 .build();
     }
 
     public static HttpClientBuilder createTrustAllHttpClientBuilder() throws Exception {
         SSLContextBuilder builder = new SSLContextBuilder();
         builder.loadTrustMaterial(null, (chain, authType) -> true);
-        builder.setProtocol("SSL");
+        builder.setProtocol("TLS");
 
         SSLConnectionSocketFactory sslsf = new
                 SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);

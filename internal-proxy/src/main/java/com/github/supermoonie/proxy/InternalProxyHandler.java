@@ -21,13 +21,13 @@ import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSession;
+import javax.net.ssl.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -121,18 +121,18 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             logger.debug("url: " + request.uri());
             if (connectionInfo.isHttps()) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
-                SSLEngine engine = sslHandler.engine();
                 SSLSession session = sslHandler.engine().getSession();
-                logger.info("Enable Protocols: {}", Arrays.toString(engine.getEnabledProtocols()));
-                session.getPeerCertificates();
-                logger.info("Protocols: {}", session.getProtocol());
+                connectionInfo.setClientSessionId(Hex.toHexString(session.getId()).toUpperCase());
+                connectionInfo.setClientProtocol(session.getProtocol());
+                connectionInfo.setClientCipherSuite(session.getCipherSuite());
+                connectionInfo.setLocalCertificates(List.of(session.getLocalCertificates()));
+                logger.debug("client session protocol: {}, cipher suite: {}", session.getProtocol(), session.getCipherSuite());
             }
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
                 ReferenceCountUtil.release(msg);
                 return;
             }
-            logger.debug(connectionInfo.toString());
             connectRemote(ctx.channel(), request);
         } else if (msg instanceof HttpContent) {
             if (msg instanceof LastHttpContent) {
@@ -150,7 +150,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 String host = connectionInfo.getHostHeader().split(":")[0];
                 InternalProxy.CertificateConfig certificateConfig = internalProxy.getCertificateConfig();
                 SslContext sslCtx = SslContextBuilder
-                        .forServer(certificateConfig.getServerPriKey(), CertificateUtil.getCert(port, host, certificateConfig)).build();
+                        .forServer(certificateConfig.getServerPriKey(), CertificateUtil.getCert(port, host, certificateConfig))
+                        .build();
                 ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
                 ctx.pipeline().addAfter("httpCodec", "decompressor", new HttpContentDecompressor());
                 ctx.pipeline().addAfter("decompressor", "aggregator", new HttpObjectAggregator(internalProxy.getMaxContentSize()));
@@ -231,12 +232,11 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     if (connectionInfo.isHttps()) {
                                         SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                                         SSLSession session = sslHandler.engine().getSession();
-                                        PublicKey publicKey = session.getPeerCertificates()[0].getPublicKey();
-                                        logger.debug("remote session: {} | {} | {} | {} | {} | {}",
-                                                Hex.toHexString(session.getId()),
-                                                session.getProtocol(), session.getCipherSuite(),
-                                                session.getPeerPrincipal().toString(),
-                                                publicKey.getAlgorithm(), publicKey.getFormat());
+                                        connectionInfo.setServerSessionId(Hex.toHexString(session.getId()).toUpperCase());
+                                        connectionInfo.setServerProtocol(session.getProtocol());
+                                        connectionInfo.setServerCipherSuite(session.getCipherSuite());
+                                        connectionInfo.setServerCertificates(List.of(session.getPeerCertificates()));
+                                        logger.debug(connectionInfo.toString());
                                     }
                                     logger.debug("received: " + msg);
                                     if (msg instanceof FullHttpResponse) {

@@ -23,19 +23,21 @@ public class ConnectionInfo {
 
     private boolean isHttps = false;
 
-    private List<String> clientEnabledProtocols;
+    private String clientProtocol;
 
-    private String protocol;
-
-    private List<String> clientEnabledCipherSuites;
-
-    private String cipherSuite;
+    private String clientCipherSuite;
 
     private String clientSessionId;
 
     private List<Certificate> localCertificates;
 
     private String serverSessionId;
+
+    private String serverProtocol;
+
+    private String serverCipherSuite;
+
+    private List<Certificate> serverCertificates;
 
     private boolean useSecondProxy = true;
 
@@ -93,36 +95,44 @@ public class ConnectionInfo {
         isHttps = https;
     }
 
-    public List<String> getClientEnabledProtocols() {
-        return clientEnabledProtocols;
+    public String getClientProtocol() {
+        return clientProtocol;
     }
 
-    public void setClientEnabledProtocols(List<String> clientEnabledProtocols) {
-        this.clientEnabledProtocols = clientEnabledProtocols;
+    public void setClientProtocol(String clientProtocol) {
+        this.clientProtocol = clientProtocol;
     }
 
-    public String getProtocol() {
-        return protocol;
+    public String getClientCipherSuite() {
+        return clientCipherSuite;
     }
 
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
+    public void setClientCipherSuite(String clientCipherSuite) {
+        this.clientCipherSuite = clientCipherSuite;
     }
 
-    public List<String> getClientEnabledCipherSuites() {
-        return clientEnabledCipherSuites;
+    public String getServerProtocol() {
+        return serverProtocol;
     }
 
-    public void setClientEnabledCipherSuites(List<String> clientEnabledCipherSuites) {
-        this.clientEnabledCipherSuites = clientEnabledCipherSuites;
+    public void setServerProtocol(String serverProtocol) {
+        this.serverProtocol = serverProtocol;
     }
 
-    public String getCipherSuite() {
-        return cipherSuite;
+    public String getServerCipherSuite() {
+        return serverCipherSuite;
     }
 
-    public void setCipherSuite(String cipherSuite) {
-        this.cipherSuite = cipherSuite;
+    public void setServerCipherSuite(String serverCipherSuite) {
+        this.serverCipherSuite = serverCipherSuite;
+    }
+
+    public List<Certificate> getServerCertificates() {
+        return serverCertificates;
+    }
+
+    public void setServerCertificates(List<Certificate> serverCertificates) {
+        this.serverCertificates = serverCertificates;
     }
 
     public String getClientSessionId() {
@@ -199,6 +209,14 @@ public class ConnectionInfo {
                 ", clientHost='" + clientHost + '\'' +
                 ", clientPort=" + clientPort +
                 ", isHttps=" + isHttps +
+                ", clientProtocol='" + clientProtocol + '\'' +
+                ", clientCipherSuite='" + clientCipherSuite + '\'' +
+                ", clientSessionId='" + clientSessionId + '\'' +
+                ", localCertificates=" + localCertificates +
+                ", serverSessionId='" + serverSessionId + '\'' +
+                ", serverProtocol='" + serverProtocol + '\'' +
+                ", serverCipherSuite='" + serverCipherSuite + '\'' +
+                ", serverCertificates=" + serverCertificates +
                 ", useSecondProxy=" + useSecondProxy +
                 ", secondProxyHost='" + secondProxyHost + '\'' +
                 ", secondProxyPort=" + secondProxyPort +
