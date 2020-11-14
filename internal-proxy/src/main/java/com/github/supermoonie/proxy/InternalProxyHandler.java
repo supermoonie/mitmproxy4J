@@ -22,11 +22,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -117,13 +121,11 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             logger.debug("url: " + request.uri());
             if (connectionInfo.isHttps()) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
+                SSLEngine engine = sslHandler.engine();
                 SSLSession session = sslHandler.engine().getSession();
-                PublicKey publicKey = session.getLocalCertificates()[0].getPublicKey();
-                logger.debug("client session: {} | {} | {} | {} | {} | {}",
-                        Hex.toHexString(session.getId()),
-                        session.getProtocol(), session.getCipherSuite(),
-                        session.getLocalPrincipal().toString(),
-                        publicKey.getAlgorithm(), publicKey.getFormat());
+                logger.info("Enable Protocols: {}", Arrays.toString(engine.getEnabledProtocols()));
+                session.getPeerCertificates();
+                logger.info("Protocols: {}", session.getProtocol());
             }
             boolean flag = interceptContext.onRequest(request);
             if (!flag) {
@@ -152,7 +154,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 ctx.pipeline().addFirst("httpCodec", new HttpServerCodec());
                 ctx.pipeline().addAfter("httpCodec", "decompressor", new HttpContentDecompressor());
                 ctx.pipeline().addAfter("decompressor", "aggregator", new HttpObjectAggregator(internalProxy.getMaxContentSize()));
-                ctx.pipeline().addFirst("sslHandler", sslCtx.newHandler(ctx.alloc()));
+                SslHandler sslHandler = sslCtx.newHandler(ctx.alloc());
+                ctx.pipeline().addFirst("sslHandler", sslHandler);
                 // 重新过一遍pipeline，拿到解密后的的http报文
                 ctx.pipeline().fireChannelRead(msg);
                 return;
@@ -228,7 +231,12 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     if (connectionInfo.isHttps()) {
                                         SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                                         SSLSession session = sslHandler.engine().getSession();
-                                        logger.debug("remote session: {}, {}", session.getProtocol(), session.getCipherSuite());
+                                        PublicKey publicKey = session.getPeerCertificates()[0].getPublicKey();
+                                        logger.debug("remote session: {} | {} | {} | {} | {} | {}",
+                                                Hex.toHexString(session.getId()),
+                                                session.getProtocol(), session.getCipherSuite(),
+                                                session.getPeerPrincipal().toString(),
+                                                publicKey.getAlgorithm(), publicKey.getFormat());
                                     }
                                     logger.debug("received: " + msg);
                                     if (msg instanceof FullHttpResponse) {
@@ -248,6 +256,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                                 @Override
                                 public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                                    logger.error(cause.getMessage(), cause);
                                     FullHttpResponse response = interceptContext.onResponseException(request, null, cause);
                                     if (null == response) {
                                         ResponseUtils.sendServiceUnavailableError(clientChannel, cause.getMessage());
@@ -267,6 +276,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                         @Override
                         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                            logger.error(cause.getMessage(), cause);
                             FullHttpResponse response = interceptContext.onResponseException(request, interceptContext.getFullHttpResponse(), cause);
                             if (null == response) {
                                 ResponseUtils.sendServiceUnavailableError(clientChannel, cause.getMessage());

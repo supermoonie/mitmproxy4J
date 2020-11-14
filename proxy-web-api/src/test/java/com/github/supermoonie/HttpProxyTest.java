@@ -42,6 +42,8 @@ public class HttpProxyTest {
     public static HttpClientBuilder createTrustAllHttpClientBuilder() throws Exception {
         SSLContextBuilder builder = new SSLContextBuilder();
         builder.loadTrustMaterial(null, (chain, authType) -> true);
+        builder.setProtocol("SSL");
+
         SSLConnectionSocketFactory sslsf = new
                 SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
         return HttpClients.custom().setSSLSocketFactory(sslsf);

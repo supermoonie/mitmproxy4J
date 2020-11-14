@@ -1,5 +1,8 @@
 package com.github.supermoonie.proxy;
 
+import java.security.cert.Certificate;
+import java.util.List;
+
 /**
  * @author supermoonie
  * @since 2020/8/9
@@ -19,6 +22,20 @@ public class ConnectionInfo {
     private int clientPort;
 
     private boolean isHttps = false;
+
+    private List<String> clientEnabledProtocols;
+
+    private String protocol;
+
+    private List<String> clientEnabledCipherSuites;
+
+    private String cipherSuite;
+
+    private String clientSessionId;
+
+    private List<Certificate> localCertificates;
+
+    private String serverSessionId;
 
     private boolean useSecondProxy = true;
 
@@ -76,6 +93,62 @@ public class ConnectionInfo {
         isHttps = https;
     }
 
+    public List<String> getClientEnabledProtocols() {
+        return clientEnabledProtocols;
+    }
+
+    public void setClientEnabledProtocols(List<String> clientEnabledProtocols) {
+        this.clientEnabledProtocols = clientEnabledProtocols;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+
+    public List<String> getClientEnabledCipherSuites() {
+        return clientEnabledCipherSuites;
+    }
+
+    public void setClientEnabledCipherSuites(List<String> clientEnabledCipherSuites) {
+        this.clientEnabledCipherSuites = clientEnabledCipherSuites;
+    }
+
+    public String getCipherSuite() {
+        return cipherSuite;
+    }
+
+    public void setCipherSuite(String cipherSuite) {
+        this.cipherSuite = cipherSuite;
+    }
+
+    public String getClientSessionId() {
+        return clientSessionId;
+    }
+
+    public void setClientSessionId(String clientSessionId) {
+        this.clientSessionId = clientSessionId;
+    }
+
+    public List<Certificate> getLocalCertificates() {
+        return localCertificates;
+    }
+
+    public void setLocalCertificates(List<Certificate> localCertificates) {
+        this.localCertificates = localCertificates;
+    }
+
+    public String getServerSessionId() {
+        return serverSessionId;
+    }
+
+    public void setServerSessionId(String serverSessionId) {
+        this.serverSessionId = serverSessionId;
+    }
+
     public String getHostHeader() {
         return hostHeader;
     }
@@ -127,6 +200,8 @@ public class ConnectionInfo {
                 ", clientPort=" + clientPort +
                 ", isHttps=" + isHttps +
                 ", useSecondProxy=" + useSecondProxy +
+                ", secondProxyHost='" + secondProxyHost + '\'' +
+                ", secondProxyPort=" + secondProxyPort +
                 ", finished=" + finished +
                 '}';
     }
