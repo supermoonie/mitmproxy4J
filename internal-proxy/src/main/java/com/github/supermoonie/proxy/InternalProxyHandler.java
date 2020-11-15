@@ -24,11 +24,6 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Queue;
@@ -285,8 +280,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                             }
                         }
                     });
-            logger.debug("connect to {}:{}", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
-            bootstrap.resolver(new IntervalAddressResolverGroup(internalProxy.getProxyThreads().next(), connectionInfo));
+            logger.debug("connect remote {}:{}", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
+            bootstrap.resolver(new IntervalAddressResolverGroup(internalProxy.getProxyThreads().next(), internalProxy.getDnsNameResolverConfig(), connectionInfo));
             remoteChannelFuture = bootstrap.connect(connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
             remoteChannelFuture.addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {

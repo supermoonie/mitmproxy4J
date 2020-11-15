@@ -3,9 +3,8 @@ package com.github.supermoonie.proxy.dns;
 import io.netty.resolver.dns.DnsServerAddressStream;
 import io.netty.resolver.dns.DnsServerAddressStreamProvider;
 import io.netty.resolver.dns.DnsServerAddressStreamProviders;
-import io.netty.resolver.dns.SingletonDnsServerAddressStreamProvider;
-import io.netty.util.internal.SocketUtils;
 
+import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,25 +14,21 @@ import java.util.List;
  */
 public class ConfigurableMultiDnsServerAddressStreamProvider implements DnsServerAddressStreamProvider {
 
-    public static final int DNS_PORT = 53;
-
-    public static final ConfigurableMultiDnsServerAddressStreamProvider INSTANCE
-            = new ConfigurableMultiDnsServerAddressStreamProvider(new LinkedList<>());
-
     private final List<DnsServerAddressStreamProvider> providers;
-
-    static {
-        INSTANCE.getProviders().add(DnsServerAddressStreamProviders.platformDefault());
-        INSTANCE.getProviders().add(new SingletonDnsServerAddressStreamProvider(SocketUtils.socketAddress("8.8.8.8", DNS_PORT)));
-    }
 
     /**
      * Create a new instance.
      *
-     * @param providers The providers to use for DNS resolution. They will be queried in order.
+     * @param servers DNS servers.
      */
-    private ConfigurableMultiDnsServerAddressStreamProvider(List<DnsServerAddressStreamProvider> providers) {
-        this.providers = providers;
+    public ConfigurableMultiDnsServerAddressStreamProvider(boolean useSystem, List<InetSocketAddress> servers) {
+        this.providers = new LinkedList<>();
+        if (useSystem) {
+            this.providers.add(DnsServerAddressStreamProviders.platformDefault());
+        }
+        for (InetSocketAddress address : servers) {
+            this.providers.add(new InternalSingletonDnsServerAddressStreamProvider(address));
+        }
     }
 
     @Override

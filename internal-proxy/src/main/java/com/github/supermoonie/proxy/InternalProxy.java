@@ -1,5 +1,7 @@
 package com.github.supermoonie.proxy;
 
+import com.github.supermoonie.proxy.dns.ConfigurableMultiDnsServerAddressStreamProvider;
+import com.github.supermoonie.proxy.dns.ConfigurableNameResolver;
 import com.github.supermoonie.proxy.ex.InternalProxyCloseException;
 import com.github.supermoonie.proxy.ex.InternalProxyStartException;
 import io.netty.bootstrap.ServerBootstrap;
@@ -15,14 +17,17 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
+import io.netty.resolver.dns.DnsServerAddressStreamProviders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.Date;
+import java.util.*;
 
 /**
  * @author supermoonie
@@ -56,6 +61,7 @@ public class InternalProxy {
     private CertificateConfig certificateConfig;
     private volatile boolean trafficShaping = false;
     private SecondProxyConfig secondProxyConfig;
+    private final DnsNameResolverConfig dnsNameResolverConfig = new DnsNameResolverConfig();
     private final InterceptInitializer initializer;
     private ChannelFuture future;
 
@@ -156,6 +162,26 @@ public class InternalProxy {
         logger.debug("load ca {}", caCert);
     }
 
+    public static Map<String, List<InetAddress>> memoryDnsMap() {
+        return ConfigurableNameResolver.getDnsMap();
+    }
+
+    public static class DnsNameResolverConfig {
+        private boolean useSystemDefault = true;
+        private final List<InetSocketAddress> dnsServerList = new LinkedList<>();
+
+        public boolean isUseSystemDefault() {
+            return useSystemDefault;
+        }
+
+        public void setUseSystemDefault(boolean useSystemDefault) {
+            this.useSystemDefault = useSystemDefault;
+        }
+
+        public List<InetSocketAddress> getDnsServerList() {
+            return dnsServerList;
+        }
+    }
 
     public static class SecondProxyConfig {
         private ProxyType proxyType;
@@ -343,6 +369,10 @@ public class InternalProxy {
 
     public void setSecondProxyConfig(SecondProxyConfig secondProxyConfig) {
         this.secondProxyConfig = secondProxyConfig;
+    }
+
+    public DnsNameResolverConfig getDnsNameResolverConfig() {
+        return dnsNameResolverConfig;
     }
 
     public int getMaxContentSize() {

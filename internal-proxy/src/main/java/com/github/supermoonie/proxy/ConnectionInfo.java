@@ -22,6 +22,8 @@ public class ConnectionInfo {
 
     private int clientPort;
 
+    private String dnsServer;
+
     private List<InetAddress> remoteAddressList;
 
     private boolean isHttps = false;
@@ -88,6 +90,14 @@ public class ConnectionInfo {
 
     public void setClientPort(int clientPort) {
         this.clientPort = clientPort;
+    }
+
+    public String getDnsServer() {
+        return dnsServer;
+    }
+
+    public void setDnsServer(String dnsServer) {
+        this.dnsServer = dnsServer;
     }
 
     public List<InetAddress> getRemoteAddressList() {

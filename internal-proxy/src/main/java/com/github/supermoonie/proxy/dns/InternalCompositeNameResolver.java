@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.dns;
 import com.github.supermoonie.proxy.ConnectionInfo;
 import io.netty.resolver.NameResolver;
 import io.netty.resolver.SimpleNameResolver;
+import io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,8 +70,10 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                 public void operationComplete(Future<InetAddress> future) throws Exception {
                     if (future.isSuccess()) {
                         InetAddress inetAddress = future.getNow();
-                        log.debug("host: {}, dns: {}, answer: {}", inetHost, resolver.getClass().getSimpleName(), inetAddress.toString());
+                        String dnsServer = dnsServerName(resolver);
+                        log.debug("host: {}, dns: {}, answer: {}", inetHost, dnsServer, inetAddress.toString());
                         connectionInfo.setRemoteAddressList(List.of(inetAddress));
+                        connectionInfo.setDnsServer(dnsServer);
                         promise.setSuccess(inetAddress);
                     } else {
                         doResolveRec(inetHost, promise, resolverIndex + 1, future.cause());
@@ -97,14 +101,28 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                 public void operationComplete(Future<List<InetAddress>> future) throws Exception {
                     if (future.isSuccess()) {
                         List<InetAddress> inetAddresses = future.get();
-                        log.debug("host: {}, dns answer: {}", inetHost, inetAddresses.toString());
+                        String dnsServer = dnsServerName(resolver);
+                        log.debug("host: {}, dns: {}, answer: {}", inetHost, dnsServer, inetAddresses.toString());
                         connectionInfo.setRemoteAddressList(inetAddresses);
+                        connectionInfo.setDnsServer(dnsServer);
                         promise.setSuccess(inetAddresses);
                     } else {
                         doResolveAllRec(inetHost, promise, resolverIndex + 1, future.cause());
                     }
                 }
             });
+        }
+    }
+
+    private String dnsServerName(NameResolver<InetAddress> resolver) {
+        if (resolver instanceof ConfigurableNameResolver) {
+            return "MemoryDnsMap()";
+        } else if (resolver instanceof InternalSingletonDnsServerAddressStreamProvider) {
+            InternalSingletonDnsServerAddressStreamProvider provider = (InternalSingletonDnsServerAddressStreamProvider) resolver;
+            return String.format("SingletonDnsServer(%s)", provider.getAddress().getHostString());
+        } else {
+            List<InetSocketAddress> addresses = DefaultDnsServerAddressStreamProvider.defaultAddressList();
+            return String.format("DefaultDnsServer(%s)", addresses.toString());
         }
     }
 }
