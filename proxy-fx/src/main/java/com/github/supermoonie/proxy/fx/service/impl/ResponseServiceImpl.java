@@ -1,5 +1,7 @@
 package com.github.supermoonie.proxy.fx.service.impl;
 
+import com.github.supermoonie.proxy.ConnectionInfo;
+import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
@@ -16,9 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sun.security.x509.X509CertImpl;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.security.cert.Certificate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -42,7 +47,13 @@ public class ResponseServiceImpl implements ResponseService {
 
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
-    public Response saveResponse(FullHttpResponse httpResponse, Request request) {
+    public Response saveResponse(InterceptContext ctx, FullHttpResponse httpResponse, Request request) {
+        ConnectionInfo connectionInfo = ctx.getConnectionInfo();
+        List<Certificate> serverCertificates = connectionInfo.getServerCertificates();
+        for (Certificate certificate : serverCertificates) {
+            X509CertImpl cert = (X509CertImpl) certificate;
+            System.out.println("...");
+        }
         String contentEncoding = httpResponse.headers().get(HttpHeaderNames.CONTENT_ENCODING);
         ByteBuf buf;
         boolean releaseFlag = false;

@@ -22,7 +22,7 @@ public class DnsProxyTest {
     public static void main(String[] args) throws UnknownHostException {
         InternalProxy proxy = new InternalProxy();
         Map<String, List<InetAddress>> dnsMap = InternalProxy.memoryDnsMap();
-//        dnsMap.put("httpbin.org", List.of(Inet4Address.getByName("52.6.34.179")));
+        dnsMap.put("httpbin.org", List.of(Inet4Address.getByName("52.6.34.179")));
         InternalProxy.DnsNameResolverConfig dnsNameResolverConfig = proxy.getDnsNameResolverConfig();
         dnsNameResolverConfig.setUseSystemDefault(true);
         List<InetSocketAddress> dnsServerList = dnsNameResolverConfig.getDnsServerList();

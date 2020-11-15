@@ -50,6 +50,28 @@ public class ConnectionInfo {
 
     private int secondProxyPort;
 
+    private long requestStartTime;
+
+    private long requestEndTime;
+
+    private long connectStartTime;
+
+    private long connectEndTime;
+
+    private long dnsStartTime;
+
+    private long dnsEndTime;
+
+    private long responseStartTime;
+
+    private long responseEndTime;
+
+    private int requestSize;
+
+    private int responseSize;
+
+    private int responseStatus;
+
     private volatile boolean finished = false;
 
     public String getUrl() {
@@ -212,6 +234,94 @@ public class ConnectionInfo {
         this.secondProxyPort = secondProxyPort;
     }
 
+    public long getRequestStartTime() {
+        return requestStartTime;
+    }
+
+    public void setRequestStartTime(long requestStartTime) {
+        this.requestStartTime = requestStartTime;
+    }
+
+    public long getRequestEndTime() {
+        return requestEndTime;
+    }
+
+    public void setRequestEndTime(long requestEndTime) {
+        this.requestEndTime = requestEndTime;
+    }
+
+    public long getConnectStartTime() {
+        return connectStartTime;
+    }
+
+    public void setConnectStartTime(long connectStartTime) {
+        this.connectStartTime = connectStartTime;
+    }
+
+    public long getConnectEndTime() {
+        return connectEndTime;
+    }
+
+    public void setConnectEndTime(long connectEndTime) {
+        this.connectEndTime = connectEndTime;
+    }
+
+    public long getDnsStartTime() {
+        return dnsStartTime;
+    }
+
+    public void setDnsStartTime(long dnsStartTime) {
+        this.dnsStartTime = dnsStartTime;
+    }
+
+    public long getDnsEndTime() {
+        return dnsEndTime;
+    }
+
+    public void setDnsEndTime(long dnsEndTime) {
+        this.dnsEndTime = dnsEndTime;
+    }
+
+    public long getResponseStartTime() {
+        return responseStartTime;
+    }
+
+    public void setResponseStartTime(long responseStartTime) {
+        this.responseStartTime = responseStartTime;
+    }
+
+    public long getResponseEndTime() {
+        return responseEndTime;
+    }
+
+    public void setResponseEndTime(long responseEndTime) {
+        this.responseEndTime = responseEndTime;
+    }
+
+    public int getRequestSize() {
+        return requestSize;
+    }
+
+    public void setRequestSize(int requestSize) {
+        this.requestSize = requestSize;
+    }
+
+    public int getResponseSize() {
+        return responseSize;
+    }
+
+    public void setResponseSize(int responseSize) {
+        this.responseSize = responseSize;
+    }
+
+    public int getResponseStatus() {
+        return responseStatus;
+    }
+
+    public void setResponseStatus(int responseStatus) {
+        this.responseStatus = responseStatus;
+    }
+
     public boolean isFinished() {
         return finished;
     }
@@ -229,6 +339,8 @@ public class ConnectionInfo {
                 ", remotePort=" + remotePort +
                 ", clientHost='" + clientHost + '\'' +
                 ", clientPort=" + clientPort +
+                ", dnsServer='" + dnsServer + '\'' +
+                ", remoteAddressList=" + remoteAddressList +
                 ", isHttps=" + isHttps +
                 ", clientProtocol='" + clientProtocol + '\'' +
                 ", clientCipherSuite='" + clientCipherSuite + '\'' +
@@ -241,6 +353,17 @@ public class ConnectionInfo {
                 ", useSecondProxy=" + useSecondProxy +
                 ", secondProxyHost='" + secondProxyHost + '\'' +
                 ", secondProxyPort=" + secondProxyPort +
+                ", requestStartTime=" + requestStartTime +
+                ", requestEndTime=" + requestEndTime +
+                ", connectStartTime=" + connectStartTime +
+                ", connectEndTime=" + connectEndTime +
+                ", dnsStartTime=" + dnsStartTime +
+                ", dnsEndTime=" + dnsEndTime +
+                ", responseStartTime=" + responseStartTime +
+                ", responseEndTime=" + responseEndTime +
+                ", requestSize=" + requestSize +
+                ", responseSize=" + responseSize +
+                ", responseStatus=" + responseStatus +
                 ", finished=" + finished +
                 '}';
     }

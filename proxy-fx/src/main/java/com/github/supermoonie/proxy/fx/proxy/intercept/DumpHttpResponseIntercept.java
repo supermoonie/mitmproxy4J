@@ -36,7 +36,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
         }
         if (GlobalSetting.getInstance().isRecord()) {
             Request req = (Request) ctx.getUserData();
-            Response res = responseService.saveResponse(response, req);
+            Response res = responseService.saveResponse(ctx, response, req);
             log.info("response saved, uri: {}", request.uri());
             Platform.runLater(() -> {
                 try {

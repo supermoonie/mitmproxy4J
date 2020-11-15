@@ -54,6 +54,7 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
 
     @Override
     protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
+        connectionInfo.setDnsStartTime(System.currentTimeMillis());
         doResolveRec(inetHost, promise, 0, null);
     }
 
@@ -69,6 +70,7 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                 @Override
                 public void operationComplete(Future<InetAddress> future) throws Exception {
                     if (future.isSuccess()) {
+                        connectionInfo.setDnsEndTime(System.currentTimeMillis());
                         InetAddress inetAddress = future.getNow();
                         String dnsServer = dnsServerName(resolver);
                         log.debug("host: {}, dns: {}, answer: {}", inetHost, dnsServer, inetAddress.toString());
@@ -85,6 +87,7 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
 
     @Override
     protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise) throws Exception {
+        connectionInfo.setDnsStartTime(System.currentTimeMillis());
         doResolveAllRec(inetHost, promise, 0, null);
     }
 
@@ -100,6 +103,7 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                 @Override
                 public void operationComplete(Future<List<InetAddress>> future) throws Exception {
                     if (future.isSuccess()) {
+                        connectionInfo.setDnsEndTime(System.currentTimeMillis());
                         List<InetAddress> inetAddresses = future.get();
                         String dnsServer = dnsServerName(resolver);
                         log.debug("host: {}, dns: {}, answer: {}", inetHost, dnsServer, inetAddresses.toString());

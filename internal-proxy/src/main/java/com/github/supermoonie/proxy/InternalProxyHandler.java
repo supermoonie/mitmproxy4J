@@ -7,6 +7,7 @@ import com.github.supermoonie.proxy.util.RequestUtils;
 import com.github.supermoonie.proxy.util.ResponseUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.Certificate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Queue;
@@ -220,6 +222,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                    connectionInfo.setResponseStartTime(System.currentTimeMillis());
                                     interceptContext.setNettyRemoteContext(ctx);
                                 }
 
@@ -235,6 +238,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     }
                                     logger.debug("received: " + msg);
                                     if (msg instanceof FullHttpResponse) {
+                                        connectionInfo.setResponseEndTime(System.currentTimeMillis());
                                         FullHttpResponse response = (FullHttpResponse) msg;
                                         interceptContext.setFullHttpResponse(response);
                                         FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
@@ -282,8 +286,11 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     });
             logger.debug("connect remote {}:{}", connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
             bootstrap.resolver(new IntervalAddressResolverGroup(internalProxy.getProxyThreads().next(), internalProxy.getDnsNameResolverConfig(), connectionInfo));
+            connectionInfo.setRequestStartTime(System.currentTimeMillis());
+            connectionInfo.setConnectStartTime(System.currentTimeMillis());
             remoteChannelFuture = bootstrap.connect(connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
             remoteChannelFuture.addListener((ChannelFutureListener) future -> {
+                connectionInfo.setConnectEndTime(System.currentTimeMillis());
                 if (future.isSuccess()) {
                     interceptContext.setRemoteChannel(future.channel());
                     logger.debug("send direct: {}", msg);
@@ -294,6 +301,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                         future.channel().writeAndFlush(obj);
                         obj = requestQueue.poll();
                     }
+                    connectionInfo.setRequestEndTime(System.currentTimeMillis());
                     status = ConnectionStatus.CONNECTED_WITH_REMOTE;
                 } else {
                     if (remoteChannelFuture.channel().isOpen()) {

@@ -23,6 +23,7 @@ public class HeaderServiceImpl implements HeaderService {
     @Resource
     private HeaderMapper headerMapper;
 
+    @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int saveHeaders(HttpHeaders headers, String requestId, String responseId) {
         Set<String> names = headers.names();
