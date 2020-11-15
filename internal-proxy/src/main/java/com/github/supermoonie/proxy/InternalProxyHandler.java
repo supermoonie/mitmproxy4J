@@ -74,7 +74,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         Channel clientChannel = ctx.channel();
         interceptContext.setClientChannel(clientChannel);
         InetSocketAddress clientAddress = (InetSocketAddress) clientChannel.remoteAddress();
-        logger.debug("{} active", clientAddress.toString());
+        logger.info("client: {} active", clientAddress.toString());
         String clientHost = clientAddress.getHostString();
         int clientPort = clientAddress.getPort();
         connectionInfo = new ConnectionInfo();
@@ -93,6 +93,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 ConnectionInfo info = RequestUtils.parseRemoteInfo(request, this.connectionInfo);
                 if (null == info) {
                     ReferenceCountUtil.release(msg);
+                    logger.warn("url: {}, bad request", request.uri());
                     throw new BadRequestException("Bad Request!");
                 }
                 status = ConnectionStatus.CONNECTING;
@@ -100,7 +101,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 if (HttpMethod.CONNECT.equals(request.method())) {
                     HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                     ctx.writeAndFlush(response);
-                    logger.debug("be connected by {}", ctx.channel().remoteAddress().toString());
+                    logger.debug("client: {} connected", ctx.channel().remoteAddress().toString());
                     // 暂时移除 httpServerCodec，处理 https 握手
                     ctx.pipeline().remove("httpCodec");
                     ctx.pipeline().remove("decompressor");
@@ -118,7 +119,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             } else {
                 connectionInfo.setUrl(request.uri());
             }
-            logger.debug("url: " + request.uri());
+            logger.info("request url: " + connectionInfo.getUrl());
             if (connectionInfo.isHttps()) {
                 SslHandler sslHandler = (SslHandler) ctx.pipeline().get("sslHandler");
                 SSLSession session = sslHandler.engine().getSession();
@@ -167,7 +168,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.debug(ctx.channel().remoteAddress().toString() + " inactive");
+        logger.info(ctx.channel().remoteAddress().toString() + " inactive");
         if (null != remoteChannelFuture && remoteChannelFuture.channel().isOpen()) {
             remoteChannelFuture.channel().close();
         }

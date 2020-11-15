@@ -68,7 +68,7 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                 public void operationComplete(Future<InetAddress> future) throws Exception {
                     if (future.isSuccess()) {
                         InetAddress inetAddress = future.getNow();
-                        log.debug("host: {}, dns answer: {}", inetHost, inetAddress.toString());
+                        log.debug("host: {}, dns: {}, answer: {}", inetHost, resolver.getClass().getSimpleName(), inetAddress.toString());
                         connectionInfo.setRemoteAddressList(List.of(inetAddress));
                         promise.setSuccess(inetAddress);
                     } else {

@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConfigurableNameResolver extends InetNameResolver {
 
-    private static final Map<String, InetAddress> DNS_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, List<InetAddress>> DNS_MAP = new ConcurrentHashMap<>();
 
     public ConfigurableNameResolver(EventExecutor executor) {
         super(executor);
@@ -25,31 +25,25 @@ public class ConfigurableNameResolver extends InetNameResolver {
 
     @Override
     protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
-        try {
-            InetAddress inetAddress = DNS_MAP.get(inetHost);
-            if (null != inetAddress) {
-                promise.setSuccess(inetAddress);
-            }
-            throw new UnknownHostException(inetHost);
-        } catch (UnknownHostException e) {
-            promise.setFailure(e);
+        List<InetAddress> inetAddresses = DNS_MAP.get(inetHost);
+        if (null == inetAddresses || inetAddresses.size() == 0) {
+            promise.setFailure(new UnknownHostException(inetHost));
+        } else {
+            promise.setSuccess(inetAddresses.get(0));
         }
     }
 
     @Override
     protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise) throws Exception {
-        try {
-            InetAddress inetAddress = DNS_MAP.get(inetHost);
-            if (null != inetAddress) {
-                promise.setSuccess(Collections.singletonList(inetAddress));
-            }
-            throw new UnknownHostException(inetHost);
-        } catch (UnknownHostException e) {
-            promise.setFailure(e);
+        List<InetAddress> inetAddresses = DNS_MAP.get(inetHost);
+        if (null == inetAddresses || inetAddresses.size() == 0) {
+            promise.setFailure(new UnknownHostException(inetHost));
+        } else {
+            promise.setSuccess(inetAddresses);
         }
     }
 
-    public static Map<String, InetAddress> getDnsMap() {
+    public static Map<String, List<InetAddress>> getDnsMap() {
         return DNS_MAP;
     }
 }

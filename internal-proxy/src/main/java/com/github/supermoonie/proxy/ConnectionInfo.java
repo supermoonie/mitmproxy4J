@@ -42,7 +42,7 @@ public class ConnectionInfo {
 
     private List<Certificate> serverCertificates;
 
-    private boolean useSecondProxy = true;
+    private boolean useSecondProxy = false;
 
     private String secondProxyHost;
 

@@ -3,12 +3,13 @@ package com.github.supermoonie.proxy.dns;
 import com.github.supermoonie.proxy.ConnectionInfo;
 import io.netty.channel.EventLoop;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.resolver.*;
+import io.netty.resolver.AddressResolver;
+import io.netty.resolver.AddressResolverGroup;
+import io.netty.resolver.InetSocketAddressResolver;
 import io.netty.resolver.dns.DnsNameResolver;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
 import io.netty.util.concurrent.EventExecutor;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 /**
