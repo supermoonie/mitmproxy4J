@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS certificate_info
     id                              VARCHAR(64) PRIMARY KEY ,
     request_id                      VARCHAR(64),
     response_id                     VARCHAR(64),
+    serial_number                   VARCHAR(128),
     issuer_common_name	            VARCHAR(128),
     issuer_organization_department	VARCHAR(128),
     issuer_organization_name	    VARCHAR(128),
@@ -98,7 +99,7 @@ CREATE TABLE IF NOT EXISTS certificate_info
     not_valid_before                DATETIME,
     not_valid_after                 DATETIME,
     sha_one                         VARCHAR(128),
-    sha_tow_five_six                VARCHAR(256),
+    sha_two_five_six                VARCHAR(256),
     full_detail	                    VARCHAR(5120),
     time_created                    DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );

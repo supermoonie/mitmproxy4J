@@ -10,6 +10,7 @@ public class CertificateInfo extends BaseEntity {
 
     private String requestId;
     private String responseId;
+    private String serialNumber;
     private String issuerCommonName;
     private String issuerOrganizationDepartment;
     private String issuerOrganizationName;
@@ -45,6 +46,14 @@ public class CertificateInfo extends BaseEntity {
 
     public void setResponseId(String responseId) {
         this.responseId = responseId;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public String getIssuerCommonName() {
@@ -212,6 +221,7 @@ public class CertificateInfo extends BaseEntity {
         return "CertificateInfo{" +
                 "requestId='" + requestId + '\'' +
                 ", responseId='" + responseId + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
                 ", issuerCommonName='" + issuerCommonName + '\'' +
                 ", issuerOrganizationDepartment='" + issuerOrganizationDepartment + '\'' +
                 ", issuerOrganizationName='" + issuerOrganizationName + '\'' +

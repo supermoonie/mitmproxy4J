@@ -5,10 +5,7 @@ import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
-import com.github.supermoonie.proxy.fx.service.ConnectionOverviewService;
-import com.github.supermoonie.proxy.fx.service.ContentService;
-import com.github.supermoonie.proxy.fx.service.HeaderService;
-import com.github.supermoonie.proxy.fx.service.RequestService;
+import com.github.supermoonie.proxy.fx.service.*;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
@@ -50,16 +47,15 @@ public class RequestServiceImpl implements RequestService {
     @Resource
     private ConnectionOverviewService connectionOverviewService;
 
+    @Resource
+    private CertificateInfoService certificateInfoService;
+
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public Request saveRequest(InterceptContext ctx, HttpRequest httpRequest) {
         ConnectionInfo connectionInfo = ctx.getConnectionInfo();
         Assert.notNull(connectionInfo, "ConnectionInfo is null!");
         String requestId = UUID.randomUUID().toString();
-//        List<Certificate> localCertificates = connectionInfo.getLocalCertificates();
-//        for (Certificate certificate : localCertificates) {
-//            saveCertificate(certificate);
-//        }
         String host = connectionInfo.getRemoteHost();
         int port = connectionInfo.getRemotePort();
         HttpMethod method = httpRequest.method();
@@ -82,6 +78,8 @@ public class RequestServiceImpl implements RequestService {
         }
         requestMapper.insert(req);
         connectionOverviewService.saveClientInfo(connectionInfo, requestId);
+        List<Certificate> localCertificates = connectionInfo.getLocalCertificates();
+        certificateInfoService.saveList(localCertificates, requestId, null);
         headerService.saveHeaders(httpRequest.headers(), requestId, null);
         return req;
     }

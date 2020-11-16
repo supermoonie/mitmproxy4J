@@ -242,6 +242,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                         FullHttpResponse response = (FullHttpResponse) msg;
                                         interceptContext.setFullHttpResponse(response);
                                         FullHttpResponse httpResponse = interceptContext.onResponse(request, response);
+                                        // https://www.yungouos.com/js/index.js?v=20201104005
                                         if ("bytes".equals(httpResponse.headers().get(HttpHeaderNames.ACCEPT_RANGES))) {
                                             httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, httpResponse.content().readableBytes());
                                         }
