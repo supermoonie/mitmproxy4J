@@ -12,14 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author supermoonie
@@ -44,6 +43,12 @@ public class CertificateInfoServiceImpl implements CertificateInfoService {
             if (certificate instanceof X509Certificate) {
                 X509Certificate cert = (X509Certificate) certificate;
                 String serialNumber = cert.getSerialNumber().toString(16).toUpperCase();
+                CertificateMap certificateMap = new CertificateMap();
+                certificateMap.setCertificateSerialNumber(serialNumber);
+                certificateMap.setId(UUID.randomUUID().toString());
+                certificateMap.setRequestId(requestId);
+                certificateMap.setResponseId(responseId);
+                certificateMapMapper.insert(certificateMap);
                 QueryWrapper<CertificateInfo> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("serial_number", serialNumber);
                 CertificateInfo certificateInfo = certificateInfoMapper.selectOne(queryWrapper);
@@ -80,12 +85,6 @@ public class CertificateInfoServiceImpl implements CertificateInfoService {
                     }
                     info.setFullDetail(cert.toString());
                     certificateInfoMapper.insert(info);
-                    CertificateMap certificateMap = new CertificateMap();
-                    certificateMap.setCertificateSerialNumber(serialNumber);
-                    certificateMap.setId(UUID.randomUUID().toString());
-                    certificateMap.setRequestId(requestId);
-                    certificateMap.setResponseId(responseId);
-                    certificateMapMapper.insert(certificateMap);
                 }
             }
         }
@@ -93,14 +92,22 @@ public class CertificateInfoServiceImpl implements CertificateInfoService {
 
     private Map<String, String> parseSubject(String subject) {
         Map<String, String> result = new HashMap<>(8);
-        String[] names = subject.split(", ");
+        List<String> list = new LinkedList<>();
+        String[] names = subject.split("=");
         for (String name : names) {
-            String[] arr = name.split("=");
-            if (arr.length == 2) {
-                result.put(arr[0], arr[1]);
+            if (name.contains(", ")) {
+                int index = name.lastIndexOf(", ");
+                String value = name.substring(0, index).replaceAll("\"", "");
+                String key = name.substring(index + 2, name.length());
+                list.add(value);
+                list.add(key);
             } else {
-                result.put(arr[0], "");
+                list.add(name);
             }
+        }
+        for (int i = 0; i < list.size(); i ++) {
+            result.put(list.get(i), list.get(i + 1));
+            i = i + 1;
         }
         return result;
     }

@@ -46,6 +46,8 @@ public class ConnectionOverviewServiceImpl implements ConnectionOverviewService 
         QueryWrapper<ConnectionOverview> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("request_id", requestId);
         ConnectionOverview connectionOverview = connectionOverviewMapper.selectOne(queryWrapper);
+        connectionOverview.setConnectStartTime(connectionInfo.getConnectStartTime());
+        connectionOverview.setConnectEndTime(connectionInfo.getConnectEndTime());
         connectionOverview.setDnsServer(connectionInfo.getDnsServer());
         connectionOverview.setDnsStartTime(connectionInfo.getDnsStartTime());
         connectionOverview.setDnsEndTime(connectionInfo.getDnsEndTime());

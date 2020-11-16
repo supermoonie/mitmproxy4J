@@ -173,6 +173,9 @@
 
                                         </TreeTableColumn>
                                       </columns>
+                                        <columnResizePolicy>
+                                            <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                        </columnResizePolicy>
                                     </TreeTableView>
                                  </children>
                               </AnchorPane>

@@ -12,7 +12,6 @@ public class ConnectionOverview extends BaseEntity {
     private String clientSessionId;
     private String clientProtocol;
     private String clientCipherSuite;
-
     private String dnsServer;
     private String remoteIp;
     private String serverSessionId;
@@ -21,6 +20,8 @@ public class ConnectionOverview extends BaseEntity {
     private Integer useSecondProxy;
     private String secondProxyHost;
     private Integer secondProxyPort;
+    private Long connectStartTime;
+    private Long connectEndTime;
     private Long dnsStartTime;
     private Long dnsEndTime;
 
@@ -136,6 +137,22 @@ public class ConnectionOverview extends BaseEntity {
         this.secondProxyPort = secondProxyPort;
     }
 
+    public Long getConnectStartTime() {
+        return connectStartTime;
+    }
+
+    public void setConnectStartTime(Long connectStartTime) {
+        this.connectStartTime = connectStartTime;
+    }
+
+    public Long getConnectEndTime() {
+        return connectEndTime;
+    }
+
+    public void setConnectEndTime(Long connectEndTime) {
+        this.connectEndTime = connectEndTime;
+    }
+
     public Long getDnsStartTime() {
         return dnsStartTime;
     }
@@ -158,17 +175,19 @@ public class ConnectionOverview extends BaseEntity {
                 "requestId='" + requestId + '\'' +
                 ", clientHost='" + clientHost + '\'' +
                 ", clientPort=" + clientPort +
-                ", dnsServer='" + dnsServer + '\'' +
-                ", remoteIp='" + remoteIp + '\'' +
+                ", clientSessionId='" + clientSessionId + '\'' +
                 ", clientProtocol='" + clientProtocol + '\'' +
                 ", clientCipherSuite='" + clientCipherSuite + '\'' +
-                ", clientSessionId='" + clientSessionId + '\'' +
+                ", dnsServer='" + dnsServer + '\'' +
+                ", remoteIp='" + remoteIp + '\'' +
                 ", serverSessionId='" + serverSessionId + '\'' +
                 ", serverProtocol='" + serverProtocol + '\'' +
                 ", serverCipherSuite='" + serverCipherSuite + '\'' +
                 ", useSecondProxy=" + useSecondProxy +
                 ", secondProxyHost='" + secondProxyHost + '\'' +
                 ", secondProxyPort=" + secondProxyPort +
+                ", connectStartTime=" + connectStartTime +
+                ", connectEndTime=" + connectEndTime +
                 ", dnsStartTime=" + dnsStartTime +
                 ", dnsEndTime=" + dnsEndTime +
                 '}';

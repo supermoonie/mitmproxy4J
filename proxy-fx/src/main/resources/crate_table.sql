@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS connection_overview
     use_second_proxy        INTEGER,
     second_proxy_host       VARCHAR(32),
     second_proxy_port       INTEGER,
+    connect_start_time      BIGINT,
+    connect_end_time        BIGINT,
     dns_start_time          BIGINT,
     dns_end_time            BIGINT,
     time_created            DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
