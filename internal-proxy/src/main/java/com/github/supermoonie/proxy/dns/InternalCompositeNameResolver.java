@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
@@ -120,13 +121,14 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
 
     private String dnsServerName(NameResolver<InetAddress> resolver) {
         if (resolver instanceof ConfigurableNameResolver) {
-            return "MemoryDnsMap()";
+            return "MemoryDnsMap";
         } else if (resolver instanceof InternalSingletonDnsServerAddressStreamProvider) {
             InternalSingletonDnsServerAddressStreamProvider provider = (InternalSingletonDnsServerAddressStreamProvider) resolver;
-            return String.format("SingletonDnsServer(%s)", provider.getAddress().getHostString());
+            return String.format("SingletonDnsServer:%s", provider.getAddress().getHostString());
         } else {
             List<InetSocketAddress> addresses = DefaultDnsServerAddressStreamProvider.defaultAddressList();
-            return String.format("DefaultDnsServer(%s)", addresses.toString());
+            String addr = addresses.stream().map(InetSocketAddress::getHostString).collect(Collectors.toList()).toString();
+            return String.format("SystemDnsProvider:%s", addr);
         }
     }
 }

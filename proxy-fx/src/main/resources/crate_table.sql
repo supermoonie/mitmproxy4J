@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS connection_overview
     dns_end_time            BIGINT,
     time_created            DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
-CREATE INDEX request_id_idx ON connection_overview(request_id);
+CREATE UNIQUE INDEX request_id_idx ON connection_overview(request_id);
 --EOF--
 CREATE TABLE IF NOT EXISTS certificate_info
 (
@@ -112,5 +112,3 @@ CREATE TABLE IF NOT EXISTS config
   `type`      INTEGER,
   time_created DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
-
-SELECT * FROM request ORDER BY time_created DESC;

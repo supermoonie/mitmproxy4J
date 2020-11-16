@@ -11,10 +11,18 @@ import com.github.supermoonie.proxy.fx.entity.Request;
 public interface ConnectionOverviewService {
 
     /**
-     * save connection info
+     * save connection client info
      * @param connectionInfo {@link ConnectionInfo}
      * @param requestId {@link Request#getId()}
      * @return  {@link ConnectionOverview#getId()}
      */
-    String save(ConnectionInfo connectionInfo, String requestId);
+    String saveClientInfo(ConnectionInfo connectionInfo, String requestId);
+
+    /**
+     * update connection server info
+     * @param connectionInfo    {@link ConnectionInfo}
+     * @param requestId {@link Request#getId()}
+     * @return effect rows
+     */
+    int updateServerInfo(ConnectionInfo connectionInfo, String requestId);
 }

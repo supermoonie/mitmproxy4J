@@ -12,6 +12,7 @@ public class ConnectionOverview extends BaseEntity {
     private String clientSessionId;
     private String clientProtocol;
     private String clientCipherSuite;
+
     private String dnsServer;
     private String remoteIp;
     private String serverSessionId;

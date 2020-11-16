@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
+import com.github.supermoonie.proxy.fx.service.ConnectionOverviewService;
 import com.github.supermoonie.proxy.fx.service.ContentService;
 import com.github.supermoonie.proxy.fx.service.HeaderService;
 import com.github.supermoonie.proxy.fx.service.RequestService;
@@ -46,22 +47,26 @@ public class RequestServiceImpl implements RequestService {
     @Resource
     private ContentService contentService;
 
+    @Resource
+    private ConnectionOverviewService connectionOverviewService;
+
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public Request saveRequest(InterceptContext ctx, HttpRequest httpRequest) {
         ConnectionInfo connectionInfo = ctx.getConnectionInfo();
         Assert.notNull(connectionInfo, "ConnectionInfo is null!");
-        List<Certificate> localCertificates = connectionInfo.getLocalCertificates();
-        for (Certificate certificate : localCertificates) {
-            saveCertificate(certificate);
-        }
+        String requestId = UUID.randomUUID().toString();
+//        List<Certificate> localCertificates = connectionInfo.getLocalCertificates();
+//        for (Certificate certificate : localCertificates) {
+//            saveCertificate(certificate);
+//        }
         String host = connectionInfo.getRemoteHost();
         int port = connectionInfo.getRemotePort();
         HttpMethod method = httpRequest.method();
         HttpVersion httpVersion = httpRequest.protocolVersion();
         String contentType = httpRequest.headers().get(HttpHeaders.CONTENT_TYPE);
         Request req = new Request();
-        req.setId(UUID.randomUUID().toString());
+        req.setId(requestId);
         req.setUri(connectionInfo.getUrl());
         req.setMethod(method.name());
         req.setHttpVersion(httpVersion.text());
@@ -76,7 +81,8 @@ public class RequestServiceImpl implements RequestService {
             req.setContentId(content.getId());
         }
         requestMapper.insert(req);
-        headerService.saveHeaders(httpRequest.headers(), req.getId(), null);
+        connectionOverviewService.saveClientInfo(connectionInfo, requestId);
+        headerService.saveHeaders(httpRequest.headers(), requestId, null);
         return req;
     }
 
