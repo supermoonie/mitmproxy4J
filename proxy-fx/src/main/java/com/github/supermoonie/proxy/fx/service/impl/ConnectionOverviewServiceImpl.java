@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.net.InetAddress;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -48,7 +49,7 @@ public class ConnectionOverviewServiceImpl implements ConnectionOverviewService 
         connectionOverview.setDnsServer(connectionInfo.getDnsServer());
         connectionOverview.setDnsStartTime(connectionInfo.getDnsStartTime());
         connectionOverview.setDnsEndTime(connectionInfo.getDnsEndTime());
-        connectionOverview.setRemoteIp(JSON.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress)));
+        connectionOverview.setRemoteIp(JSON.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress).collect(Collectors.toList())));
         connectionOverview.setServerSessionId(connectionInfo.getServerSessionId());
         connectionOverview.setServerProtocol(connectionInfo.getServerProtocol());
         connectionOverview.setServerCipherSuite(connectionInfo.getServerCipherSuite());

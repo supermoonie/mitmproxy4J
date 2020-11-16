@@ -6,7 +6,6 @@ import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.service.*;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -17,7 +16,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import sun.security.x509.X509CertImpl;
 
 import javax.annotation.Resource;
 import java.security.cert.Certificate;
@@ -69,9 +67,6 @@ public class RequestServiceImpl implements RequestService {
         req.setContentType(contentType);
         req.setHost(host);
         req.setPort(port);
-        req.setStartTime(connectionInfo.getRequestStartTime());
-        req.setEndTime(connectionInfo.getRequestEndTime());
-        req.setTimeCreated(new Date());
         if (httpRequest instanceof FullHttpRequest) {
             Content content = contentService.saveContent(((FullHttpRequest) httpRequest).content(), req.getUri());
             req.setContentId(content.getId());
@@ -82,10 +77,5 @@ public class RequestServiceImpl implements RequestService {
         certificateInfoService.saveList(localCertificates, requestId, null);
         headerService.saveHeaders(httpRequest.headers(), requestId, null);
         return req;
-    }
-
-    private void saveCertificate(Certificate certificate) {
-        X509CertImpl cert = (X509CertImpl) certificate;
-        log.info(cert.getName());
     }
 }

@@ -8,8 +8,6 @@ import java.util.Date;
  */
 public class CertificateInfo extends BaseEntity {
 
-    private String requestId;
-    private String responseId;
     private String serialNumber;
     private String issuerCommonName;
     private String issuerOrganizationDepartment;
@@ -31,22 +29,6 @@ public class CertificateInfo extends BaseEntity {
     private String shaOne;
     private String shaTwoFiveSix;
     private String fullDetail;
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getResponseId() {
-        return responseId;
-    }
-
-    public void setResponseId(String responseId) {
-        this.responseId = responseId;
-    }
 
     public String getSerialNumber() {
         return serialNumber;
@@ -219,9 +201,7 @@ public class CertificateInfo extends BaseEntity {
     @Override
     public String toString() {
         return "CertificateInfo{" +
-                "requestId='" + requestId + '\'' +
-                ", responseId='" + responseId + '\'' +
-                ", serialNumber='" + serialNumber + '\'' +
+                "serialNumber='" + serialNumber + '\'' +
                 ", issuerCommonName='" + issuerCommonName + '\'' +
                 ", issuerOrganizationDepartment='" + issuerOrganizationDepartment + '\'' +
                 ", issuerOrganizationName='" + issuerOrganizationName + '\'' +

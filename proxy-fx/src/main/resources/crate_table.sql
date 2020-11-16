@@ -75,11 +75,17 @@ CREATE TABLE IF NOT EXISTS connection_overview
 );
 CREATE UNIQUE INDEX request_id_idx ON connection_overview(request_id);
 --EOF--
+CREATE TABLE IF NOT EXISTS certificate_map (
+    id                              VARCHAR(64) PRIMARY KEY ,
+    certificate_serial_number       VARCHAR(128),
+    request_id                      VARCHAR(64),
+    response_id                     VARCHAR(64),
+    time_created                    DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
+);
+--EOF--
 CREATE TABLE IF NOT EXISTS certificate_info
 (
     id                              VARCHAR(64) PRIMARY KEY ,
-    request_id                      VARCHAR(64),
-    response_id                     VARCHAR(64),
     serial_number                   VARCHAR(128),
     issuer_common_name	            VARCHAR(128),
     issuer_organization_department	VARCHAR(128),
@@ -103,7 +109,7 @@ CREATE TABLE IF NOT EXISTS certificate_info
     full_detail	                    VARCHAR(5120),
     time_created                    DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
-CREATE INDEX request_id_idx ON certificate_info(request_id);
+CREATE UNIQUE INDEX serial_number_idx ON certificate_info(serial_number);
 --EOF--
 CREATE TABLE IF NOT EXISTS config
 (

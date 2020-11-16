@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.entity.Content;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
+import com.github.supermoonie.proxy.fx.mapper.RequestMapper;
 import com.github.supermoonie.proxy.fx.mapper.ResponseMapper;
 import com.github.supermoonie.proxy.fx.service.*;
 import com.github.supermoonie.proxy.fx.util.BrotliUtil;
@@ -34,6 +35,9 @@ public class ResponseServiceImpl implements ResponseService {
     private final Logger log = LoggerFactory.getLogger(ResponseServiceImpl.class);
 
     @Resource
+    private RequestMapper requestMapper;
+
+    @Resource
     private HeaderService headerService;
 
     @Resource
@@ -52,6 +56,9 @@ public class ResponseServiceImpl implements ResponseService {
     @Override
     public Response saveResponse(InterceptContext ctx, FullHttpResponse httpResponse, Request request) {
         ConnectionInfo connectionInfo = ctx.getConnectionInfo();
+        request.setStartTime(connectionInfo.getRequestStartTime());
+        request.setEndTime(connectionInfo.getRequestEndTime());
+        requestMapper.updateById(request);
         connectionOverviewService.updateServerInfo(connectionInfo, request.getId());
         String contentEncoding = httpResponse.headers().get(HttpHeaderNames.CONTENT_ENCODING);
         ByteBuf buf;
@@ -84,6 +91,8 @@ public class ResponseServiceImpl implements ResponseService {
         res.setHttpVersion(httpResponse.protocolVersion().text());
         res.setStatus(httpResponse.status().code());
         res.setContentId(content.getId());
+        res.setStartTime(connectionInfo.getResponseStartTime());
+        res.setEndTime(connectionInfo.getResponseEndTime());
         responseMapper.insert(res);
         List<Certificate> serverCertificates = connectionInfo.getServerCertificates();
         certificateInfoService.saveList(serverCertificates, request.getId(), res.getId());

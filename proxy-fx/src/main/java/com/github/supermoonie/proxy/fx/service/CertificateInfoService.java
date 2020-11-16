@@ -18,7 +18,6 @@ public interface CertificateInfoService {
      * @param certificates list of {@link Certificate}
      * @param requestId    {@link Request#getId()}
      * @param responseId   {@link Response#getId()}
-     * @return effect rows
      */
-    int saveList(List<Certificate> certificates, String requestId, String responseId);
+    void saveList(List<Certificate> certificates, String requestId, String responseId);
 }
