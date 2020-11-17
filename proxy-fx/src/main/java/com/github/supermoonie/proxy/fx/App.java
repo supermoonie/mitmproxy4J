@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.fx;
 
-import com.github.supermoonie.proxy.fx.controller.MainController;
+import com.github.supermoonie.proxy.fx.controller.main.MainController;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
@@ -13,7 +13,6 @@ import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;

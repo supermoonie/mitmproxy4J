@@ -1,18 +1,27 @@
 package com.github.supermoonie.proxy.fx.controller.dialog;
 
+import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.AllowUrl;
+import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
-import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.ResourceBundle;
@@ -22,6 +31,8 @@ import java.util.ResourceBundle;
  * @date 2020-11-08
  */
 public class AllowListSettingDialog implements Initializable {
+
+    private static final Logger log = LoggerFactory.getLogger(AllowListSettingDialog.class);
 
     public CheckBox enableCheckBox;
     public TableView<AllowUrl> settingTableView;
@@ -82,5 +93,26 @@ public class AllowListSettingDialog implements Initializable {
     public void onCancelButtonClicked() {
         stage.setUserData(GlobalSetting.getInstance().isAllowUrl());
         stage.close();
+    }
+
+    public static Object showAndWait() {
+        Stage allowListSettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(AllowListSettingDialog.class.getResource("/ui/dialog/AllowListSettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            AllowListSettingDialog allowListSettingDialog = fxmlLoader.getController();
+            allowListSettingDialog.setStage(allowListSettingStage);
+            allowListSettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(allowListSettingStage, "Allow List Setting");
+            allowListSettingStage.initModality(Modality.APPLICATION_MODAL);
+            allowListSettingStage.setResizable(false);
+            allowListSettingStage.initStyle(StageStyle.UTILITY);
+            allowListSettingStage.showAndWait();
+            return allowListSettingStage.getUserData();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            AlertUtil.error(e);
+            return null;
+        }
     }
 }

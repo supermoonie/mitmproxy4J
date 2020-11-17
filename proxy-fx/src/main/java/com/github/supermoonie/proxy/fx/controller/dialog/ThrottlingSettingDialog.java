@@ -1,12 +1,21 @@
 package com.github.supermoonie.proxy.fx.controller.dialog;
 
+import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ResourceBundle;
@@ -17,9 +26,10 @@ import java.util.ResourceBundle;
  */
 public class ThrottlingSettingDialog implements Initializable {
 
+    private static final Logger log = LoggerFactory.getLogger(ThrottlingSettingDialog.class);
+
     @FXML
     protected TextField downloadTextField;
-
     @FXML
     protected TextField uploadTextField;
 
@@ -62,5 +72,24 @@ public class ThrottlingSettingDialog implements Initializable {
 
     public void setStage(Stage stage) {
         this.stage = stage;
+    }
+
+    public static void show() {
+        Stage throttlingSettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(ThrottlingSettingDialog.class.getResource("/ui/dialog/ThrottlingSettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            ThrottlingSettingDialog throttlingSettingDialog = fxmlLoader.getController();
+            throttlingSettingDialog.setStage(throttlingSettingStage);
+            throttlingSettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(throttlingSettingStage, "Throttling Setting");
+            throttlingSettingStage.initModality(Modality.APPLICATION_MODAL);
+            throttlingSettingStage.setResizable(false);
+            throttlingSettingStage.initStyle(StageStyle.UTILITY);
+            throttlingSettingStage.show();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            AlertUtil.error(e);
+        }
     }
 }

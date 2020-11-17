@@ -1,11 +1,16 @@
-package com.github.supermoonie.proxy.fx.controller;
+package com.github.supermoonie.proxy.fx.controller.main;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.controller.SendReqController;
 import com.github.supermoonie.proxy.fx.controller.dialog.*;
+import com.github.supermoonie.proxy.fx.controller.main.factory.ListViewCellFactory;
+import com.github.supermoonie.proxy.fx.controller.main.handler.*;
+import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewFocusListener;
+import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewSelectListener;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.*;
@@ -13,18 +18,18 @@ import com.github.supermoonie.proxy.fx.mapper.*;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
-import com.github.supermoonie.proxy.fx.support.*;
+import com.github.supermoonie.proxy.fx.source.Icons;
+import com.github.supermoonie.proxy.fx.support.Flow;
+import com.github.supermoonie.proxy.fx.support.HexContentFlow;
+import com.github.supermoonie.proxy.fx.support.PropertyPair;
 import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -35,21 +40,16 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.bouncycastle.util.encoders.Hex;
 import org.controlsfx.glyphfont.FontAwesome;
-import org.controlsfx.glyphfont.Glyph;
-import org.controlsfx.glyphfont.GlyphFont;
-import org.controlsfx.glyphfont.GlyphFontRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -63,7 +63,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 /**
@@ -204,14 +207,6 @@ public class MainController implements Initializable {
     private final KeyCodeCombination macKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN);
     private final KeyCodeCombination winKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
 
-    private final GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
-
-    private final Image blackLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_000.gif"), 16, 16, false, false);
-    private final Image whiteLoadingIcon = new Image(getClass().getResourceAsStream("/icon/loading_fff.gif"), 16, 16, false, false);
-    private final Image clearIcon = new Image(getClass().getResourceAsStream("/icon/clear.png"), 16, 16, false, false);
-    private final Image grayDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_gray.png"), 16, 16, false, false);
-    private final Image greenDotIcon = new Image(getClass().getResourceAsStream("/icon/dot_green.png"), 16, 16, false, false);
-
     private final ObservableList<FlowNode> allNode = FXCollections.observableList(new LinkedList<>());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     private String currentRequestId;
@@ -235,75 +230,28 @@ public class MainController implements Initializable {
         initTreeView();
         initListView();
         initResponseJsonWebView();
+        initOverview();
         clear();
+    }
+
+    private void initOverview() {
         overviewNameColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getKey()));
         overviewValueColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getValue()));
         overviewRoot.setExpanded(true);
         overviewTreeTableView.setRoot(overviewRoot);
         overviewTreeTableView.setShowRoot(false);
-        overviewTreeTableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (event.getClickCount() == 2) {
-                    TreeItem<PropertyPair> selectedItem = overviewTreeTableView.getSelectionModel().getSelectedItem();
-                    if (null != selectedItem) {
-                        PropertyPair propertyPair = selectedItem.getValue();
-                        if (!StringUtils.isEmpty(propertyPair.getValue())) {
-                            Stage stage = new Stage();
-                            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/InfoDialog.fxml"));
-                            try {
-                                Parent parent = fxmlLoader.load();
-                                InfoDialog infoDialog = fxmlLoader.getController();
-                                infoDialog.setStage(stage);
-                                infoDialog.setText(propertyPair.getValue());
-                                stage.setScene(new Scene(parent));
-                                App.setCommonIcon(stage, propertyPair.getKey());
-                                stage.initModality(Modality.NONE);
-                                stage.initStyle(StageStyle.UTILITY);
-                                stage.setX(event.getX() + 300);
-                                stage.setY(event.getY() + 100);
-                                stage.showAndWait();
-                            } catch (IOException e) {
-                                log.error(e.getMessage(), e);
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        overviewTreeTableView.setOnMouseClicked(new OverviewTreeTableViewMouseEventHandler(overviewTreeTableView));
     }
 
     private void initListView() {
-        listView.setCellFactory(param -> new ListCell<>() {
-            private final ChangeListener<Number> statusChangeListener = (observable, oldValue, newValue) -> {
-                if (null == newValue || null == getItem()) {
-                    return;
-                }
-                setGraphic(loadIcon(getItem().getStatus(), getItem().getContentType(), false));
-            };
-
-            @Override
-            protected void updateItem(FlowNode item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    setText(item.getUrl());
-                    setGraphic(loadIcon(item.getStatus(), item.getContentType(), false));
-                    item.statusPropertyProperty().removeListener(statusChangeListener);
-                    item.statusPropertyProperty().addListener(statusChangeListener);
-                }
-            }
-        });
+        listView.setCellFactory(new ListViewCellFactory());
+        listView.setContextMenu(listContextMenu);
         listView.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
             FlowNode selectedItem = listView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
+            if (null != selectedItem) {
+                fillContentsTab(selectedItem);
             }
-            fillContentsTab(selectedItem);
         });
-        listView.setContextMenu(listContextMenu);
     }
 
     private void initTreeView() {
@@ -311,272 +259,22 @@ public class MainController implements Initializable {
         treeView.setShowRoot(false);
         treeView.setContextMenu(treeContextMenu);
         treeView.contextMenuProperty().bind(Bindings.when(treeView.getSelectionModel().selectedItemProperty().isNull()).then((ContextMenu) null).otherwise(treeContextMenu));
-        treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            FlowNode selectedNode = selectedItem.getValue();
-            if (null == selectedNode) {
-                return;
-            }
-            if (!selectedNode.getType().equals(EnumFlowType.TARGET)) {
-                return;
-            }
+        treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, new TreeViewMouseEventHandler(treeView, selectedNode -> {
             fillContentsTab(selectedNode);
             fillOverviewTab(selectedNode);
-        });
-        treeView.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            Node node = selectedItem.getGraphic();
-            FlowNode flowNode = selectedItem.getValue();
-            if (!newValue) {
-                if (flowNode.getType().equals(EnumFlowType.TARGET) && node instanceof Glyph) {
-                    Glyph glyph = (Glyph) node;
-                    glyph.setColor((Color) Objects.requireNonNullElse(glyph.getUserData(), Color.BLACK));
-                }
-            } else {
-                if (flowNode.getType().equals(EnumFlowType.TARGET) && node instanceof Glyph) {
-                    Glyph glyph = (Glyph) node;
-                    glyph.setColor(Color.WHITE);
-                }
-            }
-        });
-        treeView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (null != oldValue) {
-                FlowNode node = oldValue.getValue();
-                Node oldNode = oldValue.getGraphic();
-                if (node.getType().equals(EnumFlowType.TARGET) && oldNode instanceof Glyph) {
-                    Glyph glyph = (Glyph) oldNode;
-                    glyph.setColor((Color) Objects.requireNonNullElse(glyph.getUserData(), Color.BLACK));
-                }
-                if (-1 == node.getStatus() && node.getType().equals(EnumFlowType.TARGET)) {
-                    if (oldNode instanceof ImageView) {
-                        ImageView imageView = (ImageView) oldNode;
-                        imageView.setImage(blackLoadingIcon);
-                    }
-                }
-
-            }
-            if (null != newValue) {
-                FlowNode node = newValue.getValue();
-                Node newNode = newValue.getGraphic();
-                if (-1 == node.getStatus() && node.getType().equals(EnumFlowType.TARGET)) {
-                    if (newNode instanceof ImageView) {
-                        ImageView imageView = (ImageView) newNode;
-                        imageView.setImage(whiteLoadingIcon);
-                    }
-                }
-                if (node.getType().equals(EnumFlowType.TARGET) && newNode instanceof Glyph) {
-                    Glyph glyph = (Glyph) newNode;
-                    glyph.setColor(Color.WHITE);
-                }
-            }
-        });
+        }));
+        treeView.focusedProperty().addListener(new TreeViewFocusListener(treeView));
+        treeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectListener());
     }
 
-    private final EventHandler<ActionEvent> copyMenuItemHandler = event -> {
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        if (selectedTab.equals(structureTab)) {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            FlowNode node = selectedItem.getValue();
-            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-                List<String> list = new LinkedList<>();
-                TreeItem<FlowNode> current = selectedItem;
-                while (current != treeView.getRoot()) {
-                    list.add(current.getValue().getUrl());
-                    current = current.getParent();
-                }
-                Collections.reverse(list);
-                String url = String.join("/", list);
-                ClipboardUtil.copyText(url);
-            } else {
-                ClipboardUtil.copyText(node.getUrl());
-            }
-        } else {
-            FlowNode node = listView.getSelectionModel().getSelectedItem();
-            if (null == node) {
-                return;
-            }
-            ClipboardUtil.copyText(node.getUrl());
-        }
-
-    };
-
-    private final EventHandler<ActionEvent> copyResponseMenuItemHandler = event -> {
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        FlowNode node;
-        if (selectedTab.equals(structureTab)) {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            node = selectedItem.getValue();
-        } else {
-            node = listView.getSelectionModel().getSelectedItem();
-            if (node == null) {
-                return;
-            }
-        }
-        Request request = requestMapper.selectById(node.getId());
-        QueryWrapper<Response> resQuery = new QueryWrapper<>();
-        resQuery.eq("request_id", request.getId());
-        Response response = responseMapper.selectOne(resQuery);
-        String contentType = response.getContentType();
-        Content content = contentMapper.selectById(response.getContentId());
-        if (null != content && null != content.getContent() && content.getContent().length > 0) {
-            if (contentType.startsWith("image/")) {
-                ClipboardUtil.copyImage(new Image(new ByteArrayInputStream(content.getContent())));
-            } else {
-                // TODO contentType 与 文件映射
-                ClipboardUtil.copyText(new String(content.getContent(), StandardCharsets.UTF_8));
-            }
-        } else {
-            ClipboardUtil.copyText("");
-        }
-    };
-
-    private final EventHandler<ActionEvent> saveResponseMenuItemHandler = event -> {
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        FlowNode node;
-        if (selectedTab.equals(structureTab)) {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            node = selectedItem.getValue();
-        } else {
-            node = listView.getSelectionModel().getSelectedItem();
-            if (node == null) {
-                return;
-            }
-        }
-        Request request = requestMapper.selectById(node.getId());
-        QueryWrapper<Response> resQuery = new QueryWrapper<>();
-        resQuery.eq("request_id", request.getId());
-        Response response = responseMapper.selectOne(resQuery);
-        Content content = contentMapper.selectById(response.getContentId());
-        if (null != content && null != content.getContent() && content.getContent().length > 0) {
-            FileChooser fileChooser = new FileChooser();
-            String lastFragment = UrlUtil.getLastFragment(request.getUri());
-            if (null != lastFragment) {
-                fileChooser.setInitialFileName(lastFragment);
-            }
-            File file = fileChooser.showSaveDialog(App.getPrimaryStage());
-            try {
-                FileUtils.writeByteArrayToFile(file, content.getContent());
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
-                AlertUtil.error(e);
-            }
-        } else {
-            AlertUtil.info("Empty Response!");
-        }
-    };
-
-    private final EventHandler<ActionEvent> editMenuItemHandler = event -> {
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        FlowNode node;
-        if (selectedTab.equals(structureTab)) {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            node = selectedItem.getValue();
-        } else {
-            node = listView.getSelectionModel().getSelectedItem();
-            if (node == null) {
-                return;
-            }
-        }
-        onSendRequestMenuItemClicked().setRequestId(node.getId());
-    };
-
-    private final EventHandler<ActionEvent> addBlockListMenuItemHandler = event -> {
-        GlobalSetting setting = GlobalSetting.getInstance();
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        FlowNode node;
-        if (selectedTab.equals(structureTab)) {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            node = selectedItem.getValue();
-            String url;
-            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-                List<String> list = new LinkedList<>();
-                TreeItem<FlowNode> current = selectedItem;
-                while (current != treeView.getRoot()) {
-                    list.add(current.getValue().getUrl());
-                    current = current.getParent();
-                }
-                Collections.reverse(list);
-                url = String.join("/", list);
-            } else {
-                url = node.getUrl();
-            }
-            BlockUrl blockUrl = new BlockUrl(true, url);
-            setting.getBlockUrlList().add(blockUrl);
-        } else {
-            node = listView.getSelectionModel().getSelectedItem();
-            if (node == null) {
-                return;
-            }
-            BlockUrl blockUrl = new BlockUrl(true, node.getUrl());
-            setting.getBlockUrlList().add(blockUrl);
-        }
-    };
-
-    private final EventHandler<ActionEvent> addAllowListMenuItemHandler = event -> {
-        GlobalSetting setting = GlobalSetting.getInstance();
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        FlowNode node;
-        if (selectedTab.equals(structureTab)) {
-            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-            if (null == selectedItem) {
-                return;
-            }
-            node = selectedItem.getValue();
-            String url;
-            if (!node.getType().equals(EnumFlowType.BASE_URL)) {
-                List<String> list = new LinkedList<>();
-                TreeItem<FlowNode> current = selectedItem;
-                while (current != treeView.getRoot()) {
-                    list.add(current.getValue().getUrl());
-                    current = current.getParent();
-                }
-                Collections.reverse(list);
-                url = String.join("/", list);
-            } else {
-                url = node.getUrl();
-            }
-            AllowUrl allowUrl = new AllowUrl(true, url);
-            setting.getAllowUrlList().add(allowUrl);
-        } else {
-            node = listView.getSelectionModel().getSelectedItem();
-            if (node == null) {
-                return;
-            }
-            AllowUrl allowUrl = new AllowUrl(true, node.getUrl());
-            setting.getAllowUrlList().add(allowUrl);
-        }
-
-    };
-
     private void initContextMenu() {
-        copyMenuItem.setOnAction(copyMenuItemHandler);
-        copyResponseMenuItem.setOnAction(copyResponseMenuItemHandler);
-        saveResponseMenuItem.setOnAction(saveResponseMenuItemHandler);
+        copyMenuItem.setOnAction(new CopyMenuItemHandler(tabPane, structureTab, treeView, listView));
+        copyResponseMenuItem.setOnAction(new CopyResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
+        saveResponseMenuItem.setOnAction(new SaveResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
         repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
-        editMenuItem.setOnAction(editMenuItemHandler);
-        blockMenuItem.setOnAction(addBlockListMenuItemHandler);
-        allowMenuItem.setOnAction(addAllowListMenuItemHandler);
+        editMenuItem.setOnAction(new EditMenuItemHandler(tabPane, structureTab, treeView, listView, node -> onSendRequestMenuItemClicked().setRequestId(node.getId())));
+        blockMenuItem.setOnAction(new AddBlockListMenuItemHandler(tabPane, structureTab, treeView, listView));
+        allowMenuItem.setOnAction(new AddAllowListMenuItemHandler(tabPane, structureTab, treeView, listView));
         treeContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
         listContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
         treeContextMenu.setOnShowing(event -> {
@@ -613,36 +311,36 @@ public class MainController implements Initializable {
     }
 
     private void initToolBar() {
-        ImageView clearIconView = new ImageView(clearIcon);
+        ImageView clearIconView = new ImageView(Icons.CLEAR_ICON);
         clearIconView.setFitHeight(12);
         clearIconView.setFitWidth(12);
         clearButton.setGraphic(clearIconView);
-        editButton.setGraphic(fontAwesome.create(FontAwesome.Glyph.EDIT));
-        repeatButton.setGraphic(fontAwesome.create(FontAwesome.Glyph.REPEAT));
+        editButton.setGraphic(Icons.FONT_AWESOME.create(FontAwesome.Glyph.EDIT));
+        repeatButton.setGraphic(Icons.FONT_AWESOME.create(FontAwesome.Glyph.REPEAT));
     }
 
     private void initRecordSetting() {
         recordMenuItem.setSelected(GlobalSetting.getInstance().isRecord());
-        ImageView imageView = new ImageView(GlobalSetting.getInstance().isRecord() ? greenDotIcon : grayDotIcon);
+        ImageView imageView = new ImageView(GlobalSetting.getInstance().isRecord() ? Icons.GREEN_DOT_ICON : Icons.GRAY_DOT_ICON);
         imageView.setFitWidth(12);
         imageView.setFitHeight(12);
         recordingSwitchButton.setGraphic(imageView);
         GlobalSetting.getInstance().recordProperty().addListener((observable, oldValue, newValue) -> {
             recordMenuItem.setSelected(newValue);
-            imageView.setImage(newValue ? greenDotIcon : grayDotIcon);
+            imageView.setImage(newValue ? Icons.GREEN_DOT_ICON : Icons.GRAY_DOT_ICON);
             recordingSwitchButton.setGraphic(imageView);
         });
     }
 
     private void initThrottlingSetting() {
         throttlingMenuItem.setSelected(GlobalSetting.getInstance().isThrottling());
-        ImageView imageView = new ImageView(GlobalSetting.getInstance().isThrottling() ? greenDotIcon : grayDotIcon);
+        ImageView imageView = new ImageView(GlobalSetting.getInstance().isThrottling() ? Icons.GREEN_DOT_ICON : Icons.GRAY_DOT_ICON);
         imageView.setFitWidth(12);
         imageView.setFitHeight(12);
         throttlingSwitchButton.setGraphic(imageView);
         GlobalSetting.getInstance().throttlingProperty().addListener((observable, oldValue, newValue) -> {
             throttlingMenuItem.setSelected(newValue);
-            imageView.setImage(newValue ? greenDotIcon : grayDotIcon);
+            imageView.setImage(newValue ? Icons.GREEN_DOT_ICON : Icons.GRAY_DOT_ICON);
             throttlingSwitchButton.setGraphic(imageView);
             ProxyManager.getInternalProxy().setTrafficShaping(newValue);
             GlobalChannelTrafficShapingHandler handler = ProxyManager.getInternalProxy().getTrafficShapingHandler();
@@ -656,98 +354,31 @@ public class MainController implements Initializable {
     }
 
     public void onJsonViewerMenuItemClicked() {
-        Stage jsonViewerStage = new Stage();
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/JsonViewerDialog.fxml"));
-        try {
-            Parent parent = fxmlLoader.load();
-            JsonViewerDialog jsonViewerDialog = fxmlLoader.getController();
-            jsonViewerDialog.setStage(jsonViewerStage);
-            jsonViewerStage.setScene(new Scene(parent));
-            App.setCommonIcon(jsonViewerStage, "JSON Viewer");
-            jsonViewerStage.show();
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        JsonViewerDialog.show();
     }
 
     public void onAllowListMenuItemClicked() {
-        Stage allowListSettingStage = new Stage();
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/AllowListSettingDialog.fxml"));
-        try {
-            Parent parent = fxmlLoader.load();
-            AllowListSettingDialog allowListSettingDialog = fxmlLoader.getController();
-            allowListSettingDialog.setStage(allowListSettingStage);
-            allowListSettingStage.setScene(new Scene(parent));
-            App.setCommonIcon(allowListSettingStage, "Allow List Setting");
-            allowListSettingStage.initModality(Modality.APPLICATION_MODAL);
-            allowListSettingStage.setResizable(false);
-            allowListSettingStage.initStyle(StageStyle.UTILITY);
-            allowListSettingStage.showAndWait();
-            if (null != allowListSettingStage.getUserData()) {
-                boolean enable = (boolean) allowListSettingStage.getUserData();
-                allowListMenuItem.setSelected(enable);
-            }
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
+        Object userData = AllowListSettingDialog.showAndWait();
+        if (null != userData) {
+            boolean enable = (boolean) userData;
+            allowListMenuItem.setSelected(enable);
         }
     }
 
     public void onBlockListMenuItemClicked() {
-        Stage blockUrlSettingStage = new Stage();
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/BlockUrlSettingDialog.fxml"));
-        try {
-            Parent parent = fxmlLoader.load();
-            BlockUrlSettingDialog blockUrlSettingDialog = fxmlLoader.getController();
-            blockUrlSettingDialog.setStage(blockUrlSettingStage);
-            blockUrlSettingStage.setScene(new Scene(parent));
-            App.setCommonIcon(blockUrlSettingStage, "Block List Setting");
-            blockUrlSettingStage.setResizable(false);
-            blockUrlSettingStage.initModality(Modality.APPLICATION_MODAL);
-            blockUrlSettingStage.initStyle(StageStyle.UTILITY);
-            blockUrlSettingStage.showAndWait();
-            if (null != blockUrlSettingStage.getUserData()) {
-                boolean enable = (boolean) blockUrlSettingStage.getUserData();
-                blockListMenuItem.setSelected(enable);
-            }
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
+        Object userData = BlockUrlSettingDialog.showAndWait();
+        if (null != userData) {
+            boolean enable = (boolean) userData;
+            blockListMenuItem.setSelected(enable);
         }
     }
 
     public void onThrottlingSettingMenuItemClicked() {
-        Stage throttlingSettingStage = new Stage();
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/ThrottlingSettingDialog.fxml"));
-        try {
-            Parent parent = fxmlLoader.load();
-            ThrottlingSettingDialog throttlingSettingDialog = fxmlLoader.getController();
-            throttlingSettingDialog.setStage(throttlingSettingStage);
-            throttlingSettingStage.setScene(new Scene(parent));
-            App.setCommonIcon(throttlingSettingStage, "Throttling Setting");
-            throttlingSettingStage.initModality(Modality.APPLICATION_MODAL);
-            throttlingSettingStage.setResizable(false);
-            throttlingSettingStage.initStyle(StageStyle.UTILITY);
-            throttlingSettingStage.show();
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        ThrottlingSettingDialog.show();
     }
 
     public void onProxySettingMenuItemClicked() {
-        Stage proxySettingStage = new Stage();
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/ProxySettingDialog.fxml"));
-        try {
-            Parent parent = fxmlLoader.load();
-            ProxySettingDialog proxySettingDialog = fxmlLoader.getController();
-            proxySettingDialog.setStage(proxySettingStage);
-            proxySettingStage.setScene(new Scene(parent));
-            App.setCommonIcon(proxySettingStage, "Lightning");
-            proxySettingStage.initModality(Modality.APPLICATION_MODAL);
-            proxySettingStage.setResizable(false);
-            proxySettingStage.initStyle(StageStyle.UTILITY);
-            proxySettingStage.show();
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        ProxySettingDialog.show();
     }
 
     public void onSystemProxyMenuItemClicked() {
@@ -1125,7 +756,7 @@ public class MainController implements Initializable {
                 fingerprintsTreeItem.getChildren().clear();
                 fingerprintsTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("SHA-1", certificateInfo.getShaOne())));
                 fingerprintsTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("SHA-256", certificateInfo.getShaTwoFiveSix())));
-//                TreeItem<PropertyPair> fullDetailTreeItem = new TreeItem<>(new PropertyPair("Full Detail", certificateInfo.getFullDetail()));
+                TreeItem<PropertyPair> fullDetailTreeItem = new TreeItem<>(new PropertyPair("Full Detail", certificateInfo.getFullDetail()));
                 certTreeItem.getChildren().clear();
                 certTreeItem.getChildren().add(serialNumberTreeItem);
                 certTreeItem.getChildren().add(typeTreeItem);
@@ -1134,7 +765,7 @@ public class MainController implements Initializable {
                 certTreeItem.getChildren().add(notValidBeforeTreeItem);
                 certTreeItem.getChildren().add(notValidAfterTreeItem);
                 certTreeItem.getChildren().add(fingerprintsTreeItem);
-//                certTreeItem.getChildren().add(fullDetailTreeItem);
+                certTreeItem.getChildren().add(fullDetailTreeItem);
                 if (null == certificateMap.getResponseId()) {
                     clientTreeItem.getChildren().add(certTreeItem);
                 } else {
@@ -1219,7 +850,7 @@ public class MainController implements Initializable {
             baseNode.setType(EnumFlowType.BASE_URL);
             baseNode.setCurrentUrl(baseUri);
             baseNode.setStatus(flowNode.getStatus());
-            TreeItem<FlowNode> item = new TreeItem<>(baseNode, fontAwesome.create(FontAwesome.Glyph.GLOBE));
+            TreeItem<FlowNode> item = new TreeItem<>(baseNode, Icons.FONT_AWESOME.create(FontAwesome.Glyph.GLOBE));
             item.setExpanded(CollectionUtils.isEmpty(root.getChildren()));
             root.getChildren().add(item);
             return item;
@@ -1232,7 +863,7 @@ public class MainController implements Initializable {
             rootPathNode.setUrl("/");
             rootPathNode.setCurrentUrl(flowNode.getUrl());
             rootPathNode.setType(EnumFlowType.TARGET);
-            TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
+            TreeItem<FlowNode> rootPathTreeItem = new TreeItem<>(rootPathNode, Icons.loadIcon(flowNode.getStatus(), flowNode.getContentType()));
             rootPathTreeItem.setExpanded(CollectionUtils.isEmpty(overviewRoot.getChildren()));
             baseNodeTreeItem.getChildren().add(rootPathTreeItem);
         } else {
@@ -1251,7 +882,7 @@ public class MainController implements Initializable {
                     node.setCurrentUrl(flowNode.getUrl());
                     node.setType(EnumFlowType.TARGET);
                     node.setStatus(flowNode.getStatus());
-                    TreeItem<FlowNode> treeItem = new TreeItem<>(node, loadIcon(flowNode.getStatus(), flowNode.getContentType()));
+                    TreeItem<FlowNode> treeItem = new TreeItem<>(node, Icons.loadIcon(flowNode.getStatus(), flowNode.getContentType()));
                     currentItem.getChildren().add(treeItem);
                 } else {
                     ObservableList<TreeItem<FlowNode>> treeItems = currentItem.getChildren();
@@ -1264,7 +895,7 @@ public class MainController implements Initializable {
                                 node.setType(EnumFlowType.PATH);
                                 node.setContentType(flowNode.getContentType());
                                 node.setCurrentUrl(currentUrl.toString());
-                                TreeItem<FlowNode> treeItem = new TreeItem<>(node, fontAwesome.create(FontAwesome.Glyph.FOLDER_OPEN_ALT));
+                                TreeItem<FlowNode> treeItem = new TreeItem<>(node, Icons.FONT_AWESOME.create(FontAwesome.Glyph.FOLDER_OPEN_ALT));
                                 treeItem.setExpanded(true);
                                 treeItems.add(treeItem);
                                 return treeItem;
@@ -1296,7 +927,7 @@ public class MainController implements Initializable {
         if (null != item) {
             item.getValue().setStatus(flowNode.getStatus());
             item.getValue().setContentType(flowNode.getContentType());
-            Node node = loadIcon(flowNode.getStatus(), flowNode.getContentType());
+            Node node = Icons.loadIcon(flowNode.getStatus(), flowNode.getContentType());
             item.setGraphic(node);
         }
     }
@@ -1315,42 +946,6 @@ public class MainController implements Initializable {
             }
         }
         treeView.setRoot(filterRoot);
-    }
-
-    private List<TreeItem<FlowNode>> getLayer(TreeItem<FlowNode> root, int index) {
-        List<TreeItem<FlowNode>> layer = new LinkedList<>();
-        layer.add(root);
-        for (int i = 0; i < index; i++) {
-            List<TreeItem<FlowNode>> temp = new LinkedList<>();
-            for (TreeItem<FlowNode> treeItem : layer) {
-                ObservableList<TreeItem<FlowNode>> children = treeItem.getChildren();
-                if (!CollectionUtils.isEmpty(children)) {
-                    temp.addAll(children);
-                }
-            }
-            layer.clear();
-            layer.addAll(temp);
-        }
-        return layer;
-    }
-
-    private List<TreeItem<FlowNode>> findInTree(String text) {
-        ObservableList<TreeItem<FlowNode>> children = root.getChildren();
-        Queue<TreeItem<FlowNode>> queue = new LinkedList<>(children);
-        List<TreeItem<FlowNode>> list = new LinkedList<>();
-        while (!queue.isEmpty()) {
-            TreeItem<FlowNode> treeItem = queue.poll();
-            ObservableList<TreeItem<FlowNode>> itemChildren = treeItem.getChildren();
-            if (!CollectionUtils.isEmpty(itemChildren)) {
-                queue.addAll(itemChildren);
-            } else {
-                FlowNode node = treeItem.getValue();
-                if (node.getType().equals(EnumFlowType.TARGET) && node.getCurrentUrl().contains(text)) {
-                    list.add(treeItem);
-                }
-            }
-        }
-        return list;
     }
 
     public void addFlow(ConnectionInfo connectionInfo, Request request, Response response) throws URISyntaxException {
@@ -1393,64 +988,6 @@ public class MainController implements Initializable {
         if (CollectionUtils.isEmpty(list)) {
             tabPane.getTabs().add(tabPane.getTabs().size(), tab);
         }
-    }
-
-    private Node loadIcon(int status, String contentType) {
-        return loadIcon(status, contentType, true);
-    }
-
-    private Node loadIcon(int status, String contentType, boolean coloring) {
-        if (status == -1) {
-            ImageView imageView = new ImageView(blackLoadingIcon);
-            imageView.setFitHeight(16);
-            imageView.setFitWidth(16);
-            return imageView;
-        }
-        if (status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES) {
-            if (null == contentType) {
-                return fontAwesome.create(FontAwesome.Glyph.LINK);
-            }
-            if (contentType.startsWith(ContentType.TEXT_CSS)) {
-                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.CSS3);
-                if (coloring) {
-                    Color color = Color.web("#3077b8");
-                    glyph.color(color);
-                    glyph.setUserData(color);
-                }
-                return glyph;
-            } else if (contentType.startsWith(ContentType.TEXT_XML) || contentType.startsWith(ContentType.APPLICATION_XML)) {
-                return fontAwesome.create(FontAwesome.Glyph.CODE);
-            } else if (contentType.startsWith(ContentType.TEXT_PLAIN)) {
-                return fontAwesome.create(FontAwesome.Glyph.FILE_TEXT_ALT);
-            } else if (contentType.startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
-                return fontAwesome.create(FontAwesome.Glyph.CODE);
-            } else if (contentType.startsWith(ContentType.TEXT_HTML)) {
-                Glyph glyph = fontAwesome.create(FontAwesome.Glyph.HTML5);
-                if (coloring) {
-                    Color color = Color.web("#d65a26");
-                    glyph.color(color);
-                    glyph.setUserData(color);
-                }
-                return glyph;
-            } else if (contentType.startsWith(ContentType.APPLICATION_JSON)) {
-                return fontAwesome.create(FontAwesome.Glyph.CODE);
-            } else if (contentType.startsWith("image/")) {
-                return fontAwesome.create(FontAwesome.Glyph.PHOTO);
-            }
-        } else if (status >= HttpStatus.SC_MULTIPLE_CHOICES && status < HttpStatus.SC_BAD_REQUEST) {
-            Glyph glyph = fontAwesome.create(FontAwesome.Glyph.SHARE);
-            if (coloring) {
-                Color color = Color.web("#f8aa19");
-                glyph.color(color);
-                glyph.setUserData(color);
-            }
-            return glyph;
-        } else if (status >= HttpStatus.SC_BAD_REQUEST && status < HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-            return fontAwesome.create(FontAwesome.Glyph.QUESTION_CIRCLE);
-        } else if (status >= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-            return fontAwesome.create(FontAwesome.Glyph.BOMB);
-        }
-        return fontAwesome.create(FontAwesome.Glyph.LINK);
     }
 
 }

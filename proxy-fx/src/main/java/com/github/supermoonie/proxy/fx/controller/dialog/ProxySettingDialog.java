@@ -10,14 +10,22 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.controlsfx.control.ToggleSwitch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -27,24 +35,20 @@ import java.util.ResourceBundle;
  */
 public class ProxySettingDialog implements Initializable {
 
+    private static final Logger log = LoggerFactory.getLogger(ProxySettingDialog.class);
+
     @FXML
     protected VBox container;
-
     @FXML
     protected TextField portTextField;
-
     @FXML
     protected ToggleSwitch authToggleSwitch;
-
     @FXML
     protected TextField usernameTextField;
-
     @FXML
     protected TextField passwordTextField;
-
     @FXML
     protected Button confirmButton;
-
     @FXML
     protected Button cancelButton;
 
@@ -124,5 +128,24 @@ public class ProxySettingDialog implements Initializable {
 
     public void setStage(Stage stage) {
         this.stage = stage;
+    }
+
+    public static void show() {
+        Stage proxySettingStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(ProxySettingDialog.class.getResource("/ui/dialog/ProxySettingDialog.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            ProxySettingDialog proxySettingDialog = fxmlLoader.getController();
+            proxySettingDialog.setStage(proxySettingStage);
+            proxySettingStage.setScene(new Scene(parent));
+            App.setCommonIcon(proxySettingStage, "Lightning");
+            proxySettingStage.initModality(Modality.APPLICATION_MODAL);
+            proxySettingStage.setResizable(false);
+            proxySettingStage.initStyle(StageStyle.UTILITY);
+            proxySettingStage.show();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            AlertUtil.error(e);
+        }
     }
 }
