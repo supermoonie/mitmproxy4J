@@ -20,7 +20,6 @@ import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -40,7 +39,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.*;
-import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -243,6 +241,36 @@ public class MainController implements Initializable {
         overviewRoot.setExpanded(true);
         overviewTreeTableView.setRoot(overviewRoot);
         overviewTreeTableView.setShowRoot(false);
+        overviewTreeTableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.getClickCount() == 2) {
+                    TreeItem<PropertyPair> selectedItem = overviewTreeTableView.getSelectionModel().getSelectedItem();
+                    if (null != selectedItem) {
+                        PropertyPair propertyPair = selectedItem.getValue();
+                        if (!StringUtils.isEmpty(propertyPair.getValue())) {
+                            Stage stage = new Stage();
+                            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/dialog/InfoDialog.fxml"));
+                            try {
+                                Parent parent = fxmlLoader.load();
+                                InfoDialog infoDialog = fxmlLoader.getController();
+                                infoDialog.setStage(stage);
+                                infoDialog.setText(propertyPair.getValue());
+                                stage.setScene(new Scene(parent));
+                                App.setCommonIcon(stage, propertyPair.getKey());
+                                stage.initModality(Modality.NONE);
+                                stage.initStyle(StageStyle.UTILITY);
+                                stage.setX(event.getX() + 300);
+                                stage.setY(event.getY() + 100);
+                                stage.showAndWait();
+                            } catch (IOException e) {
+                                log.error(e.getMessage(), e);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void initListView() {
@@ -1024,7 +1052,6 @@ public class MainController implements Initializable {
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Method", request.getMethod())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Host", request.getHost())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Port", String.valueOf(request.getPort()))));
-
         QueryWrapper<Response> responseQuery = new QueryWrapper<>();
         responseQuery.eq("request_id", request.getId());
         Response response = responseMapper.selectOne(responseQuery);
@@ -1293,7 +1320,7 @@ public class MainController implements Initializable {
     private List<TreeItem<FlowNode>> getLayer(TreeItem<FlowNode> root, int index) {
         List<TreeItem<FlowNode>> layer = new LinkedList<>();
         layer.add(root);
-        for (int i = 0; i < index; i ++) {
+        for (int i = 0; i < index; i++) {
             List<TreeItem<FlowNode>> temp = new LinkedList<>();
             for (TreeItem<FlowNode> treeItem : layer) {
                 ObservableList<TreeItem<FlowNode>> children = treeItem.getChildren();

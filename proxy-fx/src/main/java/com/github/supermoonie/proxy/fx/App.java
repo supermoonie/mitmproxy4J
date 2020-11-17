@@ -13,10 +13,13 @@ import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import org.apache.commons.io.IOUtils;
 import org.mybatis.spring.annotation.MapperScan;
@@ -174,6 +177,11 @@ public class App extends Application {
         }
         stage.getIcons().add(new Image(iconUrl.toString()));
         stage.setTitle(title);
+        stage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode().equals(KeyCode.ESCAPE)) {
+                stage.close();
+            }
+        });
     }
 
     public static Stage getPrimaryStage() {
