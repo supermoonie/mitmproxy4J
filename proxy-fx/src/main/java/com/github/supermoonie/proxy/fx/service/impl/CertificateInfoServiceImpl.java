@@ -78,8 +78,8 @@ public class CertificateInfoServiceImpl implements CertificateInfoService {
                     info.setNotValidBefore(cert.getNotBefore());
                     info.setNotValidAfter(cert.getNotAfter());
                     try {
-                        info.setShaOne(Hex.toHexString(SHACoder.encodeSHA(cert.getEncoded())).toLowerCase());
-                        info.setShaTwoFiveSix(Hex.toHexString(SHACoder.encodeSHA256(cert.getEncoded())).toLowerCase());
+                        info.setShaOne(Hex.toHexString(SHACoder.encodeSHA(cert.getEncoded())).toUpperCase());
+                        info.setShaTwoFiveSix(Hex.toHexString(SHACoder.encodeSHA256(cert.getEncoded())).toUpperCase());
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }

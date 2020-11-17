@@ -1024,12 +1024,12 @@ public class MainController implements Initializable {
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Method", request.getMethod())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Host", request.getHost())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Port", String.valueOf(request.getPort()))));
-//        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Content-Type", request.getContentType())));
-//        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Request time", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(request.getTimeCreated()))));
+
         QueryWrapper<Response> responseQuery = new QueryWrapper<>();
         responseQuery.eq("request_id", request.getId());
         Response response = responseMapper.selectOne(responseQuery);
         if (null != response) {
+            overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Content-Type", response.getContentType())));
             QueryWrapper<ConnectionOverview> connectionOverviewQuery = new QueryWrapper<>();
             connectionOverviewQuery.eq("request_id", request.getId());
             ConnectionOverview connectionOverview = connectionOverviewMapper.selectOne(connectionOverviewQuery);
