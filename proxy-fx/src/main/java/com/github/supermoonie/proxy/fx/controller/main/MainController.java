@@ -25,11 +25,13 @@ import com.github.supermoonie.proxy.fx.support.PropertyPair;
 import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -37,14 +39,24 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import javafx.stage.*;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
@@ -57,6 +69,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -162,8 +175,6 @@ public class MainController implements Initializable {
     @FXML
     protected TableView<ColumnMap> queryTableView;
     @FXML
-    protected Label label;
-    @FXML
     protected WebView responseJsonWebView;
     @FXML
     protected Tab responseTextTab;
@@ -236,7 +247,9 @@ public class MainController implements Initializable {
         initWebview(responseJsonWebView);
         initOverview();
         clear();
+
     }
+
 
     private void initOverview() {
         overviewNameColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getKey()));
@@ -631,16 +644,22 @@ public class MainController implements Initializable {
                     responseImageView.setImage(image);
                     responseImageView.setFitHeight(image.getHeight());
                     responseImageView.setFitWidth(image.getWidth());
-                    responseRawBuilder.append("<Too Large>");
+                    responseRawBuilder.append("<Image>");
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseTextTab.getText()));
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
                     appendTab(responseTabPane, responseImageTab);
                 } else {
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
-                    String raw = new String(bytes, StandardCharsets.UTF_8);
-                    responseTextArea.setText(raw);
-                    responseRawBuilder.append(raw);
-                    appendTab(responseTabPane, responseTextTab);
+                    if (bytes.length > 100_000) {
+                        responseRawBuilder.append("<Too Large>");
+                        responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseTextTab.getText()));
+                    } else {
+                        String raw = new String(bytes, StandardCharsets.UTF_8);
+                        responseTextArea.setText(raw);
+                        responseRawBuilder.append(raw);
+                        appendTab(responseTabPane, responseTextTab);
+                    }
+
                     if (header.getValue().startsWith(ContentType.APPLICATION_JSON)) {
                         engine.executeScript(String.format("setHexJson('%s')", hexRaw));
                         responseContentTab.setText("JSON");
@@ -650,7 +669,7 @@ public class MainController implements Initializable {
                         responseContentTab.setText("HTML");
                         appendTab(responseTabPane, responseContentTab);
                     } else if (header.getValue().startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
-                        engine.executeScript(String.format("setHexJavaScript('%s')", hexRaw));
+                        Platform.runLater(() -> engine.executeScript(String.format("setHexJavaScript('%s')", hexRaw)));
                         responseContentTab.setText("JavaScript");
                         appendTab(responseTabPane, responseContentTab);
                     } else if (header.getValue().startsWith(ContentType.APPLICATION_XML) || header.getValue().startsWith(ContentType.TEXT_XML)) {
@@ -672,10 +691,7 @@ public class MainController implements Initializable {
             responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
             responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
         }
-//        label.setText(responseRawBuilder.toString());
-//        rawListView.getItems().addAll(responseRawBuilder.toString().split("\n"));
-//        rawWebview.getEngine().executeScript(String.format("setHexText('%s')", Hex.toHexString(responseRawBuilder.toString().getBytes(StandardCharsets.UTF_8))));
-//        responseRawTextArea.appendText();
+        responseRawTextArea.appendText(responseRawBuilder.toString());
     }
 
     private void fillOverviewTab(FlowNode selectedNode) {
