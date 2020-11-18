@@ -40,6 +40,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.*;
@@ -160,6 +162,8 @@ public class MainController implements Initializable {
     @FXML
     protected TableView<ColumnMap> queryTableView;
     @FXML
+    protected Label label;
+    @FXML
     protected WebView responseJsonWebView;
     @FXML
     protected Tab responseTextTab;
@@ -229,7 +233,7 @@ public class MainController implements Initializable {
         initContextMenu();
         initTreeView();
         initListView();
-        initResponseJsonWebView();
+        initWebview(responseJsonWebView);
         initOverview();
         clear();
     }
@@ -298,12 +302,12 @@ public class MainController implements Initializable {
         });
     }
 
-    private void initResponseJsonWebView() {
-        responseJsonWebView.setContextMenuEnabled(false);
-        responseJsonWebView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
-        responseJsonWebView.setOnKeyPressed(keyEvent -> {
+    private void initWebview(WebView webView) {
+        webView.setContextMenuEnabled(false);
+        webView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
+        webView.setOnKeyPressed(keyEvent -> {
             if (macKeyCodeCopy.match(keyEvent) || winKeyCodeCopy.match(keyEvent)) {
-                WebEngine engine = responseJsonWebView.getEngine();
+                WebEngine engine = webView.getEngine();
                 String text = engine.executeScript("try{codeEditor.getSelectedText();}catch(e){''}").toString();
                 ClipboardUtil.copyText(text);
             }
@@ -668,7 +672,10 @@ public class MainController implements Initializable {
             responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
             responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
         }
-        responseRawTextArea.appendText(responseRawBuilder.toString());
+//        label.setText(responseRawBuilder.toString());
+//        rawListView.getItems().addAll(responseRawBuilder.toString().split("\n"));
+//        rawWebview.getEngine().executeScript(String.format("setHexText('%s')", Hex.toHexString(responseRawBuilder.toString().getBytes(StandardCharsets.UTF_8))));
+//        responseRawTextArea.appendText();
     }
 
     private void fillOverviewTab(FlowNode selectedNode) {
@@ -756,7 +763,7 @@ public class MainController implements Initializable {
                 fingerprintsTreeItem.getChildren().clear();
                 fingerprintsTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("SHA-1", certificateInfo.getShaOne())));
                 fingerprintsTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("SHA-256", certificateInfo.getShaTwoFiveSix())));
-                TreeItem<PropertyPair> fullDetailTreeItem = new TreeItem<>(new PropertyPair("Full Detail", certificateInfo.getFullDetail()));
+//                TreeItem<PropertyPair> fullDetailTreeItem = new TreeItem<>(new PropertyPair("Full Detail", certificateInfo.getFullDetail()));
                 certTreeItem.getChildren().clear();
                 certTreeItem.getChildren().add(serialNumberTreeItem);
                 certTreeItem.getChildren().add(typeTreeItem);
@@ -765,7 +772,7 @@ public class MainController implements Initializable {
                 certTreeItem.getChildren().add(notValidBeforeTreeItem);
                 certTreeItem.getChildren().add(notValidAfterTreeItem);
                 certTreeItem.getChildren().add(fingerprintsTreeItem);
-                certTreeItem.getChildren().add(fullDetailTreeItem);
+//                certTreeItem.getChildren().add(fullDetailTreeItem);
                 if (null == certificateMap.getResponseId()) {
                     clientTreeItem.getChildren().add(certTreeItem);
                 } else {

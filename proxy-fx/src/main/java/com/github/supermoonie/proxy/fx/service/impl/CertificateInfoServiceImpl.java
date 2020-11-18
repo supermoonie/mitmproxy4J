@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -39,6 +40,9 @@ public class CertificateInfoServiceImpl implements CertificateInfoService {
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public void saveList(List<Certificate> certificates, String requestId, String responseId) {
+        if (CollectionUtils.isEmpty(certificates)) {
+            return;
+        }
         for (Certificate certificate : certificates) {
             if (certificate instanceof X509Certificate) {
                 X509Certificate cert = (X509Certificate) certificate;

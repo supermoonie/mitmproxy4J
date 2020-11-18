@@ -29,6 +29,7 @@ public class AppLauncher {
         }
         System.setProperty("apple.awt.UIElement", "true");
         java.awt.Toolkit.getDefaultToolkit();
-        LauncherImpl.launchApplication(App.class, SplashScreenLoader.class, args);
+//        LauncherImpl.launchApplication(App.class, SplashScreenLoader.class, args);
+        Application.launch(TestApp.class, args);
     }
 }

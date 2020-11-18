@@ -94,6 +94,13 @@
     codeEditor.setOption("dragEnabled", false)
     codeEditor.setScrollSpeed(0.02);
     window.codeEditor = codeEditor;
+    window.setHexText = function(hexText) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/text');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexText)), 1);
+        hideLoading();
+    }
     window.setHexJson = function (hexJson) {
         showLoading();
         codeEditor.getSession().setMode('ace/mode/json');
