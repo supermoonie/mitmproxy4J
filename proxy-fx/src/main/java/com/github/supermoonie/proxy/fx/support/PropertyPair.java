@@ -1,6 +1,8 @@
 package com.github.supermoonie.proxy.fx.support;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 /**
@@ -44,4 +46,5 @@ public class PropertyPair {
     public void setValue(String value) {
         this.value.setValue(value);
     }
+
 }

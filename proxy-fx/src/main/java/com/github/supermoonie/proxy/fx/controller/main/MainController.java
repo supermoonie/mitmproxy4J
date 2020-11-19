@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.constant.KeyEvents;
 import com.github.supermoonie.proxy.fx.controller.SendReqController;
 import com.github.supermoonie.proxy.fx.controller.dialog.*;
 import com.github.supermoonie.proxy.fx.controller.main.factory.ListViewCellFactory;
@@ -31,10 +32,10 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -48,15 +49,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
@@ -69,7 +70,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -209,6 +209,17 @@ public class MainController implements Initializable {
     private final MenuItem allowMenuItem = new MenuItem("Allow List");
 
     private final ContextMenu listContextMenu = new ContextMenu();
+    private final MenuItem copyLiMenuItem = new MenuItem("Copy URL");
+    private final MenuItem copyLiResponseMenuItem = new MenuItem("Copy Response");
+    private final MenuItem saveLiResponseMenuItem = new MenuItem("Save Response");
+    private final MenuItem repeatLiMenuItem = new MenuItem("Repeat");
+    private final MenuItem editLiMenuItem = new MenuItem("Edit");
+    private final MenuItem blockLiMenuItem = new MenuItem("Block List");
+    private final MenuItem allowLiMenuItem = new MenuItem("Allow List");
+
+    private final ContextMenu overviewContextMenu = new ContextMenu();
+    private final MenuItem ovCopyValueMenuItem = new MenuItem("Copy Value");
+    private final MenuItem ovCopyRowMenuItem = new MenuItem("Copu Row");
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
@@ -218,9 +229,6 @@ public class MainController implements Initializable {
     private final ConnectionOverviewMapper connectionOverviewMapper = ApplicationContextUtil.getBean(ConnectionOverviewMapper.class);
     private final CertificateMapMapper certificateMapMapper = ApplicationContextUtil.getBean(CertificateMapMapper.class);
     private final CertificateInfoMapper certificateInfoMapper = ApplicationContextUtil.getBean(CertificateInfoMapper.class);
-
-    private final KeyCodeCombination macKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN);
-    private final KeyCodeCombination winKeyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
 
     private final ObservableList<FlowNode> allNode = FXCollections.observableList(new LinkedList<>());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
@@ -247,7 +255,6 @@ public class MainController implements Initializable {
         initWebview(responseJsonWebView);
         initOverview();
         clear();
-
     }
 
 
@@ -269,6 +276,7 @@ public class MainController implements Initializable {
                 fillContentsTab(selectedItem);
             }
         });
+        listView.setOnKeyPressed(new FlowNodeKeyEventHandler(tabPane, structureTab, treeView, listView));
     }
 
     private void initTreeView() {
@@ -280,20 +288,16 @@ public class MainController implements Initializable {
             fillContentsTab(selectedNode);
             fillOverviewTab(selectedNode);
         }));
+        treeView.setOnKeyPressed(new FlowNodeKeyEventHandler(tabPane, structureTab, treeView, listView));
         treeView.focusedProperty().addListener(new TreeViewFocusListener(treeView));
         treeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectListener());
     }
 
     private void initContextMenu() {
-        copyMenuItem.setOnAction(new CopyMenuItemHandler(tabPane, structureTab, treeView, listView));
-        copyResponseMenuItem.setOnAction(new CopyResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
-        saveResponseMenuItem.setOnAction(new SaveResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
-        repeatMenuItem.setOnAction(event -> onRepeatButtonClicked());
-        editMenuItem.setOnAction(new EditMenuItemHandler(tabPane, structureTab, treeView, listView, node -> onSendRequestMenuItemClicked().setRequestId(node.getId())));
-        blockMenuItem.setOnAction(new AddBlockListMenuItemHandler(tabPane, structureTab, treeView, listView));
-        allowMenuItem.setOnAction(new AddAllowListMenuItemHandler(tabPane, structureTab, treeView, listView));
+        setMenuItemOnAction(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, repeatMenuItem, editMenuItem, blockMenuItem, allowMenuItem);
+        setMenuItemOnAction(copyLiMenuItem, copyLiResponseMenuItem, saveLiResponseMenuItem, repeatLiMenuItem, editLiMenuItem, blockLiMenuItem, allowLiMenuItem);
+        listContextMenu.getItems().addAll(copyLiMenuItem, copyLiResponseMenuItem, saveLiResponseMenuItem, new SeparatorMenuItem(), repeatLiMenuItem, editLiMenuItem, new SeparatorMenuItem(), blockLiMenuItem, allowLiMenuItem);
         treeContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
-        listContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
         treeContextMenu.setOnShowing(event -> {
             TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
             if (null == selectedItem) {
@@ -310,16 +314,26 @@ public class MainController implements Initializable {
                 return;
             }
             boolean disable = node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET);
-            copyResponseMenuItem.setDisable(disable);
-            saveResponseMenuItem.setDisable(disable);
+            copyLiResponseMenuItem.setDisable(disable);
+            saveLiResponseMenuItem.setDisable(disable);
         });
+    }
+
+    private void setMenuItemOnAction(MenuItem copyLiMenuItem, MenuItem copyLiResponseMenuItem, MenuItem saveLiResponseMenuItem, MenuItem repeatLiMenuItem, MenuItem editLiMenuItem, MenuItem blockLiMenuItem, MenuItem allowLiMenuItem) {
+        copyLiMenuItem.setOnAction(new CopyMenuItemHandler(tabPane, structureTab, treeView, listView));
+        copyLiResponseMenuItem.setOnAction(new CopyResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
+        saveLiResponseMenuItem.setOnAction(new SaveResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
+        repeatLiMenuItem.setOnAction(event -> onRepeatButtonClicked());
+        editLiMenuItem.setOnAction(new EditMenuItemHandler(tabPane, structureTab, treeView, listView, node -> onSendRequestMenuItemClicked().setRequestId(node.getId())));
+        blockLiMenuItem.setOnAction(new AddBlockListMenuItemHandler(tabPane, structureTab, treeView, listView));
+        allowLiMenuItem.setOnAction(new AddAllowListMenuItemHandler(tabPane, structureTab, treeView, listView));
     }
 
     private void initWebview(WebView webView) {
         webView.setContextMenuEnabled(false);
         webView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
         webView.setOnKeyPressed(keyEvent -> {
-            if (macKeyCodeCopy.match(keyEvent) || winKeyCodeCopy.match(keyEvent)) {
+            if (KeyEvents.MAC_KEY_CODE_COMBINATION.match(keyEvent) || KeyEvents.WIN_KEY_CODE_COPY.match(keyEvent)) {
                 WebEngine engine = webView.getEngine();
                 String text = engine.executeScript("try{codeEditor.getSelectedText();}catch(e){''}").toString();
                 ClipboardUtil.copyText(text);
