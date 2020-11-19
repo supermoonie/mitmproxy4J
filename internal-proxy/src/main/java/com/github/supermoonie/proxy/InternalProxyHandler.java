@@ -58,9 +58,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
     private void verifyAuth(HttpRequest request) {
         if (this.internalProxy.isAuth() && null != this.internalProxy.getUsername() && null != this.internalProxy.getPassword()) {
             String auth = "Basic " + Base64.getEncoder().encodeToString((this.internalProxy.getUsername() + ":" + this.internalProxy.getPassword()).getBytes(StandardCharsets.UTF_8));
-            String authorization = request.headers().get(HttpHeaderNames.PROXY_AUTHORIZATION);
-            if (null == authorization || !authorization.equals(auth)) {
-                throw new AuthorizationFailedException("Authorization Failed!");
+            if (null == connectionInfo.getAuthorization() || !connectionInfo.getAuthorization().equals(auth)) {
+                throw new AuthorizationFailedException("Wrong Authorization: " + connectionInfo.getAuthorization());
             }
         }
     }
@@ -71,7 +70,6 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         Channel clientChannel = ctx.channel();
         interceptContext.setClientChannel(clientChannel);
         InetSocketAddress clientAddress = (InetSocketAddress) clientChannel.remoteAddress();
-        logger.info("client: {} active", clientAddress.toString());
         String clientHost = clientAddress.getHostString();
         int clientPort = clientAddress.getPort();
         connectionInfo = new ConnectionInfo();
@@ -96,6 +94,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 status = ConnectionStatus.CONNECTING;
                 this.connectionInfo.setHostHeader(request.headers().get(HttpHeaderNames.HOST));
                 if (HttpMethod.CONNECT.equals(request.method())) {
+                    String authorization = request.headers().get(HttpHeaderNames.PROXY_AUTHORIZATION);
+                    connectionInfo.setAuthorization(authorization);
                     HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                     ctx.writeAndFlush(response);
                     logger.debug("client: {} connected", ctx.channel().remoteAddress().toString());

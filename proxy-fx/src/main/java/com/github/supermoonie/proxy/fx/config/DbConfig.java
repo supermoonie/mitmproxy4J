@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.fx.config;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -18,7 +19,7 @@ public class DbConfig {
     public DataSource dataSource() {
         HikariDataSource ds = new HikariDataSource();
         ds.setDriverClassName(org.sqlite.JDBC.class.getName());
-        ds.setJdbcUrl("jdbc:sqlite:" + dbPath() + "/internal_proxy.db?date_string_format=yyyy-MM-dd HH:mm:ss&encoding=UTF8");
+        ds.setJdbcUrl(JDBC.PREFIX + dbPath() + "/internal_proxy.db?date_string_format=yyyy-MM-dd HH:mm:ss&encoding=UTF8");
         return ds;
     }
 

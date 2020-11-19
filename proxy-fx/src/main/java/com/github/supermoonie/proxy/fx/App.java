@@ -100,9 +100,12 @@ public class App extends Application {
     public void init() throws Exception {
         SpringApplication.run(getClass()).getAutowireCapableBeanFactory().autowireBean(this);
         initDatabase();
-        Platform.runLater(SettingUtil::load);
+        Platform.runLater(() -> {
+            SettingUtil.load();
+            initSetting();
+        });
         EXECUTOR.scheduleAtFixedRate(() -> SettingUtil.save(GlobalSetting.getInstance()), 10, 30, TimeUnit.SECONDS);
-        initSetting();
+
         systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }
