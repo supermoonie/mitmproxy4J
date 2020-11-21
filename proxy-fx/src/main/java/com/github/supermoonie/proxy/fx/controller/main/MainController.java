@@ -219,7 +219,7 @@ public class MainController implements Initializable {
 
     private final ContextMenu overviewContextMenu = new ContextMenu();
     private final MenuItem ovCopyValueMenuItem = new MenuItem("Copy Value");
-    private final MenuItem ovCopyRowMenuItem = new MenuItem("Copu Row");
+    private final MenuItem ovCopyRowMenuItem = new MenuItem("Copy Row");
 
     private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
     private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
@@ -265,6 +265,9 @@ public class MainController implements Initializable {
         overviewTreeTableView.setRoot(overviewRoot);
         overviewTreeTableView.setShowRoot(false);
         overviewTreeTableView.setOnMouseClicked(new OverviewTreeTableViewMouseEventHandler(overviewTreeTableView));
+        overviewTreeTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        overviewContextMenu.getItems().addAll(ovCopyValueMenuItem, ovCopyRowMenuItem);
+        overviewTreeTableView.setContextMenu(overviewContextMenu);
     }
 
     private void initListView() {

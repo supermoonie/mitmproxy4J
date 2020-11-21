@@ -12,6 +12,8 @@
         <module>proxy-web-api</module>
         <module>internal-proxy</module>
         <module>proxy-fx</module>
+        <module>proxy-jf</module>
+        <module>proxy-swing</module>
     </modules>
 
     <name>mitmproxy4J</name>
