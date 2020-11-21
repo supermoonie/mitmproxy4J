@@ -3,11 +3,13 @@ package com.github.supermoonie.proxy.swing;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
-import com.github.supermoonie.proxy.swing.treetable.FileSystemModel;
-import com.github.supermoonie.proxy.swing.treetable.JTreeTable;
+import org.jdesktop.swingx.JXTree;
 import org.jdesktop.swingx.JXTreeTable;
+import org.jdesktop.swingx.renderer.DefaultTreeRenderer;
+import org.jdesktop.swingx.table.TableColumnExt;
 
 import javax.swing.*;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
@@ -74,8 +76,26 @@ public class ProxyFrame extends JFrame {
         JTabbedPane flowDetailTablePane = new JTabbedPane();
         JPanel overviewTab = new JPanel(new BorderLayout());
         Window window = SwingUtilities.getWindowAncestor(this);
+
         JXTreeTable jxTreeTable = new JXTreeTable(ComponentModels.getTreeTableModel(window != null ? window : this));
+
+        jxTreeTable.setTreeCellRenderer(new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                Component c = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+                if (selected) {
+                    c.setBackground(Color.RED);
+                } else {
+                    setBackground(tree.getBackground());
+                }
+                return c;
+            }
+        });
         JScrollPane overviewScrollPane = new JScrollPane(jxTreeTable);
+        jxTreeTable.setSelectionBackground(Color.decode("#2675BF"));
+
+        JXTree.DelegatingRenderer renderer = (JXTree.DelegatingRenderer) jxTreeTable.getTreeCellRenderer();
+
         jxTreeTable.setEditable(false);
         jxTreeTable.setDoubleBuffered(false);
         jxTreeTable.setShowGrid(false);
@@ -84,12 +104,32 @@ public class ProxyFrame extends JFrame {
         overviewTab.add(overviewScrollPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Overview", overviewTab);
         JPanel contentTab = new JPanel(new BorderLayout());
-        contentTab.add(new JSplitPane(JSplitPane.VERTICAL_SPLIT), BorderLayout.CENTER);
+        JSplitPane contentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JTabbedPane requestTablePane = new JTabbedPane();
+        JPanel requestHeaderTab = new JPanel(new BorderLayout());
+        Object[][] tableDate=new Object[5][8];
+        for(int i=0;i<5;i++)
+        {
+            tableDate[i][0]="1000"+i;
+            for(int j=1;j<8;j++)
+            {
+                tableDate[i][j]=0;
+            }
+        }
+        String[] name={"学号","软件工程","Java","网络","数据结构","数据库","总成绩","平均成绩"};
+        JTable requestHeaderTable = new JTable(tableDate, name);
+        requestHeaderTab.add(new JScrollPane(requestHeaderTable), BorderLayout.CENTER);
+        requestTablePane.addTab("Header", requestHeaderTab);
+        JTabbedPane responseTablePane = new JTabbedPane();
+        contentSplitPane.setTopComponent(requestTablePane);
+        contentSplitPane.setBottomComponent(responseTablePane);
+        contentTab.add(contentSplitPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Content", contentTab);
         detailPanel.add(flowDetailTablePane, BorderLayout.CENTER);
         splitPane.setLeftComponent(flowPanel);
         splitPane.setRightComponent(detailPanel);
         container.add(splitPane, BorderLayout.CENTER);
+
         getContentPane().add(container, BorderLayout.CENTER);
     }
 
