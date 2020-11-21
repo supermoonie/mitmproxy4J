@@ -83,6 +83,7 @@ public class App extends Application {
         mainController = fxmlLoader.getController();
         primaryStage.setScene(new Scene(root));
         setCommonIcon(primaryStage);
+//        new InspectNode(primaryStage);
         primaryStage.show();
         primaryStage.setOnCloseRequest(windowEvent -> {
             SpringApplication.exit(applicationContext, () -> 0);
