@@ -10,9 +10,12 @@ import org.jdesktop.swingx.table.TableColumnExt;
 
 import javax.swing.*;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 /**
@@ -26,6 +29,9 @@ public class ProxyFrame extends JFrame {
     private JCheckBoxMenuItem remoteMapMenuItem;
     private JCheckBoxMenuItem blockListMenuItem;
     private JCheckBoxMenuItem allowListMenuItem;
+
+    private final DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("root");
+    private final JTree flowTree = new JTree(treeNode);
 
     public ProxyFrame() {
         setTitle("Lightning:10801");
@@ -57,16 +63,44 @@ public class ProxyFrame extends JFrame {
         JTabbedPane flowTablePane = new JTabbedPane();
         JPanel structureTab = new JPanel(new BorderLayout());
         structureTab.setMinimumSize(new Dimension(100, 0));
-        JTree flowTree = new JTree();
-        DefaultTreeCellRenderer cellRenderer = (DefaultTreeCellRenderer) flowTree.getCellRenderer();
-        cellRenderer.setLeafIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg"));
+        DefaultMutableTreeNode path1 = new DefaultMutableTreeNode("path1");
+        DefaultMutableTreeNode html = new DefaultMutableTreeNode("html");
+        path1.add(html);
+        DefaultMutableTreeNode path2 = new DefaultMutableTreeNode("path2");
+        DefaultMutableTreeNode js = new DefaultMutableTreeNode("js");
+        path2.add(js);
+        treeNode.add(path1);
+        treeNode.add(path2);
+        DefaultTreeCellRenderer defaultTreeCellRenderer = new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                Component c = super.getTreeCellRendererComponent(tree, value,
+                        selected, expanded, leaf, row, hasFocus);
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+                if (node.getUserObject().toString().equals("root") || node.getUserObject().toString().contains("path")) {
+                    setIcon(getDefaultClosedIcon());
+                } else {
+                    if (node.getUserObject().toString().equals("html")) {
+                        setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/html.svg"));
+                    } else {
+                        setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/js.svg"));
+                    }
+                }
+                setBackgroundSelectionColor(Color.decode("#4B6EAF"));
+                return c;
+            }
+        };
+        flowTree.setCellRenderer(defaultTreeCellRenderer);
+//        DefaultTreeCellRenderer cellRenderer = (DefaultTreeCellRenderer) flowTree.getCellRenderer();
+//        cellRenderer.setLeafIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg"));
+
         structureTab.add(flowTree, BorderLayout.CENTER);
         JPanel sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         JList<String> flowList = new JList<>(new String[]{"foo", "bar"});
         sequenceTab.add(flowList, BorderLayout.CENTER);
-        flowTablePane.addTab("Structure", structureTab);
-        flowTablePane.addTab("Sequence", sequenceTab);
+        flowTablePane.addTab("Structure", new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/tree.svg"), structureTab);
+        flowTablePane.addTab("Sequence", new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/list.svg"), sequenceTab);
         flowPanel.add(flowTablePane, BorderLayout.CENTER);
 
         // Flow detail panel
@@ -76,25 +110,9 @@ public class ProxyFrame extends JFrame {
         JTabbedPane flowDetailTablePane = new JTabbedPane();
         JPanel overviewTab = new JPanel(new BorderLayout());
         Window window = SwingUtilities.getWindowAncestor(this);
-
         JXTreeTable jxTreeTable = new JXTreeTable(ComponentModels.getTreeTableModel(window != null ? window : this));
-
-        jxTreeTable.setTreeCellRenderer(new DefaultTreeCellRenderer() {
-            @Override
-            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-                Component c = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-                if (selected) {
-                    c.setBackground(Color.RED);
-                } else {
-                    setBackground(tree.getBackground());
-                }
-                return c;
-            }
-        });
         JScrollPane overviewScrollPane = new JScrollPane(jxTreeTable);
-        jxTreeTable.setSelectionBackground(Color.decode("#2675BF"));
-
-        JXTree.DelegatingRenderer renderer = (JXTree.DelegatingRenderer) jxTreeTable.getTreeCellRenderer();
+//        jxTreeTable.setSelectionBackground(Color.decode("#2675BF"));
 
         jxTreeTable.setEditable(false);
         jxTreeTable.setDoubleBuffered(false);
@@ -151,7 +169,15 @@ public class ProxyFrame extends JFrame {
         throttlingButton.setToolTipText("Throttling");
         throttlingButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/throttling_stop.svg"));
         JButton recordButton = new JButton();
-        recordButton.setToolTipText("Throttling");
+        recordButton.setAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) treeNode.getFirstChild().getChildAt(0);
+                node.setUserObject("js");
+                flowTree.updateUI();
+            }
+        });
+        recordButton.setToolTipText("Record");
         recordButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/play.svg"));
         toolBar.add(clearButton);
         toolBar.add(editButton);

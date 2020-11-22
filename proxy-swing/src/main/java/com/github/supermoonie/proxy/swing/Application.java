@@ -36,7 +36,7 @@ public class Application {
             FlatUIDefaultsInspector.install("ctrl shift alt Y");
 
             ProxyFrame frame = new ProxyFrame();
-            frame.setPreferredSize( new Dimension( 1280, 620 ) );
+            frame.setPreferredSize(new Dimension(1280, 620));
             // show frame
             frame.pack();
             frame.setLocationRelativeTo(null);

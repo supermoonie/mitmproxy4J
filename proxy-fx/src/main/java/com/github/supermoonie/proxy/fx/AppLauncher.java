@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.fx;
 
 import com.sun.javafx.application.LauncherImpl;
+import javafx.application.Application;
 
 import java.awt.*;
 import java.lang.reflect.Method;
@@ -28,7 +29,7 @@ public class AppLauncher {
         }
         System.setProperty("apple.awt.UIElement", "true");
         java.awt.Toolkit.getDefaultToolkit();
-        LauncherImpl.launchApplication(App.class, SplashScreenLoader.class, args);
-//        Application.launch(TestApp.class, args);
+//        LauncherImpl.launchApplication(App.class, SplashScreenLoader.class, args);
+        Application.launch(TestApp.class, args);
     }
 }
