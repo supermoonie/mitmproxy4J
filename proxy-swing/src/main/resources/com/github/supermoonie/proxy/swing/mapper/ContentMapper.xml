@@ -6,10 +6,13 @@
     <resultMap id="BaseResultMap" type="com.github.supermoonie.proxy.swing.entity.Content">
         <id column="id" jdbcType="VARCHAR" property="id"/>
         <result column="content" jdbcType="BLOB" property="content"/>
-        <result column="time_created" jdbcType="VARCHAR" property="timeCreated" typeHandler="com.github.supermoonie.proxy.swing.db.TextDateTypeHandler"/>
+        <result column="time_created" jdbcType="VARCHAR" property="timeCreated"
+                typeHandler="com.github.supermoonie.proxy.swing.db.TextDateTypeHandler"/>
     </resultMap>
 
     <select id="selectById" resultMap="BaseResultMap" parameterType="java.lang.String">
-        select * from content where id = #{id}
+        select *
+        from content
+        where id = #{id}
     </select>
 </mapper>

@@ -91,7 +91,7 @@ public class InternalProxy {
             trafficShapingEventLoopGroup = new NioEventLoopGroup(1);
             trafficShapingHandler = new GlobalChannelTrafficShapingHandler(trafficShapingEventLoopGroup);
             InternalProxy that = this;
-            future = b.group(bossThreads, workerThreads)
+            b.group(bossThreads, workerThreads)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<Channel>() {
                         @Override
@@ -101,7 +101,12 @@ public class InternalProxy {
                             ch.pipeline().addLast("aggregator", new HttpObjectAggregator(maxContentSize));
                             ch.pipeline().addLast("internalProxyHandler", new InternalProxyHandler(that, initializer));
                         }
-                    }).bind(host, port).sync();
+                    });
+            if (null != host) {
+                future = b.bind(host, port).sync();
+            } else {
+                future = b.bind(port).sync();
+            }
             logger.info("proxy listening on {}", port);
         } catch (Exception e) {
             close();

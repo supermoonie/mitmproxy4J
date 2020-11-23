@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS response
   size          INTEGER,
   time_created  DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
-CREATE INDEX request_id_idx ON response(request_id);
+CREATE INDEX idx_request_id ON response(request_id);
 CREATE INDEX status_idx ON response(status);
 CREATE INDEX content_type_idx ON response(content_type);
 --EOF--

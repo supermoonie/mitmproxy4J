@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.db;
 
+import com.github.supermoonie.proxy.swing.mapper.ConnectionOverviewMapper;
 import com.github.supermoonie.proxy.swing.mapper.ContentMapper;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -13,7 +14,6 @@ import org.sqlite.javax.SQLiteConnectionPoolDataSource;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.util.Date;
 
 /**
  * @author supermoonie
@@ -35,8 +35,6 @@ public class Db {
         SQLiteConnectionPoolDataSource dataSource = new SQLiteConnectionPoolDataSource();
         SQLiteConfig config = new SQLiteConfig();
         config.setDateClass(SQLiteConfig.DateClass.REAL.getValue());
-//        config.setDateStringFormat("yyyy-MM-dd HH:mm:ss");
-//        config.setEncoding(SQLiteConfig.Encoding.UTF8);
         config.enableShortColumnNames(true);
         config.setBusyTimeout(3_000);
         dataSource.setConfig(config);
@@ -48,9 +46,10 @@ public class Db {
     private static SqlSessionFactory init() {
         DataSource dataSource = defaultDataSource();
         TransactionFactory transactionFactory = new JdbcTransactionFactory();
-        Environment environment = new Environment("development", transactionFactory, dataSource);
+        Environment environment = new Environment("p", transactionFactory, dataSource);
         Configuration configuration = new Configuration(environment);
         configuration.addMapper(ContentMapper.class);
+        configuration.addMapper(ConnectionOverviewMapper.class);
         return new SqlSessionFactoryBuilder().build(configuration);
     }
 

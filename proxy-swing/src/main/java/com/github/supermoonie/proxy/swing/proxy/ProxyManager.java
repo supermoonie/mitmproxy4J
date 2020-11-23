@@ -1,9 +1,9 @@
-package com.github.supermoonie.proxy.fx.proxy;
+package com.github.supermoonie.proxy.swing.proxy;
 
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.InternalProxy;
-import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.platform.mac.NetworkSetup;
+import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.util.internal.PlatformDependent;
 
 import java.io.IOException;
