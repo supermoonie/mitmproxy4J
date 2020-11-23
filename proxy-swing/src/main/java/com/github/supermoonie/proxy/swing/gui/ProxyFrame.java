@@ -1,8 +1,9 @@
-package com.github.supermoonie.proxy.swing;
+package com.github.supermoonie.proxy.swing.gui;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
+import com.github.supermoonie.proxy.swing.ComponentModels;
 import org.jdesktop.swingx.JXTree;
 import org.jdesktop.swingx.JXTreeTable;
 import org.jdesktop.swingx.renderer.DefaultTreeRenderer;

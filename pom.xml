@@ -231,6 +231,11 @@
                 <artifactId>log4j-slf4j-impl</artifactId>
                 <version>2.13.3</version>
             </dependency>
+            <dependency>
+                <groupId>com.madgag</groupId>
+                <artifactId>animated-gif-lib</artifactId>
+                <version>1.4</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

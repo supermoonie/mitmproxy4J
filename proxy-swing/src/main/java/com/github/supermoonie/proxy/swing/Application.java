@@ -4,6 +4,9 @@ import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatInspector;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.util.SystemInfo;
+import com.github.supermoonie.proxy.InternalProxy;
+import com.github.supermoonie.proxy.swing.gui.ProxyFrame;
+import com.github.supermoonie.proxy.swing.gui.Splash;
 
 import javax.swing.*;
 import java.awt.*;

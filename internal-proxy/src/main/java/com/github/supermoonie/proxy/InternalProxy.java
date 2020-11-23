@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy;
 
-import com.github.supermoonie.proxy.dns.ConfigurableMultiDnsServerAddressStreamProvider;
 import com.github.supermoonie.proxy.dns.ConfigurableNameResolver;
 import com.github.supermoonie.proxy.ex.InternalProxyCloseException;
 import com.github.supermoonie.proxy.ex.InternalProxyStartException;
@@ -17,7 +16,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
-import io.netty.resolver.dns.DnsServerAddressStreamProviders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +25,10 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author supermoonie
@@ -53,6 +54,7 @@ public class InternalProxy {
     private NioEventLoopGroup proxyThreads;
     private int maxContentSize = DEFAULT_MAX_CONTENT_SIZE;
     private int port = DEFAULT_PORT;
+    private String host;
     private volatile boolean auth = false;
     private String username;
     private String password;
@@ -99,7 +101,7 @@ public class InternalProxy {
                             ch.pipeline().addLast("aggregator", new HttpObjectAggregator(maxContentSize));
                             ch.pipeline().addLast("internalProxyHandler", new InternalProxyHandler(that, initializer));
                         }
-                    }).bind(port).sync();
+                    }).bind(host, port).sync();
             logger.info("proxy listening on {}", port);
         } catch (Exception e) {
             close();
@@ -293,6 +295,14 @@ public class InternalProxy {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
     }
 
     public NioEventLoopGroup getBossThreads() {

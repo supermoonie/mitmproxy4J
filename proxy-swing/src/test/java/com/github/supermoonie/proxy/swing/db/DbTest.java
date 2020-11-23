@@ -28,13 +28,13 @@ public class DbTest {
 //                }
 //            });
             Statement statement = sqlSession.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from content where id = '276c72ea-55bd-42fc-9d0a-fe8852d0a4e5'");
+            ResultSet resultSet = statement.executeQuery("select * from content where id = '462d6e87-ab7b-4a3b-9a66-b8ccf160708b'");
             while (resultSet.next()) {
 //                Timestamp time_created = resultSet.getTimestamp("time_created");
                 System.out.println(resultSet.getString("time_created"));
             }
             ContentMapper mapper = sqlSession.getMapper(ContentMapper.class);
-            Content content = mapper.selectById("276c72ea-55bd-42fc-9d0a-fe8852d0a4e5");
+            Content content = mapper.selectById("462d6e87-ab7b-4a3b-9a66-b8ccf160708b");
             System.out.println(content);
         } catch (SQLException e) {
             e.printStackTrace();
