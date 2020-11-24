@@ -1,5 +1,7 @@
 package com.github.supermoonie.proxy.swing.db;
 
+import com.github.supermoonie.proxy.swing.mapper.CertificateInfoMapper;
+import com.github.supermoonie.proxy.swing.mapper.CertificateMapMapper;
 import com.github.supermoonie.proxy.swing.mapper.ConnectionOverviewMapper;
 import com.github.supermoonie.proxy.swing.mapper.ContentMapper;
 import org.apache.ibatis.mapping.Environment;
@@ -50,6 +52,8 @@ public class Db {
         Configuration configuration = new Configuration(environment);
         configuration.addMapper(ContentMapper.class);
         configuration.addMapper(ConnectionOverviewMapper.class);
+        configuration.addMapper(CertificateInfoMapper.class);
+        configuration.addMapper(CertificateMapMapper.class);
         return new SqlSessionFactoryBuilder().build(configuration);
     }
 

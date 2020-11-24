@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.supermoonie.proxy.swing.mapper.CertificateInfoMapper">
+
+    <resultMap type="com.github.supermoonie.proxy.swing.entity.CertificateInfo" id="CertificateInfoMap">
+        <result property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="serialNumber" column="serial_number" jdbcType="VARCHAR"/>
+        <result property="issuerCommonName" column="issuer_common_name" jdbcType="VARCHAR"/>
+        <result property="issuerOrganizationDepartment" column="issuer_organization_department" jdbcType="VARCHAR"/>
+        <result property="issuerOrganizationName" column="issuer_organization_name" jdbcType="VARCHAR"/>
+        <result property="issuerLocalityName" column="issuer_locality_name" jdbcType="VARCHAR"/>
+        <result property="issuerStateName" column="issuer_state_name" jdbcType="VARCHAR"/>
+        <result property="issuerCountry" column="issuer_country" jdbcType="VARCHAR"/>
+        <result property="subjectCommonName" column="subject_common_name" jdbcType="VARCHAR"/>
+        <result property="subjectOrganizationDepartment" column="subject_organization_department" jdbcType="VARCHAR"/>
+        <result property="subjectOrganizationName" column="subject_organization_name" jdbcType="VARCHAR"/>
+        <result property="subjectLocalityName" column="subject_locality_name" jdbcType="VARCHAR"/>
+        <result property="subjectStateName" column="subject_state_name" jdbcType="VARCHAR"/>
+        <result property="subjectCountry" column="subject_country" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="version" column="version" jdbcType="INTEGER"/>
+        <result property="sigAlgName" column="sig_alg_name" jdbcType="VARCHAR"/>
+        <result property="notValidBefore" column="not_valid_before" jdbcType="TIMESTAMP"/>
+        <result property="notValidAfter" column="not_valid_after" jdbcType="TIMESTAMP"/>
+        <result property="shaOne" column="sha_one" jdbcType="VARCHAR"/>
+        <result property="shaTwoFiveSix" column="sha_two_five_six" jdbcType="VARCHAR"/>
+        <result property="fullDetail" column="full_detail" jdbcType="VARCHAR"/>
+        <result property="timeCreated" column="time_created" jdbcType="VARCHAR"
+                typeHandler="com.github.supermoonie.proxy.swing.db.TextDateTypeHandler"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="CertificateInfoMap">
+        select id,
+               serial_number,
+               issuer_common_name,
+               issuer_organization_department,
+               issuer_organization_name,
+               issuer_locality_name,
+               issuer_state_name,
+               issuer_country,
+               subject_common_name,
+               subject_organization_department,
+               subject_organization_name,
+               subject_locality_name,
+               subject_state_name,
+               subject_country,
+               type,
+               version,
+               sig_alg_name,
+               not_valid_before,
+               not_valid_after,
+               sha_one,
+               sha_two_five_six,
+               full_detail,
+               time_created
+        from certificate_info
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="CertificateInfoMap">
+        select id,
+               serial_number,
+               issuer_common_name,
+               issuer_organization_department,
+               issuer_organization_name,
+               issuer_locality_name,
+               issuer_state_name,
+               issuer_country,
+               subject_common_name,
+               subject_organization_department,
+               subject_organization_name,
+               subject_locality_name,
+               subject_state_name,
+               subject_country,
+               type,
+               version,
+               sig_alg_name,
+               not_valid_before,
+               not_valid_after,
+               sha_one,
+               sha_two_five_six,
+               full_detail,
+               time_created
+        from certificate_info
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="CertificateInfoMap">
+        select
+        id, serial_number, issuer_common_name, issuer_organization_department, issuer_organization_name,
+        issuer_locality_name, issuer_state_name, issuer_country, subject_common_name, subject_organization_department,
+        subject_organization_name, subject_locality_name, subject_state_name, subject_country, type, version,
+        sig_alg_name, not_valid_before, not_valid_after, sha_one, sha_two_five_six, full_detail, time_created
+        from certificate_info
+        <where>
+            <if test="id != null and id != ''">
+                and id = #{id}
+            </if>
+            <if test="serialNumber != null and serialNumber != ''">
+                and serial_number = #{serialNumber}
+            </if>
+            <if test="issuerCommonName != null and issuerCommonName != ''">
+                and issuer_common_name = #{issuerCommonName}
+            </if>
+            <if test="issuerOrganizationDepartment != null and issuerOrganizationDepartment != ''">
+                and issuer_organization_department = #{issuerOrganizationDepartment}
+            </if>
+            <if test="issuerOrganizationName != null and issuerOrganizationName != ''">
+                and issuer_organization_name = #{issuerOrganizationName}
+            </if>
+            <if test="issuerLocalityName != null and issuerLocalityName != ''">
+                and issuer_locality_name = #{issuerLocalityName}
+            </if>
+            <if test="issuerStateName != null and issuerStateName != ''">
+                and issuer_state_name = #{issuerStateName}
+            </if>
+            <if test="issuerCountry != null and issuerCountry != ''">
+                and issuer_country = #{issuerCountry}
+            </if>
+            <if test="subjectCommonName != null and subjectCommonName != ''">
+                and subject_common_name = #{subjectCommonName}
+            </if>
+            <if test="subjectOrganizationDepartment != null and subjectOrganizationDepartment != ''">
+                and subject_organization_department = #{subjectOrganizationDepartment}
+            </if>
+            <if test="subjectOrganizationName != null and subjectOrganizationName != ''">
+                and subject_organization_name = #{subjectOrganizationName}
+            </if>
+            <if test="subjectLocalityName != null and subjectLocalityName != ''">
+                and subject_locality_name = #{subjectLocalityName}
+            </if>
+            <if test="subjectStateName != null and subjectStateName != ''">
+                and subject_state_name = #{subjectStateName}
+            </if>
+            <if test="subjectCountry != null and subjectCountry != ''">
+                and subject_country = #{subjectCountry}
+            </if>
+            <if test="type != null and type != ''">
+                and type = #{type}
+            </if>
+            <if test="version != null">
+                and version = #{version}
+            </if>
+            <if test="sigAlgName != null and sigAlgName != ''">
+                and sig_alg_name = #{sigAlgName}
+            </if>
+            <if test="notValidBefore != null">
+                and not_valid_before = #{notValidBefore}
+            </if>
+            <if test="notValidAfter != null">
+                and not_valid_after = #{notValidAfter}
+            </if>
+            <if test="shaOne != null and shaOne != ''">
+                and sha_one = #{shaOne}
+            </if>
+            <if test="shaTwoFiveSix != null and shaTwoFiveSix != ''">
+                and sha_two_five_six = #{shaTwoFiveSix}
+            </if>
+            <if test="fullDetail != null and fullDetail != ''">
+                and full_detail = #{fullDetail}
+            </if>
+            <if test="timeCreated != null">
+                and time_created = #{timeCreated}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert">
+        insert into certificate_info(id, serial_number, issuer_common_name, issuer_organization_department,
+                                          issuer_organization_name, issuer_locality_name, issuer_state_name,
+                                          issuer_country, subject_common_name, subject_organization_department,
+                                          subject_organization_name, subject_locality_name, subject_state_name,
+                                          subject_country, type, version, sig_alg_name, not_valid_before,
+                                          not_valid_after, sha_one, sha_two_five_six, full_detail, time_created)
+        values (#{id}, #{serialNumber}, #{issuerCommonName}, #{issuerOrganizationDepartment}, #{issuerOrganizationName},
+                #{issuerLocalityName}, #{issuerStateName}, #{issuerCountry}, #{subjectCommonName},
+                #{subjectOrganizationDepartment}, #{subjectOrganizationName}, #{subjectLocalityName},
+                #{subjectStateName}, #{subjectCountry}, #{type}, #{version}, #{sigAlgName}, #{notValidBefore},
+                #{notValidAfter}, #{shaOne}, #{shaTwoFiveSix}, #{fullDetail}, #{timeCreated})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update certificate_info
+        <set>
+            <if test="serialNumber != null and serialNumber != ''">
+                serial_number = #{serialNumber},
+            </if>
+            <if test="issuerCommonName != null and issuerCommonName != ''">
+                issuer_common_name = #{issuerCommonName},
+            </if>
+            <if test="issuerOrganizationDepartment != null and issuerOrganizationDepartment != ''">
+                issuer_organization_department = #{issuerOrganizationDepartment},
+            </if>
+            <if test="issuerOrganizationName != null and issuerOrganizationName != ''">
+                issuer_organization_name = #{issuerOrganizationName},
+            </if>
+            <if test="issuerLocalityName != null and issuerLocalityName != ''">
+                issuer_locality_name = #{issuerLocalityName},
+            </if>
+            <if test="issuerStateName != null and issuerStateName != ''">
+                issuer_state_name = #{issuerStateName},
+            </if>
+            <if test="issuerCountry != null and issuerCountry != ''">
+                issuer_country = #{issuerCountry},
+            </if>
+            <if test="subjectCommonName != null and subjectCommonName != ''">
+                subject_common_name = #{subjectCommonName},
+            </if>
+            <if test="subjectOrganizationDepartment != null and subjectOrganizationDepartment != ''">
+                subject_organization_department = #{subjectOrganizationDepartment},
+            </if>
+            <if test="subjectOrganizationName != null and subjectOrganizationName != ''">
+                subject_organization_name = #{subjectOrganizationName},
+            </if>
+            <if test="subjectLocalityName != null and subjectLocalityName != ''">
+                subject_locality_name = #{subjectLocalityName},
+            </if>
+            <if test="subjectStateName != null and subjectStateName != ''">
+                subject_state_name = #{subjectStateName},
+            </if>
+            <if test="subjectCountry != null and subjectCountry != ''">
+                subject_country = #{subjectCountry},
+            </if>
+            <if test="type != null and type != ''">
+                type = #{type},
+            </if>
+            <if test="version != null">
+                version = #{version},
+            </if>
+            <if test="sigAlgName != null and sigAlgName != ''">
+                sig_alg_name = #{sigAlgName},
+            </if>
+            <if test="notValidBefore != null">
+                not_valid_before = #{notValidBefore},
+            </if>
+            <if test="notValidAfter != null">
+                not_valid_after = #{notValidAfter},
+            </if>
+            <if test="shaOne != null and shaOne != ''">
+                sha_one = #{shaOne},
+            </if>
+            <if test="shaTwoFiveSix != null and shaTwoFiveSix != ''">
+                sha_two_five_six = #{shaTwoFiveSix},
+            </if>
+            <if test="fullDetail != null and fullDetail != ''">
+                full_detail = #{fullDetail},
+            </if>
+            <if test="timeCreated != null">
+                time_created = #{timeCreated},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from certificate_info
+        where id = #{id}
+    </delete>
+
+</mapper>

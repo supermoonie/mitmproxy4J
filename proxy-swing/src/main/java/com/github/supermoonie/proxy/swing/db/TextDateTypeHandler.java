@@ -19,7 +19,7 @@ public class TextDateTypeHandler extends BaseTypeHandler<Date> {
 
     @Override
     public void setNonNullParameter(PreparedStatement preparedStatement, int i, Date date, JdbcType jdbcType) throws SQLException {
-
+        preparedStatement.setString(i, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
     }
 
     @Override
