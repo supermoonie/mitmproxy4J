@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.supermoonie.proxy.swing.mapper.HeaderMapper">
+
+    <resultMap type="com.github.supermoonie.proxy.swing.entity.Header" id="HeaderMap">
+        <result property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="value" column="value" jdbcType="VARCHAR"/>
+        <result property="requestId" column="request_id" jdbcType="VARCHAR"/>
+        <result property="responseId" column="response_id" jdbcType="VARCHAR"/>
+        <result property="timeCreated" column="time_created" jdbcType="VARCHAR"
+                typeHandler="com.github.supermoonie.proxy.swing.db.TextDateTypeHandler"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="HeaderMap">
+        select id,
+               name,
+               value,
+               request_id,
+               response_id,
+               time_created
+        from header
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="HeaderMap">
+        select id,
+               name,
+               value,
+               request_id,
+               response_id,
+               time_created
+        from header
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="HeaderMap">
+        select
+        id, name, value, request_id, response_id, time_created
+        from header
+        <where>
+            <if test="id != null and id != ''">
+                and id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="value != null and value != ''">
+                and value = #{value}
+            </if>
+            <if test="requestId != null and requestId != ''">
+                and request_id = #{requestId}
+            </if>
+            <if test="responseId != null and responseId != ''">
+                and response_id = #{responseId}
+            </if>
+            <if test="timeCreated != null">
+                and time_created = #{timeCreated}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert">
+        insert into header(id, name, value, request_id, response_id)
+        values (#{id}, #{name}, #{value}, #{requestId}, #{responseId})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update header
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="value != null and value != ''">
+                value = #{value},
+            </if>
+            <if test="requestId != null and requestId != ''">
+                request_id = #{requestId},
+            </if>
+            <if test="responseId != null and responseId != ''">
+                response_id = #{responseId},
+            </if>
+            <if test="timeCreated != null">
+                time_created = #{timeCreated},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from header
+        where id = #{id}
+    </delete>
+
+</mapper>

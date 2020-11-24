@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS header
   time_created  DATETIME DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
 );
 CREATE INDEX name_idx ON header(name);
+CREATE INDEX request_id_idx ON header(request_id);
+CREATE INDEX response_id_idx ON header(response_id);
 --EOF--
 CREATE TABLE IF NOT EXISTS request
 (

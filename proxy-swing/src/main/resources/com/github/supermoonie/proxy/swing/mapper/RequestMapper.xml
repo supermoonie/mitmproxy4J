@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.supermoonie.proxy.swing.mapper.RequestMapper">
+
+    <resultMap type="com.github.supermoonie.proxy.swing.entity.Request" id="RequestMap">
+        <result property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="method" column="method" jdbcType="VARCHAR"/>
+        <result property="host" column="host" jdbcType="VARCHAR"/>
+        <result property="port" column="port" jdbcType="INTEGER"/>
+        <result property="uri" column="uri" jdbcType="VARCHAR"/>
+        <result property="httpVersion" column="http_version" jdbcType="VARCHAR"/>
+        <result property="contentType" column="content_type" jdbcType="VARCHAR"/>
+        <result property="contentId" column="content_id" jdbcType="VARCHAR"/>
+        <result property="startTime" column="start_time" jdbcType="INTEGER"/>
+        <result property="endTime" column="end_time" jdbcType="INTEGER"/>
+        <result property="size" column="size" jdbcType="INTEGER"/>
+        <result property="timeCreated" column="time_created" jdbcType="VARCHAR"
+                typeHandler="com.github.supermoonie.proxy.swing.db.TextDateTypeHandler"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="RequestMap">
+        select id,
+               method,
+               host,
+               port,
+               uri,
+               http_version,
+               content_type,
+               content_id,
+               start_time,
+               end_time,
+               size,
+               time_created
+        from request
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="RequestMap">
+        select id,
+               method,
+               host,
+               port,
+               uri,
+               http_version,
+               content_type,
+               content_id,
+               start_time,
+               end_time,
+               size,
+               time_created
+        from request
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="RequestMap">
+        select
+        id, method, host, port, uri, http_version, content_type, content_id, start_time, end_time, size, time_created
+        from request
+        <where>
+            <if test="id != null and id != ''">
+                and id = #{id}
+            </if>
+            <if test="method != null and method != ''">
+                and method = #{method}
+            </if>
+            <if test="host != null and host != ''">
+                and host = #{host}
+            </if>
+            <if test="port != null">
+                and port = #{port}
+            </if>
+            <if test="uri != null and uri != ''">
+                and uri = #{uri}
+            </if>
+            <if test="httpVersion != null and httpVersion != ''">
+                and http_version = #{httpVersion}
+            </if>
+            <if test="contentType != null and contentType != ''">
+                and content_type = #{contentType}
+            </if>
+            <if test="contentId != null and contentId != ''">
+                and content_id = #{contentId}
+            </if>
+            <if test="startTime != null">
+                and start_time = #{startTime}
+            </if>
+            <if test="endTime != null">
+                and end_time = #{endTime}
+            </if>
+            <if test="size != null">
+                and size = #{size}
+            </if>
+            <if test="timeCreated != null">
+                and time_created = #{timeCreated}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert">
+        insert into request(id, method, host, port, uri, http_version, content_type, content_id, start_time, end_time,
+                                 size)
+        values (#{id}, #{method}, #{host}, #{port}, #{uri}, #{httpVersion}, #{contentType}, #{contentId}, #{startTime},
+                #{endTime}, #{size})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update request
+        <set>
+            <if test="method != null and method != ''">
+                method = #{method},
+            </if>
+            <if test="host != null and host != ''">
+                host = #{host},
+            </if>
+            <if test="port != null">
+                port = #{port},
+            </if>
+            <if test="uri != null and uri != ''">
+                uri = #{uri},
+            </if>
+            <if test="httpVersion != null and httpVersion != ''">
+                http_version = #{httpVersion},
+            </if>
+            <if test="contentType != null and contentType != ''">
+                content_type = #{contentType},
+            </if>
+            <if test="contentId != null and contentId != ''">
+                content_id = #{contentId},
+            </if>
+            <if test="startTime != null">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null">
+                end_time = #{endTime},
+            </if>
+            <if test="size != null">
+                size = #{size},
+            </if>
+            <if test="timeCreated != null">
+                time_created = #{timeCreated},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from request
+        where id = #{id}
+    </delete>
+
+</mapper>

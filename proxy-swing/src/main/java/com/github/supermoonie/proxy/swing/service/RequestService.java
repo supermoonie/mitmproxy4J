@@ -38,7 +38,7 @@ public final class RequestService {
         HttpVersion httpVersion = httpRequest.protocolVersion();
         String contentType = httpRequest.headers().get(HttpHeaderNames.CONTENT_TYPE);
         Request req = new Request();
-        req.setId(requestId);
+//        req.setId(requestId);
         req.setUri(connectionInfo.getUrl());
         req.setMethod(method.name());
         req.setHttpVersion(httpVersion.text());

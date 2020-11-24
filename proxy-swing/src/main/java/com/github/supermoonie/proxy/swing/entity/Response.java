@@ -1,26 +1,56 @@
 package com.github.supermoonie.proxy.swing.entity;
 
+import com.github.supermoonie.proxy.swing.util.Jackson;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+import java.util.Date;
+
 /**
  * @author supermoonie
  * @date 2020-05-30
  */
-public class Response extends BaseEntity {
+@DatabaseTable(tableName = "response")
+public class Response {
 
+    public static final String REQUEST_ID_FIELD_NAME = "request_id";
+    public static final String HTTP_VERSION_FIELD_NAME = "http_version";
+    public static final String STATUS_FIELD_NAME = "status";
+    public static final String CONTENT_TYPE_FIELD_NAME = "content_type";
+    public static final String CONTENT_ID_FIELD_NAME = "content_id";
+    public static final String START_TIME_FIELD_NAME = "start_time";
+    public static final String EDN_TIME_FIELD_NAME = "end_time";
+    public static final String SIZE_FIELD_NAME = "size";
+    public static final String TIME_CREATED_NAME = "time_created";
+
+    @DatabaseField(generatedId = true)
+    private int id;
+    @DatabaseField(columnName = REQUEST_ID_FIELD_NAME, unique = true, uniqueIndexName = "uk_request_id")
     private String requestId;
-
+    @DatabaseField(columnName = HTTP_VERSION_FIELD_NAME)
     private String httpVersion;
-
+    @DatabaseField(columnName = STATUS_FIELD_NAME)
     private Integer status;
-
+    @DatabaseField(columnName = CONTENT_TYPE_FIELD_NAME)
     private String contentType;
-
+    @DatabaseField(columnName = CONTENT_ID_FIELD_NAME)
     private String contentId;
-
+    @DatabaseField(columnName = START_TIME_FIELD_NAME)
     private Long startTime;
-
+    @DatabaseField(columnName = EDN_TIME_FIELD_NAME)
     private Long endTime;
-
+    @DatabaseField(columnName = SIZE_FIELD_NAME)
     private Integer size;
+    @DatabaseField(columnName = TIME_CREATED_NAME, canBeNull = false)
+    private Date timeCreated;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getRequestId() {
         return requestId;
@@ -86,17 +116,16 @@ public class Response extends BaseEntity {
         this.size = size;
     }
 
+    public Date getTimeCreated() {
+        return timeCreated;
+    }
+
+    public void setTimeCreated(Date timeCreated) {
+        this.timeCreated = timeCreated;
+    }
+
     @Override
     public String toString() {
-        return "Response{" +
-                "requestId='" + requestId + '\'' +
-                ", httpVersion='" + httpVersion + '\'' +
-                ", status=" + status +
-                ", contentType='" + contentType + '\'' +
-                ", contentId='" + contentId + '\'' +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", size=" + size +
-                '}';
+        return Jackson.toJsonString(this);
     }
 }
