@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.dao;
 
+import com.github.supermoonie.proxy.swing.entity.CertificateInfo;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
 import com.j256.ormlite.dao.Dao;
@@ -43,6 +44,7 @@ public class DaoCollections {
     private static void setupDatabase(JdbcConnectionSource connectionSource) throws SQLException {
         TableUtils.createTableIfNotExists(connectionSource, Request.class);
         TableUtils.createTableIfNotExists(connectionSource, Response.class);
+        TableUtils.createTableIfNotExists(connectionSource, CertificateInfo.class);
     }
 
     private static String dbPath() {
