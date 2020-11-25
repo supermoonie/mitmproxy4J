@@ -41,7 +41,7 @@ public class Response {
     private Long endTime;
     @DatabaseField(columnName = SIZE_FIELD_NAME)
     private Integer size;
-    @DatabaseField(columnName = TIME_CREATED_NAME, canBeNull = false)
+    @DatabaseField(columnName = TIME_CREATED_NAME, canBeNull = false, index = true, indexName = "idx_time_created")
     private Date timeCreated;
 
     public int getId() {

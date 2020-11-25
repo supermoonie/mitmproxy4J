@@ -11,6 +11,9 @@ import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.sql.SQLException;
+
 /**
  * @author supermoonie
  * @date 2020-09-09
@@ -27,9 +30,15 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
         if (GlobalSetting.getInstance().getRecord()) {
-            Request req = RequestService.saveRequest(ctx, request);
-            ctx.setUserData(req);
-            Platform.runLater(() -> {
+            Request req = null;
+            try {
+                req = RequestService.saveRequest(ctx, request);
+                log.info("request saved, uri: {}", request.uri());
+                ctx.setUserData(req);
+            } catch (SQLException e) {
+                log.error(ctx.getConnectionInfo().getUrl() + " error: " + e.getMessage(), e);
+            }
+            SwingUtilities.invokeLater(() -> {
                 try {
 //                    MainController mainController = App.getMainController();
 //                    mainController.addFlow(ctx.getConnectionInfo(), req, null);
@@ -37,7 +46,6 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                     log.error(e.getMessage(), e);
                 }
             });
-            log.info("request saved, uri: {}", request.uri());
         }
         return null;
     }

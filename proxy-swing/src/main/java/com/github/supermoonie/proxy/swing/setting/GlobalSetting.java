@@ -17,18 +17,18 @@ public class GlobalSetting {
     private GlobalSetting() {
     }
 
-    private Boolean record;
-    private Integer port;
-    private Boolean auth;
+    private Boolean record = Boolean.TRUE;
+    private Integer port = 10801;
+    private Boolean auth = false;
     private String username;
     private String password;
-    private Boolean systemProxy;
-    private Boolean throttling;
+    private Boolean systemProxy = false;
+    private Boolean throttling = false;
     private Long throttlingWriteLimit;
     private Long throttlingReadLimit;
-    private Boolean blockUrl;
+    private Boolean blockUrl = false;
     private Set<BlockUrl> blockUrlList;
-    private Boolean allowUrl;
+    private Boolean allowUrl = false;
     private Set<AllowUrl> allowUrlList;
 
     public static GlobalSetting getInstance() {

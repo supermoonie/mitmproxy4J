@@ -37,8 +37,12 @@ public class ProxyManager {
         internalProxy.setPassword(password);
         internalProxy.start();
         internalProxy.getTrafficShapingHandler().setCheckInterval(1_000);
-        internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
-        internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
+        if (null != GlobalSetting.getInstance().getThrottlingWriteLimit()) {
+            internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
+        }
+        if (null != GlobalSetting.getInstance().getThrottlingReadLimit()) {
+            internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
+        }
     }
 
     public static void restart(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {

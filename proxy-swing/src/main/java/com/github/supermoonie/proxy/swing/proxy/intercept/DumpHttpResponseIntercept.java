@@ -8,9 +8,10 @@ import com.github.supermoonie.proxy.swing.service.ResponseService;
 import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
-import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 
 /**
  * @author supermoonie
@@ -35,7 +36,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
             Request req = (Request) ctx.getUserData();
             Response res = ResponseService.saveResponse(ctx, req, response);
             log.info("response saved, uri: {}", request.uri());
-            Platform.runLater(() -> {
+            SwingUtilities.invokeLater(() -> {
                 try {
 //                    MainController mainController = App.getMainController();
 //                    mainController.addFlow(ctx.getConnectionInfo(), req, res);

@@ -1,27 +1,55 @@
 package com.github.supermoonie.proxy.swing.entity;
 
-import java.util.Arrays;
+import com.github.supermoonie.proxy.swing.util.Jackson;
+import com.j256.ormlite.field.DataType;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+import java.util.Date;
 
 /**
  * @author supermoonie
  * @date 2020-06-06
  */
-public class Content extends BaseEntity {
+@DatabaseTable(tableName = "content")
+public class Content {
 
-    private byte[] content;
+    public static final String RAW_CONTENT_FIELD_NAME = "raw_content";
+    public static final String TIME_CREATED_FIELD_NAME = "time_created";
 
-    public byte[] getContent() {
-        return content;
+    @DatabaseField(generatedId = true)
+    private int id;
+    @DatabaseField(columnName = RAW_CONTENT_FIELD_NAME, dataType = DataType.BYTE_ARRAY, canBeNull = false)
+    private byte[] rawContent;
+    @DatabaseField(columnName = TIME_CREATED_FIELD_NAME, canBeNull = false, index = true, indexName = "idx_time_created")
+    private Date timeCreated;
+
+    public int getId() {
+        return id;
     }
 
-    public void setContent(byte[] content) {
-        this.content = content;
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public byte[] getRawContent() {
+        return rawContent;
+    }
+
+    public void setRawContent(byte[] rawContent) {
+        this.rawContent = rawContent;
+    }
+
+    public Date getTimeCreated() {
+        return timeCreated;
+    }
+
+    public void setTimeCreated(Date timeCreated) {
+        this.timeCreated = timeCreated;
     }
 
     @Override
     public String toString() {
-        return "Content{" +
-                "content=" + Arrays.toString(content) +
-                '}';
+        return Jackson.toJsonString(this);
     }
 }

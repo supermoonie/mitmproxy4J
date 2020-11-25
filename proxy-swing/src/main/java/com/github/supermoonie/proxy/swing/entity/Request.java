@@ -12,7 +12,7 @@ import java.util.Date;
  */
 @DatabaseTable(tableName = "request")
 public class Request {
-    
+
     public static final String METHOD_FIELD_NAME = "method";
     public static final String HOST_FIELD_NAME = "host";
     public static final String PORT_FIELD_NAME = "port";
@@ -40,14 +40,14 @@ public class Request {
     @DatabaseField(columnName = CONTENT_TYPE_FIELD_NAME)
     private String contentType;
     @DatabaseField(columnName = CONTENT_ID_FIELD_NAME)
-    private String contentId;
+    private Integer contentId;
     @DatabaseField(columnName = START_TIME_FIELD_NAME)
     private Long startTime;
     @DatabaseField(columnName = END_TIME_FIELD_NAME)
     private Long endTime;
     @DatabaseField(columnName = SIZE_FIELD_NAME)
     private Integer size;
-    @DatabaseField(columnName = TIME_CREATED_FIELD_NAME, index = true, indexName = "idx_time_created")
+    @DatabaseField(columnName = TIME_CREATED_FIELD_NAME, canBeNull = false, index = true, indexName = "idx_time_created")
     private Date timeCreated;
 
     public int getId() {
@@ -98,20 +98,20 @@ public class Request {
         this.httpVersion = httpVersion;
     }
 
+    public Integer getContentId() {
+        return contentId;
+    }
+
+    public void setContentId(Integer contentId) {
+        this.contentId = contentId;
+    }
+
     public String getContentType() {
         return contentType;
     }
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
-    }
-
-    public String getContentId() {
-        return contentId;
-    }
-
-    public void setContentId(String contentId) {
-        this.contentId = contentId;
     }
 
     public Long getStartTime() {

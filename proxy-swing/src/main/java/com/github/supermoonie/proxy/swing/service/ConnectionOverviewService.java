@@ -1,11 +1,12 @@
 package com.github.supermoonie.proxy.swing.service;
 
 import com.github.supermoonie.proxy.ConnectionInfo;
-import com.github.supermoonie.proxy.swing.db.Db;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.ConnectionOverview;
-import org.apache.ibatis.session.SqlSession;
+import com.j256.ormlite.dao.Dao;
 
-import java.util.UUID;
+import java.sql.SQLException;
+import java.util.Date;
 
 /**
  * @author supermoonie
@@ -17,21 +18,17 @@ public final class ConnectionOverviewService {
         throw new UnsupportedOperationException();
     }
 
-    public static void saveClientInfo(ConnectionInfo connectionInfo, String requestId, SqlSession sqlSession) {
+    public static int saveClientInfo(ConnectionInfo connectionInfo, int requestId) throws SQLException {
         ConnectionOverview overview = new ConnectionOverview();
-        overview.setId(UUID.randomUUID().toString());
         overview.setRequestId(requestId);
         overview.setClientHost(connectionInfo.getClientHost());
         overview.setClientPort(connectionInfo.getClientPort());
         overview.setClientSessionId(connectionInfo.getClientSessionId());
         overview.setClientProtocol(connectionInfo.getClientProtocol());
         overview.setClientCipherSuite(connectionInfo.getClientCipherSuite());
-        if (null == sqlSession) {
-            try (SqlSession session = Db.sqlSessionFactory().openSession()) {
-
-            }
-        } else {
-
-        }
+        overview.setTimeCreated(new Date());
+        Dao<ConnectionOverview, Integer> dao = DaoCollections.getDao(ConnectionOverview.class);
+        dao.create(overview);
+        return overview.getId();
     }
 }

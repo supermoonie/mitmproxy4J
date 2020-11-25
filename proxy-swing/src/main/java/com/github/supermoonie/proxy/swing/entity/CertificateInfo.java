@@ -38,7 +38,7 @@ public class CertificateInfo {
 
     @DatabaseField(generatedId = true)
     private int id;
-    @DatabaseField(columnName = SERIAL_NUMBER_FIELD_NAME, uniqueIndex = true, uniqueIndexName = "uk_serial_number")
+    @DatabaseField(columnName = SERIAL_NUMBER_FIELD_NAME, canBeNull = false, uniqueIndex = true, uniqueIndexName = "uk_serial_number")
     private String serialNumber;
     @DatabaseField(columnName = ISSUER_COMMON_NAME_FIELD_NAME)
     private String issuerCommonName;
@@ -80,7 +80,7 @@ public class CertificateInfo {
     private String shaTwoFiveSix;
     @DatabaseField(columnName = FULL_DETAIL_FIELD_NAME)
     private String fullDetail;
-    @DatabaseField(columnName = TIME_CREATED_FIELD_NAME)
+    @DatabaseField(columnName = TIME_CREATED_FIELD_NAME, canBeNull = false, index = true, indexName = "idx_time_created")
     private Date timeCreated;
 
     public int getId() {
