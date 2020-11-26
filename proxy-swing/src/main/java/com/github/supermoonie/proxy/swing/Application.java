@@ -36,6 +36,8 @@ public class Application {
 
     private static final String PREFS_ROOT_PATH = "/proxy-swing";
 
+    public static ProxyFrame PROXY_FRAME;
+
     public static void main(String[] args) {
         // on macOS enable screen menu bar
         if (SystemInfo.isMacOS && System.getProperty("apple.laf.useScreenMenuBar") == null) {
@@ -65,13 +67,13 @@ public class Application {
                 responseIntercepts.put("dumpHttpResponseIntercept", DumpHttpResponseIntercept.INSTANCE);
                 requestIntercepts.put("configurableIntercept", DefaultConfigIntercept.INSTANCE);
             });
-            ProxyFrame frame = new ProxyFrame();
-            frame.setPreferredSize(new Dimension(1280, 620));
+            PROXY_FRAME = new ProxyFrame();
+            PROXY_FRAME.setPreferredSize(new Dimension(1280, 620));
             // show frame
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            PROXY_FRAME.pack();
+            PROXY_FRAME.setLocationRelativeTo(null);
+            PROXY_FRAME.setVisible(true);
+            PROXY_FRAME.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         });
     }
 }

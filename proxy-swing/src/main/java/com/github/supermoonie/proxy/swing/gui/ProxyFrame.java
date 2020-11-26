@@ -4,17 +4,14 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
 import com.github.supermoonie.proxy.swing.ComponentModels;
-import org.jdesktop.swingx.JXTree;
+import com.github.supermoonie.proxy.swing.gui.tree.FlowTreeNode;
 import org.jdesktop.swingx.JXTreeTable;
-import org.jdesktop.swingx.renderer.DefaultTreeRenderer;
-import org.jdesktop.swingx.table.TableColumnExt;
 
 import javax.swing.*;
-import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreeCellRenderer;
-import javax.swing.tree.TreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -31,8 +28,8 @@ public class ProxyFrame extends JFrame {
     private JCheckBoxMenuItem blockListMenuItem;
     private JCheckBoxMenuItem allowListMenuItem;
 
-    private final DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("root");
-    private final JTree flowTree = new JTree(treeNode);
+    private final FlowTreeNode rootNode = new FlowTreeNode();
+    private final JTree flowTree = new JTree(rootNode);
 
     public ProxyFrame() {
         setTitle("Lightning:10801");
@@ -61,17 +58,11 @@ public class ProxyFrame extends JFrame {
         flowPanel.setMinimumSize(new Dimension(200, 0));
         flowPanel.setLayout(new BorderLayout());
         flowPanel.add(new JTextField(), BorderLayout.NORTH);
+        // Flow table panel
         JTabbedPane flowTablePane = new JTabbedPane();
+        // Structure tab
         JPanel structureTab = new JPanel(new BorderLayout());
         structureTab.setMinimumSize(new Dimension(100, 0));
-        DefaultMutableTreeNode path1 = new DefaultMutableTreeNode("path1");
-        DefaultMutableTreeNode html = new DefaultMutableTreeNode("html");
-        path1.add(html);
-        DefaultMutableTreeNode path2 = new DefaultMutableTreeNode("path2");
-        DefaultMutableTreeNode js = new DefaultMutableTreeNode("js");
-        path2.add(js);
-        treeNode.add(path1);
-        treeNode.add(path2);
         DefaultTreeCellRenderer defaultTreeCellRenderer = new DefaultTreeCellRenderer() {
             @Override
             public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -87,15 +78,14 @@ public class ProxyFrame extends JFrame {
                         setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/js.svg"));
                     }
                 }
-                setBackgroundSelectionColor(Color.decode("#4B6EAF"));
                 return c;
             }
         };
-        flowTree.setCellRenderer(defaultTreeCellRenderer);
-//        DefaultTreeCellRenderer cellRenderer = (DefaultTreeCellRenderer) flowTree.getCellRenderer();
-//        cellRenderer.setLeafIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg"));
-
         structureTab.add(flowTree, BorderLayout.CENTER);
+        flowTree.setRootVisible(false);
+        flowTree.setShowsRootHandles(true);
+//        flowTree.setCellRenderer(defaultTreeCellRenderer);
+
         JPanel sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         JList<String> flowList = new JList<>(new String[]{"foo", "bar"});
@@ -126,16 +116,14 @@ public class ProxyFrame extends JFrame {
         JSplitPane contentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         JTabbedPane requestTablePane = new JTabbedPane();
         JPanel requestHeaderTab = new JPanel(new BorderLayout());
-        Object[][] tableDate=new Object[5][8];
-        for(int i=0;i<5;i++)
-        {
-            tableDate[i][0]="1000"+i;
-            for(int j=1;j<8;j++)
-            {
-                tableDate[i][j]=0;
+        Object[][] tableDate = new Object[5][8];
+        for (int i = 0; i < 5; i++) {
+            tableDate[i][0] = "1000" + i;
+            for (int j = 1; j < 8; j++) {
+                tableDate[i][j] = 0;
             }
         }
-        String[] name={"学号","软件工程","Java","网络","数据结构","数据库","总成绩","平均成绩"};
+        String[] name = {"学号", "软件工程", "Java", "网络", "数据结构", "数据库", "总成绩", "平均成绩"};
         JTable requestHeaderTable = new JTable(tableDate, name);
         requestHeaderTab.add(new JScrollPane(requestHeaderTable), BorderLayout.CENTER);
         requestTablePane.addTab("Header", requestHeaderTab);
@@ -173,7 +161,7 @@ public class ProxyFrame extends JFrame {
         recordButton.setAction(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) treeNode.getFirstChild().getChildAt(0);
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) rootNode.getFirstChild().getChildAt(0);
                 node.setUserObject("js");
                 flowTree.updateUI();
             }
@@ -278,5 +266,13 @@ public class ProxyFrame extends JFrame {
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
+    }
+
+    public JTree getFlowTree() {
+        return flowTree;
+    }
+
+    public FlowTreeNode getRootNode() {
+        return rootNode;
     }
 }
