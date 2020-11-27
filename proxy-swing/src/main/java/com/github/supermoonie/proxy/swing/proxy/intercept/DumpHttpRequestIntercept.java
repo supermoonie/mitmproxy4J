@@ -39,7 +39,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                 SwingUtilities.invokeLater(() -> {
                     try {
                         FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
-                        rootNode.add(ctx.getConnectionInfo(), req, null);
+                        rootNode.add(ctx.getConnectionInfo(), req);
                         Application.PROXY_FRAME.getFlowTree().updateUI();
                         Application.PROXY_FRAME.getFlowTree().expandPath(new TreePath(rootNode.getPath()));
                     } catch (Exception e) {

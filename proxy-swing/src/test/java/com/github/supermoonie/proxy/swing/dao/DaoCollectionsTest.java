@@ -40,7 +40,7 @@ public class DaoCollectionsTest {
     @Test
     public void test_response_dao() throws SQLException {
         Response response = new Response();
-        response.setRequestId("foo");
+        response.setRequestId(1);
         response.setTimeCreated(new Date());
         Dao<Response, Integer> dao = DaoCollections.getDao(Response.class);
         dao.create(response);

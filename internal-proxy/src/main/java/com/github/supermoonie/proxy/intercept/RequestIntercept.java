@@ -20,6 +20,16 @@ public interface RequestIntercept {
     FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request);
 
     /**
+     * on request write
+     *
+     * @param ctx     {@link InterceptContext}
+     * @param request request msg
+     */
+    default void onWrite(InterceptContext ctx, HttpRequest request) {
+
+    }
+
+    /**
      * exception occur when send request
      *
      * @param ctx     {@link InterceptContext}

@@ -4,14 +4,15 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
 import com.github.supermoonie.proxy.swing.ComponentModels;
+import com.github.supermoonie.proxy.swing.gui.tree.Flow;
 import com.github.supermoonie.proxy.swing.gui.tree.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.gui.tree.FlowType;
+import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import org.jdesktop.swingx.JXTreeTable;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -69,14 +70,9 @@ public class ProxyFrame extends JFrame {
                 Component c = super.getTreeCellRendererComponent(tree, value,
                         selected, expanded, leaf, row, hasFocus);
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-                if (node.getUserObject().toString().equals("root") || node.getUserObject().toString().contains("path")) {
-                    setIcon(getDefaultClosedIcon());
-                } else {
-                    if (node.getUserObject().toString().equals("html")) {
-                        setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/html.svg"));
-                    } else {
-                        setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/js.svg"));
-                    }
+                Flow flow = (Flow) node.getUserObject();
+                if (null != flow && flow.getFlowType().equals(FlowType.TARGET)) {
+                    setIcon(flow.getIcon());
                 }
                 return c;
             }
@@ -84,14 +80,14 @@ public class ProxyFrame extends JFrame {
         structureTab.add(flowTree, BorderLayout.CENTER);
         flowTree.setRootVisible(false);
         flowTree.setShowsRootHandles(true);
-//        flowTree.setCellRenderer(defaultTreeCellRenderer);
+        flowTree.setCellRenderer(defaultTreeCellRenderer);
 
         JPanel sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         JList<String> flowList = new JList<>(new String[]{"foo", "bar"});
         sequenceTab.add(flowList, BorderLayout.CENTER);
-        flowTablePane.addTab("Structure", new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/tree.svg"), structureTab);
-        flowTablePane.addTab("Sequence", new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/list.svg"), sequenceTab);
+        flowTablePane.addTab("Structure", SvgIcons.TREE, structureTab);
+        flowTablePane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
         flowPanel.add(flowTablePane, BorderLayout.CENTER);
 
         // Flow detail panel
@@ -173,7 +169,7 @@ public class ProxyFrame extends JFrame {
         toolBar.add(repeatButton);
         toolBar.add(throttlingButton);
         toolBar.add(recordButton);
-        container.add(toolBar, BorderLayout.CENTER);
+        container.add(toolBar, BorderLayout.EAST);
         container.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.SOUTH);
         getContentPane().add(container, BorderLayout.NORTH);
 

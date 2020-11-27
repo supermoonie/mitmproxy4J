@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.tree;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.github.supermoonie.proxy.swing.util.Jackson;
 
 import java.util.Date;
@@ -19,6 +20,8 @@ public class Flow {
     private FlowType flowType;
 
     private String contentType;
+
+    private FlatSVGIcon icon;
 
     private Date requestTime;
 
@@ -60,6 +63,14 @@ public class Flow {
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public FlatSVGIcon getIcon() {
+        return icon;
+    }
+
+    public void setIcon(FlatSVGIcon icon) {
+        this.icon = icon;
     }
 
     public Date getRequestTime() {

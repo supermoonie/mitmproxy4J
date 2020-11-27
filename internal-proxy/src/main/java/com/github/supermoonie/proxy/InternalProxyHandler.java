@@ -18,6 +18,8 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -194,6 +196,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000)
                     .handler(new ChannelInitializer<Channel>() {
+
                         @Override
                         protected void initChannel(Channel ch) throws Exception {
                             ch.pipeline().addLast(new WriteTimeoutHandler(600));
@@ -223,6 +226,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) throws Exception {
                                     connectionInfo.setResponseStartTime(System.currentTimeMillis());
+                                    interceptContext.onRead(request);
                                     interceptContext.setNettyRemoteContext(ctx);
                                 }
 
@@ -291,17 +295,19 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
             connectionInfo.setConnectStartTime(System.currentTimeMillis());
             remoteChannelFuture = bootstrap.connect(connectionInfo.getRemoteHost(), connectionInfo.getRemotePort());
             remoteChannelFuture.addListener((ChannelFutureListener) future -> {
+                interceptContext.onWrite(request);
                 connectionInfo.setConnectEndTime(System.currentTimeMillis());
                 if (future.isSuccess()) {
                     interceptContext.setRemoteChannel(future.channel());
                     logger.debug("send direct: {}", msg);
-                    future.channel().writeAndFlush(msg);
+                    future.channel().write(msg);
                     Object obj = requestQueue.poll();
                     while (null != obj) {
                         logger.debug("send from queue: {}", obj);
-                        future.channel().writeAndFlush(obj);
+                        future.channel().write(obj);
                         obj = requestQueue.poll();
                     }
+                    future.channel().flush();
                     connectionInfo.setRequestEndTime(System.currentTimeMillis());
                     status = ConnectionStatus.CONNECTED_WITH_REMOTE;
                 } else {

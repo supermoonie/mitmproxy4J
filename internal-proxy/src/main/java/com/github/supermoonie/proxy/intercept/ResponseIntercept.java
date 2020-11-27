@@ -20,6 +20,16 @@ public interface ResponseIntercept {
      */
     FullHttpResponse onResponse(InterceptContext ctx, HttpRequest request, FullHttpResponse response);
 
+    /**
+     * on read
+     *
+     * @param ctx      {@link InterceptContext}
+     * @param request  {@link HttpRequest}
+     */
+    default void onRead(InterceptContext ctx, HttpRequest request) {
+
+    }
+
     default FullHttpResponse onException(InterceptContext ctx, HttpRequest request, FullHttpResponse response, Throwable cause) {
         return null;
     }

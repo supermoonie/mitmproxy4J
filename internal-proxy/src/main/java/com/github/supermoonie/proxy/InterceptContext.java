@@ -47,6 +47,14 @@ public class InterceptContext {
 
     }
 
+    void onWrite(HttpRequest request) {
+        Set<String> keySet = requestIntercepts.keySet();
+        for (String key : keySet) {
+            RequestIntercept requestIntercept = requestIntercepts.get(key);
+            requestIntercept.onWrite(this, request);
+        }
+    }
+
     boolean onRequest(HttpRequest request) {
         Set<String> keySet = requestIntercepts.keySet();
         for (String key : keySet) {
@@ -60,6 +68,14 @@ public class InterceptContext {
             }
         }
         return true;
+    }
+
+    void onRead(HttpRequest request) {
+        Set<String> keySet = responseIntercepts.keySet();
+        for (String key : keySet) {
+            ResponseIntercept responseIntercept = responseIntercepts.get(key);
+            responseIntercept.onRead(this, request);
+        }
     }
 
     FullHttpResponse onResponse(HttpRequest request, FullHttpResponse response) {

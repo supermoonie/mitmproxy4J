@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.swing.gui.tree;
 import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
+import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.net.URI;
@@ -28,7 +29,20 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
         super(userObject, allowsChildren);
     }
 
-    public void add(ConnectionInfo connectionInfo, Request request, Response response) throws URISyntaxException {
+    public void update(Request request, Response response) {
+        FlowTreeNode leaf = findLeaf(this, request.getId());
+        if (null == leaf) {
+            return;
+        }
+        Flow flow = (Flow) leaf.getUserObject();
+        if (null == response) {
+            flow.setIcon(SvgIcons.DOWNLOAD);
+        } else {
+            flow.setIcon(SvgIcons.HTML);
+        }
+    }
+
+    public void add(ConnectionInfo connectionInfo, Request request) throws URISyntaxException {
         URI uri = new URI(connectionInfo.getUrl());
         String baseUrl = uri.getScheme() + "://" + uri.getAuthority();
         // Base node
@@ -36,12 +50,13 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
             Flow baseFlow = new Flow();
             baseFlow.setUrl(baseUrl);
             baseFlow.setFlowType(FlowType.BASE_URL);
+            baseFlow.setIcon(SvgIcons.UPLOAD);
             FlowTreeNode node = new FlowTreeNode(baseFlow);
             this.add(node);
             return node;
         });
         if ("".equals(uri.getPath()) || "/".equals(uri.getPath())) {
-            // Root path node
+            // Target node
             Flow rootPathFlow = new Flow();
             rootPathFlow.setRequestId(request.getId());
             rootPathFlow.setUrl("/");
@@ -49,10 +64,54 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
             FlowTreeNode rootPathNode = new FlowTreeNode(rootPathFlow);
             baseNode.add(rootPathNode);
         } else {
-
+            String[] array = (uri.getPath() + " ").split("/");
+            int len = array.length;
+            FlowTreeNode currentNode = baseNode;
+            for (int i = 1; i < len; i++) {
+                String fragment = "".equals(array[i].trim()) ? "/" : array[i].trim();
+                if (i == (len - 1)) {
+                    // Target node
+                    Flow targetFlow = new Flow();
+                    targetFlow.setRequestId(request.getId());
+                    targetFlow.setUrl(fragment);
+                    targetFlow.setFlowType(FlowType.TARGET);
+                    targetFlow.setIcon(SvgIcons.UPLOAD);
+                    FlowTreeNode node = new FlowTreeNode(targetFlow);
+                    currentNode.add(node);
+                } else {
+                    final FlowTreeNode finalNode = currentNode;
+                    currentNode = findFirstChild(currentNode, fragment).orElseGet(() -> {
+                        // Path node
+                        Flow pathFlow = new Flow();
+                        pathFlow.setUrl(fragment);
+                        pathFlow.setFlowType(FlowType.PATH);
+                        FlowTreeNode node = new FlowTreeNode(pathFlow);
+                        finalNode.add(node);
+                        return node;
+                    });
+                }
+            }
         }
+    }
 
-
+    public FlowTreeNode findLeaf(FlowTreeNode node, Integer requestId) {
+        if (node.isLeaf()) {
+            Flow flow = (Flow) node.getUserObject();
+            if (flow.getRequestId().equals(requestId)) {
+                return node;
+            } else {
+                return null;
+            }
+        }
+        int childCount = node.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            FlowTreeNode child = (FlowTreeNode) node.getChildAt(i);
+            FlowTreeNode treeNode = findLeaf(child, requestId);
+            if (null != treeNode) {
+                return treeNode;
+            }
+        }
+        return null;
     }
 
     public Optional<FlowTreeNode> findFirstChild(FlowTreeNode node, String url) {
@@ -62,11 +121,11 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
 
     public List<FlowTreeNode> findChildren(FlowTreeNode node, String url) {
         List<FlowTreeNode> list = new LinkedList<>();
-        int childCount = getChildCount();
+        int childCount = node.getChildCount();
         for (int i = 0; i < childCount; i++) {
-            FlowTreeNode child = (FlowTreeNode) getChildAt(i);
+            FlowTreeNode child = (FlowTreeNode) node.getChildAt(i);
             Flow flow = (Flow) child.getUserObject();
-            if (flow.getUrl().equals(url)) {
+            if (null == url || flow.getUrl().equals(url)) {
                 list.add(child);
             }
         }

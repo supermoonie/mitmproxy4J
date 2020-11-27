@@ -26,7 +26,7 @@ public class Response {
     @DatabaseField(generatedId = true)
     private int id;
     @DatabaseField(columnName = REQUEST_ID_FIELD_NAME, unique = true, uniqueIndexName = "uk_request_id")
-    private String requestId;
+    private Integer requestId;
     @DatabaseField(columnName = HTTP_VERSION_FIELD_NAME)
     private String httpVersion;
     @DatabaseField(columnName = STATUS_FIELD_NAME)
@@ -34,7 +34,7 @@ public class Response {
     @DatabaseField(columnName = CONTENT_TYPE_FIELD_NAME)
     private String contentType;
     @DatabaseField(columnName = CONTENT_ID_FIELD_NAME)
-    private String contentId;
+    private Integer contentId;
     @DatabaseField(columnName = START_TIME_FIELD_NAME)
     private Long startTime;
     @DatabaseField(columnName = EDN_TIME_FIELD_NAME)
@@ -52,11 +52,11 @@ public class Response {
         this.id = id;
     }
 
-    public String getRequestId() {
+    public Integer getRequestId() {
         return requestId;
     }
 
-    public void setRequestId(String requestId) {
+    public void setRequestId(Integer requestId) {
         this.requestId = requestId;
     }
 
@@ -84,11 +84,11 @@ public class Response {
         this.contentType = contentType;
     }
 
-    public String getContentId() {
+    public Integer getContentId() {
         return contentId;
     }
 
-    public void setContentId(String contentId) {
+    public void setContentId(Integer contentId) {
         this.contentId = contentId;
     }
 
