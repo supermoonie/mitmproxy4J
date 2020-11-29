@@ -33,7 +33,8 @@ public class ApplicationPreferences {
                 UIManager.setLookAndFeel(args[0]);
             } else {
                 FlatDarkLaf.install();
-                String lafClassName = state.get(KEY_LAF, FlatDarkLaf.class.getName());
+                FlatLightLaf.install();
+                String lafClassName = state.get(KEY_LAF, FlatLightLaf.class.getName());
                 UIManager.setLookAndFeel(lafClassName);
             }
         } catch (Throwable ex) {

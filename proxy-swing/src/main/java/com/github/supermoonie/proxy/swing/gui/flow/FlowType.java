@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.swing.gui.tree;
+package com.github.supermoonie.proxy.swing.gui.flow;
 
 /**
  * @author supermoonie

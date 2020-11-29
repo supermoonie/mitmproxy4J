@@ -19,7 +19,7 @@ public class DbConfig {
     public DataSource dataSource() {
         HikariDataSource ds = new HikariDataSource();
         ds.setDriverClassName(org.sqlite.JDBC.class.getName());
-        ds.setJdbcUrl(JDBC.PREFIX + dbPath() + "/internal_proxy.db?date_string_format=yyyy-MM-dd HH:mm:ss&encoding=UTF8");
+        ds.setJdbcUrl(JDBC.PREFIX + dbPath() + "/internal_proxy2.db?date_string_format=yyyy-MM-dd HH:mm:ss&encoding=UTF8");
         return ds;
     }
 

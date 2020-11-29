@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -33,6 +34,8 @@ import java.util.Map;
 public class Application {
 
     private static final Logger log = LoggerFactory.getLogger(Application.class);
+
+    public static final Date START_TIME = new Date();
 
     private static final String PREFS_ROOT_PATH = "/proxy-swing";
 
@@ -67,6 +70,8 @@ public class Application {
                 responseIntercepts.put("dumpHttpResponseIntercept", DumpHttpResponseIntercept.INSTANCE);
                 requestIntercepts.put("configurableIntercept", DefaultConfigIntercept.INSTANCE);
             });
+            ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(100);
+            ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(200);
             PROXY_FRAME = new ProxyFrame();
             PROXY_FRAME.setPreferredSize(new Dimension(1280, 620));
             // show frame

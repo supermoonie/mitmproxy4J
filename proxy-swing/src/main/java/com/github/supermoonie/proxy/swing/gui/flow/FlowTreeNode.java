@@ -1,10 +1,10 @@
-package com.github.supermoonie.proxy.swing.gui.tree;
+package com.github.supermoonie.proxy.swing.gui.flow;
 
-import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,19 +38,19 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
         if (null == response) {
             flow.setIcon(SvgIcons.DOWNLOAD);
         } else {
-            flow.setIcon(SvgIcons.HTML);
+            flow.setStatus(response.getStatus());
+            flow.setIcon(SvgIcons.loadIcon(response.getStatus(), response.getContentType()));
         }
     }
 
-    public void add(ConnectionInfo connectionInfo, Request request) throws URISyntaxException {
-        URI uri = new URI(connectionInfo.getUrl());
+    public void add(String url, int requestId, Icon icon) throws URISyntaxException {
+        URI uri = new URI(url);
         String baseUrl = uri.getScheme() + "://" + uri.getAuthority();
         // Base node
         FlowTreeNode baseNode = findFirstChild(this, baseUrl).orElseGet(() -> {
             Flow baseFlow = new Flow();
             baseFlow.setUrl(baseUrl);
             baseFlow.setFlowType(FlowType.BASE_URL);
-            baseFlow.setIcon(SvgIcons.UPLOAD);
             FlowTreeNode node = new FlowTreeNode(baseFlow);
             this.add(node);
             return node;
@@ -58,9 +58,10 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
         if ("".equals(uri.getPath()) || "/".equals(uri.getPath())) {
             // Target node
             Flow rootPathFlow = new Flow();
-            rootPathFlow.setRequestId(request.getId());
+            rootPathFlow.setRequestId(requestId);
             rootPathFlow.setUrl("/");
             rootPathFlow.setFlowType(FlowType.TARGET);
+            rootPathFlow.setIcon(icon);
             FlowTreeNode rootPathNode = new FlowTreeNode(rootPathFlow);
             baseNode.add(rootPathNode);
         } else {
@@ -72,10 +73,10 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
                 if (i == (len - 1)) {
                     // Target node
                     Flow targetFlow = new Flow();
-                    targetFlow.setRequestId(request.getId());
+                    targetFlow.setRequestId(requestId);
                     targetFlow.setUrl(fragment);
                     targetFlow.setFlowType(FlowType.TARGET);
-                    targetFlow.setIcon(SvgIcons.UPLOAD);
+                    targetFlow.setIcon(icon);
                     FlowTreeNode node = new FlowTreeNode(targetFlow);
                     currentNode.add(node);
                 } else {
@@ -97,7 +98,7 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
     public FlowTreeNode findLeaf(FlowTreeNode node, Integer requestId) {
         if (node.isLeaf()) {
             Flow flow = (Flow) node.getUserObject();
-            if (flow.getRequestId().equals(requestId)) {
+            if (null != flow && flow.getRequestId().equals(requestId)) {
                 return node;
             } else {
                 return null;

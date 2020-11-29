@@ -1,8 +1,8 @@
-package com.github.supermoonie.proxy.swing.gui.tree;
+package com.github.supermoonie.proxy.swing.gui.flow;
 
-import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.github.supermoonie.proxy.swing.util.Jackson;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import javax.swing.*;
 import java.util.Date;
 
 /**
@@ -21,7 +21,8 @@ public class Flow {
 
     private String contentType;
 
-    private FlatSVGIcon icon;
+    @JsonIgnore
+    private Icon icon;
 
     private Date requestTime;
 
@@ -65,11 +66,11 @@ public class Flow {
         this.contentType = contentType;
     }
 
-    public FlatSVGIcon getIcon() {
+    public Icon getIcon() {
         return icon;
     }
 
-    public void setIcon(FlatSVGIcon icon) {
+    public void setIcon(Icon icon) {
         this.icon = icon;
     }
 

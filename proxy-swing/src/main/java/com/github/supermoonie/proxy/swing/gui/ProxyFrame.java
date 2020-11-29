@@ -3,19 +3,21 @@ package com.github.supermoonie.proxy.swing.gui;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
-import com.github.supermoonie.proxy.swing.ComponentModels;
-import com.github.supermoonie.proxy.swing.gui.tree.Flow;
-import com.github.supermoonie.proxy.swing.gui.tree.FlowTreeNode;
-import com.github.supermoonie.proxy.swing.gui.tree.FlowType;
+import com.github.supermoonie.proxy.swing.gui.flow.*;
+import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
+import com.github.supermoonie.proxy.swing.gui.lintener.FlowTreeMouseListener;
+import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import org.jdesktop.swingx.JXTreeTable;
+import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author supermoonie
@@ -31,6 +33,11 @@ public class ProxyFrame extends JFrame {
 
     private final FlowTreeNode rootNode = new FlowTreeNode();
     private final JTree flowTree = new JTree(rootNode);
+    private final FlowList flowList = new FlowList(new FilterListModel<>());
+
+    private JXTreeTable overviewTreeTable;
+    private ListTreeTableNode overviewTreeTableRoot;
+    private DefaultTreeTableModel overviewTreeTableModel;
 
     public ProxyFrame() {
         setTitle("Lightning:10801");
@@ -58,7 +65,9 @@ public class ProxyFrame extends JFrame {
         JPanel flowPanel = new JPanel();
         flowPanel.setMinimumSize(new Dimension(200, 0));
         flowPanel.setLayout(new BorderLayout());
-        flowPanel.add(new JTextField(), BorderLayout.NORTH);
+        JTextField filter = new JTextField();
+        filter.addKeyListener(new FilterKeyListener(filter));
+        flowPanel.add(filter, BorderLayout.NORTH);
         // Flow table panel
         JTabbedPane flowTablePane = new JTabbedPane();
         // Structure tab
@@ -72,7 +81,7 @@ public class ProxyFrame extends JFrame {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                 Flow flow = (Flow) node.getUserObject();
                 if (null != flow && flow.getFlowType().equals(FlowType.TARGET)) {
-                    setIcon(flow.getIcon());
+                    setIcon(Objects.requireNonNullElse(flow.getIcon(), SvgIcons.ANY_TYPE));
                 }
                 return c;
             }
@@ -81,10 +90,11 @@ public class ProxyFrame extends JFrame {
         flowTree.setRootVisible(false);
         flowTree.setShowsRootHandles(true);
         flowTree.setCellRenderer(defaultTreeCellRenderer);
-
+        flowTree.addMouseListener(new FlowTreeMouseListener());
+        // Sequence tab
         JPanel sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
-        JList<String> flowList = new JList<>(new String[]{"foo", "bar"});
+        flowList.setCellRenderer(new FlowListCellRenderer());
         sequenceTab.add(flowList, BorderLayout.CENTER);
         flowTablePane.addTab("Structure", SvgIcons.TREE, structureTab);
         flowTablePane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
@@ -92,20 +102,30 @@ public class ProxyFrame extends JFrame {
 
         // Flow detail panel
         JPanel detailPanel = new JPanel();
-        detailPanel.setMinimumSize(new Dimension(200, 0));
         detailPanel.setLayout(new BorderLayout());
         JTabbedPane flowDetailTablePane = new JTabbedPane();
+        // Overview tab
         JPanel overviewTab = new JPanel(new BorderLayout());
-        Window window = SwingUtilities.getWindowAncestor(this);
-        JXTreeTable jxTreeTable = new JXTreeTable(ComponentModels.getTreeTableModel(window != null ? window : this));
-        JScrollPane overviewScrollPane = new JScrollPane(jxTreeTable);
-//        jxTreeTable.setSelectionBackground(Color.decode("#2675BF"));
-
-        jxTreeTable.setEditable(false);
-        jxTreeTable.setDoubleBuffered(false);
-        jxTreeTable.setShowGrid(false);
-        jxTreeTable.setFocusable(false);
-        jxTreeTable.setRootVisible(false);
+        overviewTreeTableRoot = new ListTreeTableNode(List.of("", ""));
+        overviewTreeTableModel = new DefaultTreeTableModel(overviewTreeTableRoot, List.of("Name", "Value"));
+        overviewTreeTable = new JXTreeTable(overviewTreeTableModel);
+        JScrollPane overviewScrollPane = new JScrollPane(overviewTreeTable);
+        overviewScrollPane.setOpaque(false);
+        overviewScrollPane.getViewport().setOpaque(false);
+        overviewTreeTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                overviewTreeTable.updateUI();
+            }
+        });
+        overviewTreeTable.setDragEnabled(false);
+        overviewTreeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        overviewTreeTable.setRowHeight(25);
+        overviewTreeTable.setLeafIcon(SvgIcons.LEAF);
+        overviewTreeTable.setEditable(false);
+        overviewTreeTable.setShowGrid(false);
+        overviewTreeTable.setFocusable(false);
+        overviewTreeTable.setRootVisible(false);
         overviewTab.add(overviewScrollPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Overview", overviewTab);
         JPanel contentTab = new JPanel(new BorderLayout());
@@ -264,8 +284,24 @@ public class ProxyFrame extends JFrame {
         setJMenuBar(menuBar);
     }
 
+    public JXTreeTable getOverviewTreeTable() {
+        return overviewTreeTable;
+    }
+
+    public ListTreeTableNode getOverviewTreeTableRoot() {
+        return overviewTreeTableRoot;
+    }
+
+    public DefaultTreeTableModel getOverviewTreeTableModel() {
+        return overviewTreeTableModel;
+    }
+
     public JTree getFlowTree() {
         return flowTree;
+    }
+
+    public FlowList getFlowList() {
+        return flowList;
     }
 
     public FlowTreeNode getRootNode() {

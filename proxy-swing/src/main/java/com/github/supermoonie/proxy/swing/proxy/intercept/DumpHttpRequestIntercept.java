@@ -4,7 +4,10 @@ import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.entity.Request;
-import com.github.supermoonie.proxy.swing.gui.tree.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.gui.flow.Flow;
+import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
+import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.service.RequestService;
 import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -39,9 +42,16 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                 SwingUtilities.invokeLater(() -> {
                     try {
                         FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
-                        rootNode.add(ctx.getConnectionInfo(), req);
+                        rootNode.add(req.getUri(), req.getId(), SvgIcons.UPLOAD);
                         Application.PROXY_FRAME.getFlowTree().updateUI();
                         Application.PROXY_FRAME.getFlowTree().expandPath(new TreePath(rootNode.getPath()));
+                        FlowList flowList = Application.PROXY_FRAME.getFlowList();
+                        Flow flow = new Flow();
+                        flow.setRequestId(req.getId());
+                        flow.setUrl(req.getUri());
+                        flow.setIcon(SvgIcons.UPLOAD);
+                        flowList.add(flow);
+                        flowList.updateUI();
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }

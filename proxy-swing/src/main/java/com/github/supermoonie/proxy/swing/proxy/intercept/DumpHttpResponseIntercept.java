@@ -5,7 +5,9 @@ import com.github.supermoonie.proxy.intercept.ResponseIntercept;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
-import com.github.supermoonie.proxy.swing.gui.tree.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
+import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.service.ResponseService;
 import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -38,6 +40,11 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
                 FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
                 rootNode.update(req, null);
                 Application.PROXY_FRAME.getFlowTree().updateUI();
+                FlowList flowList = Application.PROXY_FRAME.getFlowList();
+                flowList.findFirst(req.getId()).ifPresent(flow -> {
+                    flow.setIcon(SvgIcons.DOWNLOAD);
+                    flowList.updateUI();
+                });
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
@@ -59,6 +66,15 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
                         FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
                         rootNode.update(req, res);
                         Application.PROXY_FRAME.getFlowTree().updateUI();
+                        FlowList flowList = Application.PROXY_FRAME.getFlowList();
+                        flowList.findFirst(req.getId()).ifPresent(flow -> {
+                            if (null == res) {
+                                flow.setIcon(SvgIcons.BOMB);
+                            } else {
+                                flow.setIcon(SvgIcons.loadIcon(res.getStatus(), res.getContentType()));
+                            }
+                            flowList.updateUI();
+                        });
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }
