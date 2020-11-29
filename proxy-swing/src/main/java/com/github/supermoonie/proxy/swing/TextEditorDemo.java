@@ -22,10 +22,14 @@ public class TextEditorDemo extends JFrame {
 
         JPanel cp = new JPanel(new BorderLayout());
 
-        RSyntaxTextArea textArea = new RSyntaxTextArea(20, 60);
+        RSyntaxTextArea textArea = new RSyntaxTextArea();
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
         textArea.setCodeFoldingEnabled(true);
-        String js = FileUtils.readFileToString(new File("/Users/supermoonie/Desktop/index.js"), StandardCharsets.UTF_8);
+//        String js = FileUtils.readFileToString(new File("/Users/supermoonie/Desktop/index.js"), StandardCharsets.UTF_8);
+        String js = "function() {\n" +
+                "   var foo = 'bar';\n" +
+                "   console.log(foo);\n" +
+                "}";
         textArea.setText(js);
         textArea.setEditable(false);
         RTextScrollPane sp = new RTextScrollPane(textArea);

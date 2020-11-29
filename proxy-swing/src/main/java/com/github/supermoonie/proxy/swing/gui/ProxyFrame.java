@@ -3,21 +3,29 @@ package com.github.supermoonie.proxy.swing.gui;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
+import com.github.supermoonie.proxy.swing.gui.content.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
-import com.github.supermoonie.proxy.swing.gui.lintener.FlowTreeMouseListener;
+import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
 import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author supermoonie
@@ -31,13 +39,29 @@ public class ProxyFrame extends JFrame {
     private JCheckBoxMenuItem blockListMenuItem;
     private JCheckBoxMenuItem allowListMenuItem;
 
+    private JPanel structureTab;
+    private JPanel sequenceTab;
+
     private final FlowTreeNode rootNode = new FlowTreeNode();
     private final JTree flowTree = new JTree(rootNode);
     private final FlowList flowList = new FlowList(new FilterListModel<>());
 
-    private JXTreeTable overviewTreeTable;
     private ListTreeTableNode overviewTreeTableRoot;
     private DefaultTreeTableModel overviewTreeTableModel;
+
+    private JTabbedPane requestTablePane;
+    private JTable requestHeaderTable;
+    private JScrollPane requestQueryScrollPane;
+    private JTable requestQueryTable;
+    private JScrollPane requestContentTextScrollPane;
+    private JTextArea requestContentTextArea;
+    private JScrollPane requestFormScrollPane;
+    private JTable requestFormTable;
+    private RTextScrollPane requestJsonScrollPane;
+    private RSyntaxTextArea requestJsonArea;
+    private JScrollPane requestRawScrollPane;
+    private JTextArea requestRawArea;
+
 
     public ProxyFrame() {
         setTitle("Lightning:10801");
@@ -69,36 +93,24 @@ public class ProxyFrame extends JFrame {
         filter.addKeyListener(new FilterKeyListener(filter));
         flowPanel.add(filter, BorderLayout.NORTH);
         // Flow table panel
-        JTabbedPane flowTablePane = new JTabbedPane();
+        JTabbedPane flowTabPane = new JTabbedPane();
         // Structure tab
-        JPanel structureTab = new JPanel(new BorderLayout());
+        structureTab = new JPanel(new BorderLayout());
         structureTab.setMinimumSize(new Dimension(100, 0));
-        DefaultTreeCellRenderer defaultTreeCellRenderer = new DefaultTreeCellRenderer() {
-            @Override
-            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-                Component c = super.getTreeCellRendererComponent(tree, value,
-                        selected, expanded, leaf, row, hasFocus);
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-                Flow flow = (Flow) node.getUserObject();
-                if (null != flow && flow.getFlowType().equals(FlowType.TARGET)) {
-                    setIcon(Objects.requireNonNullElse(flow.getIcon(), SvgIcons.ANY_TYPE));
-                }
-                return c;
-            }
-        };
         structureTab.add(flowTree, BorderLayout.CENTER);
         flowTree.setRootVisible(false);
         flowTree.setShowsRootHandles(true);
-        flowTree.setCellRenderer(defaultTreeCellRenderer);
-        flowTree.addMouseListener(new FlowTreeMouseListener());
+        flowTree.setCellRenderer(new FlowTreeCellRender());
+        flowTree.addMouseListener(new FlowMouseListener(flowTabPane));
         // Sequence tab
-        JPanel sequenceTab = new JPanel(new BorderLayout());
+        sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         flowList.setCellRenderer(new FlowListCellRenderer());
+        flowList.addMouseListener(new FlowMouseListener(flowTabPane));
         sequenceTab.add(flowList, BorderLayout.CENTER);
-        flowTablePane.addTab("Structure", SvgIcons.TREE, structureTab);
-        flowTablePane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
-        flowPanel.add(flowTablePane, BorderLayout.CENTER);
+        flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
+        flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
+        flowPanel.add(flowTabPane, BorderLayout.CENTER);
 
         // Flow detail panel
         JPanel detailPanel = new JPanel();
@@ -108,7 +120,7 @@ public class ProxyFrame extends JFrame {
         JPanel overviewTab = new JPanel(new BorderLayout());
         overviewTreeTableRoot = new ListTreeTableNode(List.of("", ""));
         overviewTreeTableModel = new DefaultTreeTableModel(overviewTreeTableRoot, List.of("Name", "Value"));
-        overviewTreeTable = new JXTreeTable(overviewTreeTableModel);
+        JXTreeTable overviewTreeTable = new JXTreeTable(overviewTreeTableModel);
         JScrollPane overviewScrollPane = new JScrollPane(overviewTreeTable);
         overviewScrollPane.setOpaque(false);
         overviewScrollPane.getViewport().setOpaque(false);
@@ -130,19 +142,40 @@ public class ProxyFrame extends JFrame {
         flowDetailTablePane.addTab("Overview", overviewTab);
         JPanel contentTab = new JPanel(new BorderLayout());
         JSplitPane contentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        JTabbedPane requestTablePane = new JTabbedPane();
-        JPanel requestHeaderTab = new JPanel(new BorderLayout());
-        Object[][] tableDate = new Object[5][8];
-        for (int i = 0; i < 5; i++) {
-            tableDate[i][0] = "1000" + i;
-            for (int j = 1; j < 8; j++) {
-                tableDate[i][j] = 0;
-            }
+        requestTablePane = new JTabbedPane();
+        requestHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        requestHeaderTable.setRowHeight(25);
+        requestQueryTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        requestQueryTable.setRowHeight(25);
+        requestQueryScrollPane = new JScrollPane(requestQueryTable);
+        requestFormTable = new JTable(new NoneEditTableModel(null, new String[]{"name", "Value"}));
+        requestFormTable.setRowHeight(25);
+        requestFormScrollPane = new JScrollPane(requestFormTable);
+        requestContentTextArea = new JTextArea();
+        requestContentTextArea.setEditable(false);
+        requestContentTextScrollPane = new JScrollPane(requestContentTextArea);
+        requestJsonArea = new RSyntaxTextArea();
+        requestJsonArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+        try {
+            Theme theme = Theme.load(getClass().getResourceAsStream(
+                    "/com/github/supermoonie/proxy/swing/light.xml"));
+            theme.apply(requestJsonArea);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
-        String[] name = {"学号", "软件工程", "Java", "网络", "数据结构", "数据库", "总成绩", "平均成绩"};
-        JTable requestHeaderTable = new JTable(tableDate, name);
-        requestHeaderTab.add(new JScrollPane(requestHeaderTable), BorderLayout.CENTER);
-        requestTablePane.addTab("Header", requestHeaderTab);
+        requestJsonArea.setCodeFoldingEnabled(true);
+//        requestJsonArea.setEditable(false);
+        requestJsonScrollPane = new RTextScrollPane(requestJsonArea);
+        requestRawArea = new JTextArea();
+//        requestRawArea.setEditable(false);
+        requestRawScrollPane = new JScrollPane(requestRawArea);
+        requestTablePane.add("Header", new JScrollPane(requestHeaderTable));
+        requestTablePane.add("Query", requestQueryScrollPane);
+        requestTablePane.add("Text", requestContentTextScrollPane);
+        requestTablePane.add("Form", requestFormScrollPane);
+        requestTablePane.add("JSON", requestJsonScrollPane);
+        requestTablePane.add("Raw", requestRawScrollPane);
+
         JTabbedPane responseTablePane = new JTabbedPane();
         contentSplitPane.setTopComponent(requestTablePane);
         contentSplitPane.setBottomComponent(responseTablePane);
@@ -284,8 +317,60 @@ public class ProxyFrame extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    public JXTreeTable getOverviewTreeTable() {
-        return overviewTreeTable;
+    public RTextScrollPane getRequestJsonScrollPane() {
+        return requestJsonScrollPane;
+    }
+
+    public RSyntaxTextArea getRequestJsonArea() {
+        return requestJsonArea;
+    }
+
+    public JScrollPane getRequestRawScrollPane() {
+        return requestRawScrollPane;
+    }
+
+    public JTextArea getRequestRawArea() {
+        return requestRawArea;
+    }
+
+    public JScrollPane getRequestContentTextScrollPane() {
+        return requestContentTextScrollPane;
+    }
+
+    public JTextArea getRequestContentTextArea() {
+        return requestContentTextArea;
+    }
+
+    public JScrollPane getRequestFormScrollPane() {
+        return requestFormScrollPane;
+    }
+
+    public JTable getRequestFormTable() {
+        return requestFormTable;
+    }
+
+    public JScrollPane getRequestQueryScrollPane() {
+        return requestQueryScrollPane;
+    }
+
+    public JTabbedPane getRequestTablePane() {
+        return requestTablePane;
+    }
+
+    public JTable getRequestQueryTable() {
+        return requestQueryTable;
+    }
+
+    public JTable getRequestHeaderTable() {
+        return requestHeaderTable;
+    }
+
+    public JPanel getStructureTab() {
+        return structureTab;
+    }
+
+    public JPanel getSequenceTab() {
+        return sequenceTab;
     }
 
     public ListTreeTableNode getOverviewTreeTableRoot() {

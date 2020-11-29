@@ -28,6 +28,11 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.twalcari</groupId>
+            <artifactId>syntaxhighlighterfx</artifactId>
+            <version>3.0.0</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.fifesoft/rsyntaxtextarea -->
         <dependency>
             <groupId>com.fifesoft</groupId>

@@ -70,8 +70,8 @@ public class Application {
                 responseIntercepts.put("dumpHttpResponseIntercept", DumpHttpResponseIntercept.INSTANCE);
                 requestIntercepts.put("configurableIntercept", DefaultConfigIntercept.INSTANCE);
             });
-            ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(100);
-            ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(200);
+//            ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(100);
+//            ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(200);
             PROXY_FRAME = new ProxyFrame();
             PROXY_FRAME.setPreferredSize(new Dimension(1280, 620));
             // show frame
