@@ -10,13 +10,12 @@ import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
 import com.j256.ormlite.dao.Dao;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prettify.PrettifyParser;
-import prettify.parser.Job;
-import prettify.parser.Prettify;
 import syntaxhighlight.ParseResult;
 import syntaxhighlight.Parser;
 
@@ -30,7 +29,10 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author supermoonie
@@ -81,13 +83,86 @@ public class FlowMouseListener extends MouseAdapter {
             fillOverviewTab(request, response);
             fillRequestHeader(requestHeaderList);
             fillRequestQuery(request);
-            fillRequestForm(requestHeaderList, requestContent);
+            fillRequestForm(request, requestHeaderList, requestContent);
+            if (null != response) {
+                List<Header> responseHeaderList = headerDao.queryBuilder().where()
+                        .eq(Header.REQUEST_ID_FIELD_NAME, flow.getRequestId())
+                        .and()
+                        .eq(Header.RESPONSE_ID_FIELD_NAME, response.getId())
+                        .query();
+                fillResponseHeader(responseHeaderList);
+                Content content = null;
+                if (null != response.getContentId()) {
+                    content = contentDao.queryForId(response.getContentId());
+                }
+                fillResponseContent(response, responseHeaderList, content);
+            }
         } catch (SQLException | URISyntaxException ex) {
             log.error(ex.getMessage(), ex);
         }
     }
 
-    private void fillRequestForm(List<Header> requestHeaderList, Content requestContent) {
+    private void fillResponseContent(Response response, List<Header> responseHeaderList, Content content) {
+        ProxyFrame proxyFrame = Application.PROXY_FRAME;
+        JTextArea responseTextArea = proxyFrame.getResponseTextArea();
+        RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
+        JTextArea responseRawArea = proxyFrame.getResponseRawArea();
+        responseTextArea.setText("");
+        responseCodeArea.setText("");
+        responseRawArea.setText("");
+        if (null == content || null == response.getContentType()) {
+            int codeTabIndex = proxyFrame.getResponseTablePane().indexOfComponent(proxyFrame.getResponseCodeScrollPane());
+            if (codeTabIndex != -1) {
+                proxyFrame.getResponseTablePane().removeTabAt(codeTabIndex);
+            }
+        } else {
+            StringBuilder raw = new StringBuilder();
+            raw.append(response.getHttpVersion()).append(" ").append(response.getStatus()).append("\n");
+            for (Header header : responseHeaderList) {
+                raw.append(header.getName()).append(" ").append(header.getValue()).append("\n");
+            }
+            String contentType = response.getContentType();
+            String title = null;
+            if (contentType.contains("html")) {
+                title = "HTML";
+                responseCodeArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                Parser parser = new PrettifyParser();
+                List<ParseResult> results = parser.parse("json", body);
+                raw.append("\n");
+                StringBuilder codeText = new StringBuilder();
+                for (ParseResult result : results) {
+                    String s = body.substring(result.getOffset(), result.getOffset() + result.getLength());
+                    raw.append(s);
+                    codeText.append(s);
+                }
+                responseCodeArea.setText(codeText.toString());
+            }
+            int codeTabIndex = proxyFrame.getResponseTablePane().indexOfComponent(proxyFrame.getResponseCodeScrollPane());
+            if (codeTabIndex != -1) {
+                proxyFrame.getResponseTablePane().remove(codeTabIndex);
+            }
+            if (null != title) {
+                proxyFrame.getResponseTablePane().insertTab(title, null, proxyFrame.getResponseCodeScrollPane(), null, 2);
+            }
+            responseRawArea.setText(raw.toString());
+        }
+    }
+
+    private void fillResponseHeader(List<Header> headerList) {
+        JTable responseHeaderTable = Application.PROXY_FRAME.getResponseHeaderTable();
+        DefaultTableModel model = (DefaultTableModel) responseHeaderTable.getModel();
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            model.removeRow(i);
+        }
+        for (Header header : headerList) {
+            model.addRow(new String[]{header.getName(), header.getValue()});
+        }
+    }
+
+    private void fillRequestForm(Request request, List<Header> requestHeaderList, Content requestContent) {
         ProxyFrame proxyFrame = Application.PROXY_FRAME;
         DefaultTableModel requestFormModel = (DefaultTableModel) proxyFrame.getRequestFormTable().getModel();
         int rowCount = requestFormModel.getRowCount();
@@ -134,6 +209,7 @@ public class FlowMouseListener extends MouseAdapter {
             for (String[] form : formList) {
                 requestFormModel.addRow(form);
             }
+            fillRequestRaw(request, requestHeaderList, body);
         } else if (contentType.contains("json")) {
             int formTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestFormScrollPane());
             if (formTabIndex >= 0) {
@@ -149,6 +225,7 @@ public class FlowMouseListener extends MouseAdapter {
             if (jsonTabIndex == -1) {
                 proxyFrame.getRequestTablePane().insertTab("JSON", null, Application.PROXY_FRAME.getRequestJsonScrollPane(), null, textTabIndex + 1);
             }
+            proxyFrame.getRequestJsonArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
             if (null == requestContent) {
                 return;
             }
@@ -156,23 +233,20 @@ public class FlowMouseListener extends MouseAdapter {
             requestContentTextArea.setText(body);
             try {
                 Parser parser = new PrettifyParser();
-                List<ParseResult> results = parser.parse("js", body);
+                List<ParseResult> results = parser.parse("json", body);
                 StringBuilder highlighted = new StringBuilder();
-                for(ParseResult result : results){
-                    String type = result.getStyleKeys().get(0);
-                    String content = body.substring(result.getOffset(), result.getOffset() + result.getLength());
-                    highlighted.append(content);
+                for (ParseResult result : results) {
+                    highlighted.append(body, result.getOffset(), result.getOffset() + result.getLength());
                 }
-
 //                Job prettifyJob = new Job(0, body);
 //                Prettify prettify = new Prettify();
 //                prettify.langHandlerForExtension("js", body).decorate(prettifyJob);
 //                List<Object> decorations = prettifyJob.getDecorations();
-                System.out.println(highlighted.toString());
                 requestJsonArea.setText(highlighted.toString());
             } catch (Exception ignore) {
                 requestJsonArea.setText(body);
             }
+            fillRequestRaw(request, requestHeaderList, body);
         } else {
             int jsonTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestJsonScrollPane());
             if (jsonTabIndex >= 0) {
@@ -187,24 +261,21 @@ public class FlowMouseListener extends MouseAdapter {
             }
             String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
             requestContentTextArea.setText(body);
+            fillRequestRaw(request, requestHeaderList, body);
         }
     }
 
-//    private String getColor(String type){
-//        return COLORS.containsKey(type) ? COLORS.get(type) : COLORS.get("pln");
-//    }
-//
-//    private static Map<String, String> buildColorsMap() {
-//        Map<String, String> map = new HashMap<String, String>();
-//        map.put("typ", "87cefa");
-//        map.put("kwd", "00ff00");
-//        map.put("lit", "ffff00");
-//        map.put("com", "999999");
-//        map.put("str", "ff4500");
-//        map.put("pun", "eeeeee");
-//        map.put("pln", "ffffff");
-//        return map;
-//    }
+    private void fillRequestRaw(Request request, List<Header> requestHeaderList, String body) {
+        JTextArea requestRawArea = Application.PROXY_FRAME.getRequestRawArea();
+        requestRawArea.setText("");
+        StringBuilder raw = new StringBuilder();
+        raw.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
+        for (Header header : requestHeaderList) {
+            raw.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
+        }
+        raw.append("\n").append(body);
+        requestRawArea.setText(raw.toString());
+    }
 
     private void fillRequestQuery(Request request) throws URISyntaxException {
         URI uri = new URI(request.getUri());

@@ -61,6 +61,14 @@ public class ProxyFrame extends JFrame {
     private RSyntaxTextArea requestJsonArea;
     private JScrollPane requestRawScrollPane;
     private JTextArea requestRawArea;
+    private JTabbedPane responseTablePane;
+    private JTable responseHeaderTable;
+    private JScrollPane responseTextAreaScrollPane;
+    private JTextArea responseTextArea;
+    private RTextScrollPane responseCodeScrollPane;
+    private RSyntaxTextArea responseCodeArea;
+    private JScrollPane responseRawScrollPane;
+    private JTextArea responseRawArea;
 
 
     public ProxyFrame() {
@@ -155,19 +163,20 @@ public class ProxyFrame extends JFrame {
         requestContentTextArea.setEditable(false);
         requestContentTextScrollPane = new JScrollPane(requestContentTextArea);
         requestJsonArea = new RSyntaxTextArea();
-        requestJsonArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+        Theme theme = null;
         try {
-            Theme theme = Theme.load(getClass().getResourceAsStream(
+            theme = Theme.load(getClass().getResourceAsStream(
                     "/com/github/supermoonie/proxy/swing/light.xml"));
             theme.apply(requestJsonArea);
         } catch (IOException ioe) {
             ioe.printStackTrace();
+            return;
         }
         requestJsonArea.setCodeFoldingEnabled(true);
-//        requestJsonArea.setEditable(false);
+        requestJsonArea.setEditable(false);
         requestJsonScrollPane = new RTextScrollPane(requestJsonArea);
         requestRawArea = new JTextArea();
-//        requestRawArea.setEditable(false);
+        requestRawArea.setEditable(false);
         requestRawScrollPane = new JScrollPane(requestRawArea);
         requestTablePane.add("Header", new JScrollPane(requestHeaderTable));
         requestTablePane.add("Query", requestQueryScrollPane);
@@ -176,7 +185,23 @@ public class ProxyFrame extends JFrame {
         requestTablePane.add("JSON", requestJsonScrollPane);
         requestTablePane.add("Raw", requestRawScrollPane);
 
-        JTabbedPane responseTablePane = new JTabbedPane();
+        responseTablePane = new JTabbedPane();
+        responseHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        responseHeaderTable.setRowHeight(25);
+        responseTextArea = new JTextArea();
+        responseTextArea.setEditable(false);
+        responseTextAreaScrollPane = new JScrollPane(responseTextArea);
+        responseCodeArea = new RSyntaxTextArea();
+        responseCodeArea.setEditable(false);
+        theme.apply(responseCodeArea);
+        responseCodeScrollPane = new RTextScrollPane(responseCodeArea);
+        responseRawArea = new JTextArea();
+        responseRawArea.setEditable(false);
+        responseRawScrollPane = new JScrollPane(responseRawArea);
+        responseTablePane.add("Header", new JScrollPane(responseHeaderTable));
+        responseTablePane.add("Text", responseTextAreaScrollPane);
+        responseTablePane.add("JSON", responseCodeScrollPane);
+        responseTablePane.add("Raw", responseRawScrollPane);
         contentSplitPane.setTopComponent(requestTablePane);
         contentSplitPane.setBottomComponent(responseTablePane);
         contentTab.add(contentSplitPane, BorderLayout.CENTER);
@@ -315,6 +340,38 @@ public class ProxyFrame extends JFrame {
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
+    }
+
+    public JTabbedPane getResponseTablePane() {
+        return responseTablePane;
+    }
+
+    public JTable getResponseHeaderTable() {
+        return responseHeaderTable;
+    }
+
+    public JScrollPane getResponseTextAreaScrollPane() {
+        return responseTextAreaScrollPane;
+    }
+
+    public JTextArea getResponseTextArea() {
+        return responseTextArea;
+    }
+
+    public RTextScrollPane getResponseCodeScrollPane() {
+        return responseCodeScrollPane;
+    }
+
+    public RSyntaxTextArea getResponseCodeArea() {
+        return responseCodeArea;
+    }
+
+    public JScrollPane getResponseRawScrollPane() {
+        return responseRawScrollPane;
+    }
+
+    public JTextArea getResponseRawArea() {
+        return responseRawArea;
     }
 
     public RTextScrollPane getRequestJsonScrollPane() {

@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
+import java.util.Locale;
 import java.util.prefs.Preferences;
 
 /**
@@ -29,14 +30,11 @@ public class ApplicationPreferences {
     public static void initLaf(String[] args) {
         // set look and feel
         try {
-            if (args.length > 0) {
-                UIManager.setLookAndFeel(args[0]);
-            } else {
-                FlatDarkLaf.install();
-                FlatLightLaf.install();
-                String lafClassName = state.get(KEY_LAF, FlatLightLaf.class.getName());
-                UIManager.setLookAndFeel(lafClassName);
-            }
+            FlatDarkLaf.install();
+            FlatLightLaf.install();
+            Locale.setDefault(Locale.ENGLISH);
+            String lafClassName = state.get(KEY_LAF, FlatLightLaf.class.getName());
+            UIManager.setLookAndFeel(lafClassName);
         } catch (Throwable ex) {
             ex.printStackTrace();
             // fallback
