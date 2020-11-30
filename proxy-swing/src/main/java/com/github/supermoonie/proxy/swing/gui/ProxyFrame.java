@@ -50,6 +50,7 @@ public class ProxyFrame extends JFrame {
     private DefaultTreeTableModel overviewTreeTableModel;
 
     private JTabbedPane requestTablePane;
+    private JScrollPane requestHeaderScrollPane;
     private JTable requestHeaderTable;
     private JScrollPane requestQueryScrollPane;
     private JTable requestQueryTable;
@@ -62,6 +63,7 @@ public class ProxyFrame extends JFrame {
     private JScrollPane requestRawScrollPane;
     private JTextArea requestRawArea;
     private JTabbedPane responseTablePane;
+    private JScrollPane responseHeaderScrollPane;
     private JTable responseHeaderTable;
     private JScrollPane responseTextAreaScrollPane;
     private JTextArea responseTextArea;
@@ -153,6 +155,7 @@ public class ProxyFrame extends JFrame {
         requestTablePane = new JTabbedPane();
         requestHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
         requestHeaderTable.setRowHeight(25);
+        requestHeaderScrollPane = new JScrollPane(requestHeaderTable);
         requestQueryTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
         requestQueryTable.setRowHeight(25);
         requestQueryScrollPane = new JScrollPane(requestQueryTable);
@@ -163,7 +166,7 @@ public class ProxyFrame extends JFrame {
         requestContentTextArea.setEditable(false);
         requestContentTextScrollPane = new JScrollPane(requestContentTextArea);
         requestJsonArea = new RSyntaxTextArea();
-        Theme theme = null;
+        Theme theme;
         try {
             theme = Theme.load(getClass().getResourceAsStream(
                     "/com/github/supermoonie/proxy/swing/light.xml"));
@@ -178,7 +181,7 @@ public class ProxyFrame extends JFrame {
         requestRawArea = new JTextArea();
         requestRawArea.setEditable(false);
         requestRawScrollPane = new JScrollPane(requestRawArea);
-        requestTablePane.add("Header", new JScrollPane(requestHeaderTable));
+        requestTablePane.add("Header", requestHeaderScrollPane);
         requestTablePane.add("Query", requestQueryScrollPane);
         requestTablePane.add("Text", requestContentTextScrollPane);
         requestTablePane.add("Form", requestFormScrollPane);
@@ -188,6 +191,7 @@ public class ProxyFrame extends JFrame {
         responseTablePane = new JTabbedPane();
         responseHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
         responseHeaderTable.setRowHeight(25);
+        responseHeaderScrollPane = new JScrollPane(responseHeaderTable);
         responseTextArea = new JTextArea();
         responseTextArea.setEditable(false);
         responseTextAreaScrollPane = new JScrollPane(responseTextArea);
@@ -198,7 +202,7 @@ public class ProxyFrame extends JFrame {
         responseRawArea = new JTextArea();
         responseRawArea.setEditable(false);
         responseRawScrollPane = new JScrollPane(responseRawArea);
-        responseTablePane.add("Header", new JScrollPane(responseHeaderTable));
+        responseTablePane.add("Header", responseHeaderScrollPane);
         responseTablePane.add("Text", responseTextAreaScrollPane);
         responseTablePane.add("JSON", responseCodeScrollPane);
         responseTablePane.add("Raw", responseRawScrollPane);
@@ -340,6 +344,14 @@ public class ProxyFrame extends JFrame {
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
+    }
+
+    public JScrollPane getResponseHeaderScrollPane() {
+        return responseHeaderScrollPane;
+    }
+
+    public JScrollPane getRequestHeaderScrollPane() {
+        return requestHeaderScrollPane;
     }
 
     public JTabbedPane getResponseTablePane() {

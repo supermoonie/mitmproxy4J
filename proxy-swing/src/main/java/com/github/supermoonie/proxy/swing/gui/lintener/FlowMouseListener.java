@@ -11,6 +11,7 @@ import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
 import com.j256.ormlite.dao.Dao;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import syntaxhighlight.Parser;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
@@ -29,10 +31,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @author supermoonie
@@ -50,21 +50,18 @@ public class FlowMouseListener extends MouseAdapter {
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        ProxyFrame proxyFrame = Application.PROXY_FRAME;
         JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
         Flow flow;
-        if (selectedComponent.equals(Application.PROXY_FRAME.getStructureTab())) {
-            JTree flowTree = Application.PROXY_FRAME.getFlowTree();
+        if (selectedComponent.equals(proxyFrame.getStructureTab())) {
+            JTree flowTree = proxyFrame.getFlowTree();
             FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
-            if (null == node) {
+            if (null == node || !node.isLeaf()) {
                 return;
             }
-            if (node.isLeaf()) {
-                flow = (Flow) node.getUserObject();
-            } else {
-                return;
-            }
+            flow = (Flow) node.getUserObject();
         } else {
-            FlowList flowList = Application.PROXY_FRAME.getFlowList();
+            FlowList flowList = proxyFrame.getFlowList();
             flow = flowList.getSelectedValue();
         }
         try {
@@ -81,28 +78,38 @@ public class FlowMouseListener extends MouseAdapter {
             Content requestContent = contentDao.queryForId(request.getContentId());
             Response response = responseDao.queryBuilder().where().eq(Response.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
             fillOverviewTab(request, response);
-            fillRequestHeader(requestHeaderList);
-            fillRequestQuery(request);
-            fillRequestForm(request, requestHeaderList, requestContent);
+            proxyFrame.getRequestTablePane().removeAll();
+            proxyFrame.getResponseTablePane().removeAll();
+            List<Component> requestTabs = new ArrayList<>();
+            fillRequestHeader(requestHeaderList, requestTabs);
+            fillRequestQuery(request, requestTabs);
+            fillRequestForm(request, requestHeaderList, requestContent, requestTabs);
+            JScrollPane requestRawScrollPane = proxyFrame.getRequestRawScrollPane();
+            requestRawScrollPane.setName("Raw");
+            requestTabs.add(requestRawScrollPane);
+            requestTabs.forEach(component -> proxyFrame.getRequestTablePane().add(component.getName(), component));
             if (null != response) {
+                List<Component> responseTabs = new ArrayList<>();
                 List<Header> responseHeaderList = headerDao.queryBuilder().where()
-                        .eq(Header.REQUEST_ID_FIELD_NAME, flow.getRequestId())
-                        .and()
-                        .eq(Header.RESPONSE_ID_FIELD_NAME, response.getId())
-                        .query();
-                fillResponseHeader(responseHeaderList);
+                        .eq(Header.REQUEST_ID_FIELD_NAME, flow.getRequestId()).and()
+                        .eq(Header.RESPONSE_ID_FIELD_NAME, response.getId()).query();
+                fillResponseHeader(responseHeaderList, responseTabs);
                 Content content = null;
                 if (null != response.getContentId()) {
                     content = contentDao.queryForId(response.getContentId());
                 }
-                fillResponseContent(response, responseHeaderList, content);
+                fillResponseContent(response, responseHeaderList, content, responseTabs);
+                JScrollPane responseRawScrollPane = proxyFrame.getResponseRawScrollPane();
+                responseRawScrollPane.setName("Raw");
+                responseTabs.add(responseRawScrollPane);
+                responseTabs.forEach(component -> proxyFrame.getResponseTablePane().add(component.getName(), component));
             }
         } catch (SQLException | URISyntaxException ex) {
             log.error(ex.getMessage(), ex);
         }
     }
 
-    private void fillResponseContent(Response response, List<Header> responseHeaderList, Content content) {
+    private void fillResponseContent(Response response, List<Header> responseHeaderList, Content content, List<Component> responseTabs) {
         ProxyFrame proxyFrame = Application.PROXY_FRAME;
         JTextArea responseTextArea = proxyFrame.getResponseTextArea();
         RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
@@ -110,17 +117,12 @@ public class FlowMouseListener extends MouseAdapter {
         responseTextArea.setText("");
         responseCodeArea.setText("");
         responseRawArea.setText("");
-        if (null == content || null == response.getContentType()) {
-            int codeTabIndex = proxyFrame.getResponseTablePane().indexOfComponent(proxyFrame.getResponseCodeScrollPane());
-            if (codeTabIndex != -1) {
-                proxyFrame.getResponseTablePane().removeTabAt(codeTabIndex);
-            }
-        } else {
-            StringBuilder raw = new StringBuilder();
-            raw.append(response.getHttpVersion()).append(" ").append(response.getStatus()).append("\n");
-            for (Header header : responseHeaderList) {
-                raw.append(header.getName()).append(" ").append(header.getValue()).append("\n");
-            }
+        StringBuilder raw = new StringBuilder();
+        raw.append(response.getHttpVersion()).append(" ").append(response.getStatus()).append("\n");
+        for (Header header : responseHeaderList) {
+            raw.append(header.getName()).append(" ").append(header.getValue()).append("\n");
+        }
+        if (null != content && null != response.getContentType()) {
             String contentType = response.getContentType();
             String title = null;
             if (contentType.contains("html")) {
@@ -128,31 +130,66 @@ public class FlowMouseListener extends MouseAdapter {
                 responseCodeArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
                 String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
                 responseTextArea.setText(body);
-                Parser parser = new PrettifyParser();
-                List<ParseResult> results = parser.parse("json", body);
-                raw.append("\n");
-                StringBuilder codeText = new StringBuilder();
-                for (ParseResult result : results) {
-                    String s = body.substring(result.getOffset(), result.getOffset() + result.getLength());
-                    raw.append(s);
-                    codeText.append(s);
-                }
-                responseCodeArea.setText(codeText.toString());
-            }
-            int codeTabIndex = proxyFrame.getResponseTablePane().indexOfComponent(proxyFrame.getResponseCodeScrollPane());
-            if (codeTabIndex != -1) {
-                proxyFrame.getResponseTablePane().remove(codeTabIndex);
+                String codeText = prettify("html", body);
+                raw.append(codeText);
+                responseCodeArea.setText(codeText);
+            } else if (contentType.contains("json")) {
+                title = "JSON";
+                responseCodeArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                String codeText = prettify("json", body);
+                raw.append(codeText);
+                responseCodeArea.setText(codeText);
+            } else if (contentType.contains("javascript")) {
+                title = "JavaScript";
+                responseCodeArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                String codeText = prettify("js", body);
+                raw.append(codeText);
+                responseCodeArea.setText(codeText);
+            } else if (contentType.contains("css")) {
+                title = "CSS";
+                responseCodeArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CSS);
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                String codeText = prettify("css", body);
+                raw.append(codeText);
+                responseCodeArea.setText(codeText);
             }
             if (null != title) {
-                proxyFrame.getResponseTablePane().insertTab(title, null, proxyFrame.getResponseCodeScrollPane(), null, 2);
+                JScrollPane responseTextAreaScrollPane = proxyFrame.getResponseTextAreaScrollPane();
+                responseTextAreaScrollPane.setName("Text");
+                responseTabs.add(responseTextAreaScrollPane);
+                RTextScrollPane responseCodeScrollPane = proxyFrame.getResponseCodeScrollPane();
+                responseCodeScrollPane.setName(title);
+                responseTabs.add(responseCodeScrollPane);
             }
-            responseRawArea.setText(raw.toString());
         }
+        responseRawArea.setText(raw.toString());
     }
 
-    private void fillResponseHeader(List<Header> headerList) {
+    private String prettify(String extension, String content) {
+        Parser parser = new PrettifyParser();
+        List<ParseResult> results = parser.parse(extension, content);
+        StringBuilder sb = new StringBuilder();
+        for (ParseResult result : results) {
+            sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
+        }
+        return sb.toString();
+    }
+
+    private void fillResponseHeader(List<Header> headerList, List<Component> responseTabs) {
         JTable responseHeaderTable = Application.PROXY_FRAME.getResponseHeaderTable();
-        DefaultTableModel model = (DefaultTableModel) responseHeaderTable.getModel();
+        resetHeaderTable(headerList, responseHeaderTable);
+        JScrollPane responseHeaderScrollPane = Application.PROXY_FRAME.getResponseHeaderScrollPane();
+        responseHeaderScrollPane.setName("Header");
+        responseTabs.add(responseHeaderScrollPane);
+    }
+
+    private void resetHeaderTable(List<Header> headerList, JTable headerTable) {
+        DefaultTableModel model = (DefaultTableModel) headerTable.getModel();
         int rowCount = model.getRowCount();
         for (int i = rowCount - 1; i >= 0; i--) {
             model.removeRow(i);
@@ -162,7 +199,7 @@ public class FlowMouseListener extends MouseAdapter {
         }
     }
 
-    private void fillRequestForm(Request request, List<Header> requestHeaderList, Content requestContent) {
+    private void fillRequestForm(Request request, List<Header> requestHeaderList, Content requestContent, List<Component> requestTabs) {
         ProxyFrame proxyFrame = Application.PROXY_FRAME;
         DefaultTableModel requestFormModel = (DefaultTableModel) proxyFrame.getRequestFormTable().getModel();
         int rowCount = requestFormModel.getRowCount();
@@ -170,39 +207,25 @@ public class FlowMouseListener extends MouseAdapter {
             requestFormModel.removeRow(i);
         }
         JTextArea requestContentTextArea = proxyFrame.getRequestContentTextArea();
-        requestContentTextArea.setText("");
         RSyntaxTextArea requestJsonArea = proxyFrame.getRequestJsonArea();
+        requestContentTextArea.setText("");
         requestJsonArea.setText("");
-        Optional<Header> contentTypeHeader = requestHeaderList.stream().filter(header ->
-                header.getName().trim().equalsIgnoreCase("content-type")
-        ).findFirst();
-        if (contentTypeHeader.isEmpty()) {
-            int index = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestFormScrollPane());
-            if (index >= 0) {
-                proxyFrame.getRequestTablePane().removeTabAt(index);
-                proxyFrame.getRequestTablePane().removeTabAt(index - 1);
-            }
+        if (null == request.getContentType()) {
+            fillRequestRaw(request, requestHeaderList, null);
             return;
         }
-        String contentType = contentTypeHeader.get().getValue().toLowerCase();
+        JScrollPane requestContentTextScrollPane = proxyFrame.getRequestContentTextScrollPane();
+        requestContentTextScrollPane.setName("Text");
+        requestTabs.add(requestContentTextScrollPane);
+        String contentType = request.getContentType().toLowerCase();
         if (contentType.contains("x-www-form-urlencoded")) {
-            int jsonTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestJsonScrollPane());
-            if (jsonTabIndex >= 0) {
-                proxyFrame.getRequestTablePane().removeTabAt(jsonTabIndex);
-            }
-            int textTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestContentTextScrollPane());
-            int queryTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestQueryScrollPane());
-            if (textTabIndex == -1) {
-                textTabIndex = queryTabIndex == -1 ? 2 : 3;
-                proxyFrame.getRequestTablePane().insertTab("Text", null, Application.PROXY_FRAME.getRequestContentTextScrollPane(), null, textTabIndex);
-            }
-            int formTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestFormScrollPane());
-            if (formTabIndex == -1) {
-                proxyFrame.getRequestTablePane().insertTab("Form", null, Application.PROXY_FRAME.getRequestFormScrollPane(), null, textTabIndex + 1);
-            }
             if (null == requestContent) {
+                fillRequestRaw(request, requestHeaderList, null);
                 return;
             }
+            JScrollPane requestFormScrollPane = proxyFrame.getRequestFormScrollPane();
+            requestFormScrollPane.setName("Form");
+            requestTabs.add(requestFormScrollPane);
             String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
             requestContentTextArea.setText(body);
             List<String[]> formList = splitQuery(body);
@@ -211,51 +234,24 @@ public class FlowMouseListener extends MouseAdapter {
             }
             fillRequestRaw(request, requestHeaderList, body);
         } else if (contentType.contains("json")) {
-            int formTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestFormScrollPane());
-            if (formTabIndex >= 0) {
-                proxyFrame.getRequestTablePane().removeTabAt(formTabIndex);
-            }
-            int textTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestContentTextScrollPane());
-            int queryTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestQueryScrollPane());
-            if (textTabIndex == -1) {
-                textTabIndex = queryTabIndex == -1 ? 2 : 3;
-                proxyFrame.getRequestTablePane().insertTab("Text", null, Application.PROXY_FRAME.getRequestContentTextScrollPane(), null, textTabIndex);
-            }
-            int jsonTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestJsonScrollPane());
-            if (jsonTabIndex == -1) {
-                proxyFrame.getRequestTablePane().insertTab("JSON", null, Application.PROXY_FRAME.getRequestJsonScrollPane(), null, textTabIndex + 1);
-            }
-            proxyFrame.getRequestJsonArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
             if (null == requestContent) {
+                fillRequestRaw(request, requestHeaderList, null);
                 return;
             }
+            RTextScrollPane requestJsonScrollPane = proxyFrame.getRequestJsonScrollPane();
+            requestJsonScrollPane.setName("JSON");
+            requestTabs.add(requestJsonScrollPane);
+            proxyFrame.getRequestJsonArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
             String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
             requestContentTextArea.setText(body);
             try {
-                Parser parser = new PrettifyParser();
-                List<ParseResult> results = parser.parse("json", body);
-                StringBuilder highlighted = new StringBuilder();
-                for (ParseResult result : results) {
-                    highlighted.append(body, result.getOffset(), result.getOffset() + result.getLength());
-                }
-//                Job prettifyJob = new Job(0, body);
-//                Prettify prettify = new Prettify();
-//                prettify.langHandlerForExtension("js", body).decorate(prettifyJob);
-//                List<Object> decorations = prettifyJob.getDecorations();
-                requestJsonArea.setText(highlighted.toString());
+                String codeText = prettify("json", body);
+                requestJsonArea.setText(codeText);
             } catch (Exception ignore) {
                 requestJsonArea.setText(body);
             }
             fillRequestRaw(request, requestHeaderList, body);
         } else {
-            int jsonTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestJsonScrollPane());
-            if (jsonTabIndex >= 0) {
-                proxyFrame.getRequestTablePane().removeTabAt(jsonTabIndex);
-            }
-            int formTabIndex = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestFormScrollPane());
-            if (formTabIndex >= 0) {
-                proxyFrame.getRequestTablePane().removeTabAt(formTabIndex);
-            }
             if (null == requestContent) {
                 return;
             }
@@ -273,11 +269,13 @@ public class FlowMouseListener extends MouseAdapter {
         for (Header header : requestHeaderList) {
             raw.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
         }
-        raw.append("\n").append(body);
+        if (null != body) {
+            raw.append("\n").append(body);
+        }
         requestRawArea.setText(raw.toString());
     }
 
-    private void fillRequestQuery(Request request) throws URISyntaxException {
+    private void fillRequestQuery(Request request, List<Component> requestTabs) throws URISyntaxException {
         URI uri = new URI(request.getUri());
         String query = uri.getQuery();
         ProxyFrame proxyFrame = Application.PROXY_FRAME;
@@ -286,16 +284,12 @@ public class FlowMouseListener extends MouseAdapter {
         for (int i = rowCount - 1; i >= 0; i--) {
             model.removeRow(i);
         }
-        int index = proxyFrame.getRequestTablePane().indexOfComponent(proxyFrame.getRequestQueryScrollPane());
         if (null == query) {
-            if (index >= 0) {
-                proxyFrame.getRequestTablePane().removeTabAt(index);
-            }
             return;
         }
-        if (index == -1) {
-            proxyFrame.getRequestTablePane().insertTab("Query", null, Application.PROXY_FRAME.getRequestQueryScrollPane(), null, 1);
-        }
+        JScrollPane requestQueryScrollPane = proxyFrame.getRequestQueryScrollPane();
+        requestQueryScrollPane.setName("Query");
+        requestTabs.add(requestQueryScrollPane);
         List<String[]> queryList = splitQuery(query);
         for (String[] q : queryList) {
             model.addRow(q);
@@ -316,16 +310,12 @@ public class FlowMouseListener extends MouseAdapter {
         return list;
     }
 
-    private void fillRequestHeader(List<Header> headerList) {
+    private void fillRequestHeader(List<Header> headerList, List<Component> requestTabs) {
         JTable requestHeaderTable = Application.PROXY_FRAME.getRequestHeaderTable();
-        DefaultTableModel model = (DefaultTableModel) requestHeaderTable.getModel();
-        int rowCount = model.getRowCount();
-        for (int i = rowCount - 1; i >= 0; i--) {
-            model.removeRow(i);
-        }
-        for (Header header : headerList) {
-            model.addRow(new String[]{header.getName(), header.getValue()});
-        }
+        resetHeaderTable(headerList, requestHeaderTable);
+        JScrollPane requestHeaderScrollPane = Application.PROXY_FRAME.getRequestHeaderScrollPane();
+        requestHeaderScrollPane.setName("Header");
+        requestTabs.add(requestHeaderScrollPane);
     }
 
     private void fillOverviewTab(Request request, Response response) throws SQLException {
