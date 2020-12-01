@@ -38,6 +38,8 @@ public class FlowTreeNode extends DefaultMutableTreeNode {
         if (null == response) {
             flow.setIcon(SvgIcons.DOWNLOAD);
         } else {
+            flow.setContentType(response.getContentType());
+            flow.setResponseId(response.getId());
             flow.setStatus(response.getStatus());
             flow.setIcon(SvgIcons.loadIcon(response.getStatus(), response.getContentType()));
         }

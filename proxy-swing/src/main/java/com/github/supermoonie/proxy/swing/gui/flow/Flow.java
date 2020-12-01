@@ -13,6 +13,8 @@ public class Flow {
 
     private Integer requestId;
 
+    private Integer responseId;
+
     private String url;
 
     private Integer status;
@@ -32,6 +34,14 @@ public class Flow {
 
     public void setRequestId(Integer requestId) {
         this.requestId = requestId;
+    }
+
+    public Integer getResponseId() {
+        return responseId;
+    }
+
+    public void setResponseId(Integer responseId) {
+        this.responseId = responseId;
     }
 
     public String getUrl() {

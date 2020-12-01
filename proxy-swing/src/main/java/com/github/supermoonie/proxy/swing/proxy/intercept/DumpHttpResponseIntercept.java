@@ -71,6 +71,8 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
                             if (null == res) {
                                 flow.setIcon(SvgIcons.BOMB);
                             } else {
+                                flow.setContentType(res.getContentType());
+                                flow.setResponseId(res.getId());
                                 flow.setIcon(SvgIcons.loadIcon(res.getStatus(), res.getContentType()));
                             }
                             flowList.updateUI();

@@ -18,6 +18,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Hello world!
@@ -27,6 +29,8 @@ import java.util.Date;
 public class Application {
 
     private static final Logger log = LoggerFactory.getLogger(Application.class);
+
+    public static final ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(5);
 
     public static final Date START_TIME = new Date();
 

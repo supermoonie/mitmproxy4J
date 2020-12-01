@@ -7,11 +7,10 @@ import com.github.supermoonie.proxy.swing.gui.content.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
+import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
 import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
@@ -49,6 +48,8 @@ public class ProxyFrame extends JFrame {
     private ListTreeTableNode overviewTreeTableRoot;
     private DefaultTreeTableModel overviewTreeTableModel;
 
+    private JTabbedPane flowTabPane;
+
     private JTabbedPane requestTablePane;
     private JScrollPane requestHeaderScrollPane;
     private JTable requestHeaderTable;
@@ -67,7 +68,7 @@ public class ProxyFrame extends JFrame {
     private JTable responseHeaderTable;
     private JScrollPane responseTextAreaScrollPane;
     private JTextArea responseTextArea;
-    private RTextScrollPane responseCodeScrollPane;
+    private JPanel responseCodePane;
     private RSyntaxTextArea responseCodeArea;
     private JScrollPane responseRawScrollPane;
     private JTextArea responseRawArea;
@@ -103,7 +104,7 @@ public class ProxyFrame extends JFrame {
         filter.addKeyListener(new FilterKeyListener(filter));
         flowPanel.add(filter, BorderLayout.NORTH);
         // Flow table panel
-        JTabbedPane flowTabPane = new JTabbedPane();
+        flowTabPane = new JTabbedPane();
         // Structure tab
         structureTab = new JPanel(new BorderLayout());
         structureTab.setMinimumSize(new Dimension(100, 0));
@@ -111,12 +112,12 @@ public class ProxyFrame extends JFrame {
         flowTree.setRootVisible(false);
         flowTree.setShowsRootHandles(true);
         flowTree.setCellRenderer(new FlowTreeCellRender());
-        flowTree.addMouseListener(new FlowMouseListener(flowTabPane));
+        flowTree.addMouseListener(new FlowMouseListener());
         // Sequence tab
         sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         flowList.setCellRenderer(new FlowListCellRenderer());
-        flowList.addMouseListener(new FlowMouseListener(flowTabPane));
+        flowList.addMouseListener(new FlowMouseListener());
         sequenceTab.add(flowList, BorderLayout.CENTER);
         flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
         flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
@@ -181,12 +182,6 @@ public class ProxyFrame extends JFrame {
         requestRawArea = new JTextArea();
         requestRawArea.setEditable(false);
         requestRawScrollPane = new JScrollPane(requestRawArea);
-        requestTablePane.add("Header", requestHeaderScrollPane);
-        requestTablePane.add("Query", requestQueryScrollPane);
-        requestTablePane.add("Text", requestContentTextScrollPane);
-        requestTablePane.add("Form", requestFormScrollPane);
-        requestTablePane.add("JSON", requestJsonScrollPane);
-        requestTablePane.add("Raw", requestRawScrollPane);
 
         responseTablePane = new JTabbedPane();
         responseHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
@@ -198,23 +193,21 @@ public class ProxyFrame extends JFrame {
         responseCodeArea = new RSyntaxTextArea();
         responseCodeArea.setEditable(false);
         theme.apply(responseCodeArea);
-        responseCodeScrollPane = new RTextScrollPane(responseCodeArea);
+        responseCodePane = new JPanel(new BorderLayout());
+        responseCodePane.add(new RTextScrollPane(responseCodeArea));
+        responseCodePane.addComponentListener(new ResponseCodeAreaShownListener());
         responseRawArea = new JTextArea();
         responseRawArea.setEditable(false);
         responseRawScrollPane = new JScrollPane(responseRawArea);
-        responseTablePane.add("Header", responseHeaderScrollPane);
-        responseTablePane.add("Text", responseTextAreaScrollPane);
-        responseTablePane.add("JSON", responseCodeScrollPane);
-        responseTablePane.add("Raw", responseRawScrollPane);
         contentSplitPane.setTopComponent(requestTablePane);
         contentSplitPane.setBottomComponent(responseTablePane);
+        contentSplitPane.setDividerLocation(300);
         contentTab.add(contentSplitPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Content", contentTab);
         detailPanel.add(flowDetailTablePane, BorderLayout.CENTER);
         splitPane.setLeftComponent(flowPanel);
         splitPane.setRightComponent(detailPanel);
         container.add(splitPane, BorderLayout.CENTER);
-
         getContentPane().add(container, BorderLayout.CENTER);
     }
 
@@ -346,6 +339,10 @@ public class ProxyFrame extends JFrame {
         setJMenuBar(menuBar);
     }
 
+    public JTabbedPane getFlowTabPane() {
+        return flowTabPane;
+    }
+
     public JScrollPane getResponseHeaderScrollPane() {
         return responseHeaderScrollPane;
     }
@@ -370,8 +367,8 @@ public class ProxyFrame extends JFrame {
         return responseTextArea;
     }
 
-    public RTextScrollPane getResponseCodeScrollPane() {
-        return responseCodeScrollPane;
+    public JPanel getResponseCodePane() {
+        return responseCodePane;
     }
 
     public RSyntaxTextArea getResponseCodeArea() {
