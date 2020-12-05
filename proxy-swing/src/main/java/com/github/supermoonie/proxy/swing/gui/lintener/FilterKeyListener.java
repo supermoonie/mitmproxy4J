@@ -21,12 +21,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * @author supermoonie
  * @since 2020/11/29
  */
 public class FilterKeyListener extends KeyAdapter {
+
+    public static Predicate<Flow> filter;
 
     private final JTextField filterField;
 
@@ -38,8 +41,10 @@ public class FilterKeyListener extends KeyAdapter {
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             String text = filterField.getText();
+            filter = flow -> flow.getUrl().contains(text);
             try {
                 FlowList flowList = Application.PROXY_FRAME.getFlowList();
+                flowList.filter(filter);
                 FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
                 rootNode.removeAllChildren();
                 flowList.clear();
@@ -64,8 +69,9 @@ public class FilterKeyListener extends KeyAdapter {
                         flow.setRequestTime(req.getTimeCreated());
                         flow.setStatus(response.getStatus());
                         flow.setContentType(response.getContentType());
+                        flow.setResponseId(response.getId());
                         flow.setIcon(SvgIcons.loadIcon(response.getStatus(), response.getContentType()));
-                        rootNode.add(flow.getUrl(), flow.getRequestId(), flow.getIcon());
+                        rootNode.add(flow);
                         flowList.add(flow);
                     }
                 }
@@ -78,12 +84,12 @@ public class FilterKeyListener extends KeyAdapter {
         }
     }
 
-    public void setTreeExpandedState(JTree tree, boolean expanded) {
+    public static void setTreeExpandedState(JTree tree, boolean expanded) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getModel().getRoot();
         setNodeExpandedState(tree, node, expanded);
     }
 
-    public void setNodeExpandedState(JTree tree, DefaultMutableTreeNode node, boolean expanded) {
+    public static void setNodeExpandedState(JTree tree, DefaultMutableTreeNode node, boolean expanded) {
         ArrayList<TreeNode> list = Collections.list(node.children());
         for (TreeNode treeNode : list) {
             setNodeExpandedState(tree, (DefaultMutableTreeNode) treeNode, expanded);

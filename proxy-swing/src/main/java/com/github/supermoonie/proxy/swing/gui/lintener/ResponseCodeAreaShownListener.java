@@ -43,15 +43,15 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
     @Override
     public void componentShown(ComponentEvent e) {
         ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        JPanel responseCodeScrollPane = proxyFrame.getResponseCodePane();
-        ProxyFrameHelper.SHOWING_RESPONSE_TAB_NAME.set(responseCodeScrollPane.getName());
         RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
         Flow flow = ProxyFrameHelper.getSelectedFlow();
         if (null == flow || null == flow.getResponseId() || null == flow.getContentType()) {
-            responseCodeArea.setText("");
+            responseCodeArea.setText(null);
+            log.info("flow is null");
             return;
         }
         if (flow.getResponseId().equals(SHOWING_RESPONSE_ID)) {
+            log.info("responseId: {} is showing", flow.getRequestId());
             return;
         }
         SHOWING_RESPONSE_ID = flow.getResponseId();
@@ -114,6 +114,7 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
                 responseCodePane.updateUI();
                 responseCodeArea.setSyntaxEditingStyle(style);
                 responseCodeArea.setText(codeText.get());
+                responseCodeArea.setCaretPosition(0);
             });
         });
     }

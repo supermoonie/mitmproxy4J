@@ -5,6 +5,7 @@ import com.github.supermoonie.proxy.intercept.ResponseIntercept;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
+import com.github.supermoonie.proxy.swing.gui.ProxyFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
@@ -37,13 +38,13 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
         SwingUtilities.invokeLater(() -> {
             try {
                 Request req = (Request) ctx.getUserData();
-                FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
-                rootNode.update(req, null);
-                Application.PROXY_FRAME.getFlowTree().updateUI();
                 FlowList flowList = Application.PROXY_FRAME.getFlowList();
                 flowList.findFirst(req.getId()).ifPresent(flow -> {
                     flow.setIcon(SvgIcons.DOWNLOAD);
                     flowList.updateUI();
+                    FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
+                    rootNode.update(req, null);
+                    Application.PROXY_FRAME.getFlowTree().updateUI();
                 });
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
@@ -60,7 +61,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
             Request req = (Request) ctx.getUserData();
             try {
                 Response res = ResponseService.saveResponse(ctx, req, response);
-                log.info("response saved, uri: {}", request.uri());
+                log.info("response saved, uri: {}", ctx.getConnectionInfo().getUrl());
                 SwingUtilities.invokeLater(() -> {
                     try {
                         FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
@@ -74,6 +75,11 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
                                 flow.setContentType(res.getContentType());
                                 flow.setResponseId(res.getId());
                                 flow.setIcon(SvgIcons.loadIcon(res.getStatus(), res.getContentType()));
+                                if (ProxyFrameHelper.currentRequestId == -1
+                                        || ProxyFrameHelper.currentRequestId == req.getId()) {
+                                    ProxyFrameHelper.fillOverviewTab(req, res);
+                                    ProxyFrameHelper.showResponseContent(req, res);
+                                }
                             }
                             flowList.updateUI();
                         });

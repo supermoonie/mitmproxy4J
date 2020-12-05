@@ -15,6 +15,7 @@ import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
+import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -72,6 +73,8 @@ public class ProxyFrame extends JFrame {
     private RSyntaxTextArea responseCodeArea;
     private JScrollPane responseRawScrollPane;
     private JTextArea responseRawArea;
+    private JScrollPane responseImageScrollPane;
+    private JPanel responseImagePane;
 
 
     public ProxyFrame() {
@@ -108,7 +111,7 @@ public class ProxyFrame extends JFrame {
         // Structure tab
         structureTab = new JPanel(new BorderLayout());
         structureTab.setMinimumSize(new Dimension(100, 0));
-        structureTab.add(flowTree, BorderLayout.CENTER);
+        structureTab.add(new JScrollPane(flowTree), BorderLayout.CENTER);
         flowTree.setRootVisible(false);
         flowTree.setShowsRootHandles(true);
         flowTree.setCellRenderer(new FlowTreeCellRender());
@@ -118,7 +121,7 @@ public class ProxyFrame extends JFrame {
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         flowList.setCellRenderer(new FlowListCellRenderer());
         flowList.addMouseListener(new FlowMouseListener());
-        sequenceTab.add(flowList, BorderLayout.CENTER);
+        sequenceTab.add(new JScrollPane(flowList), BorderLayout.CENTER);
         flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
         flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
         flowPanel.add(flowTabPane, BorderLayout.CENTER);
@@ -155,13 +158,12 @@ public class ProxyFrame extends JFrame {
         JSplitPane contentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         requestTablePane = new JTabbedPane();
         requestHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
-        requestHeaderTable.setRowHeight(25);
+        requestHeaderTable.setShowHorizontalLines(true);
+        requestHeaderTable.setShowVerticalLines(true);
         requestHeaderScrollPane = new JScrollPane(requestHeaderTable);
         requestQueryTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
-        requestQueryTable.setRowHeight(25);
         requestQueryScrollPane = new JScrollPane(requestQueryTable);
         requestFormTable = new JTable(new NoneEditTableModel(null, new String[]{"name", "Value"}));
-        requestFormTable.setRowHeight(25);
         requestFormScrollPane = new JScrollPane(requestFormTable);
         requestContentTextArea = new JTextArea();
         requestContentTextArea.setEditable(false);
@@ -169,8 +171,7 @@ public class ProxyFrame extends JFrame {
         requestJsonArea = new RSyntaxTextArea();
         Theme theme;
         try {
-            theme = Theme.load(getClass().getResourceAsStream(
-                    "/com/github/supermoonie/proxy/swing/light.xml"));
+            theme = Theme.load(getClass().getResourceAsStream("/com/github/supermoonie/proxy/swing/light.xml"));
             theme.apply(requestJsonArea);
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -185,17 +186,19 @@ public class ProxyFrame extends JFrame {
 
         responseTablePane = new JTabbedPane();
         responseHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
-        responseHeaderTable.setRowHeight(25);
         responseHeaderScrollPane = new JScrollPane(responseHeaderTable);
         responseTextArea = new JTextArea();
         responseTextArea.setEditable(false);
         responseTextAreaScrollPane = new JScrollPane(responseTextArea);
         responseCodeArea = new RSyntaxTextArea();
+        responseCodeArea.setCodeFoldingEnabled(true);
         responseCodeArea.setEditable(false);
         theme.apply(responseCodeArea);
         responseCodePane = new JPanel(new BorderLayout());
         responseCodePane.add(new RTextScrollPane(responseCodeArea));
         responseCodePane.addComponentListener(new ResponseCodeAreaShownListener());
+        responseImagePane = new JPanel(new BorderLayout());
+        responseImageScrollPane = new JScrollPane(responseImagePane);
         responseRawArea = new JTextArea();
         responseRawArea.setEditable(false);
         responseRawScrollPane = new JScrollPane(responseRawArea);
@@ -211,6 +214,7 @@ public class ProxyFrame extends JFrame {
         getContentPane().add(container, BorderLayout.CENTER);
     }
 
+
     private void initToolBar() {
         JPanel container = new JPanel(new BorderLayout());
         JToolBar toolBar = new JToolBar();
@@ -219,6 +223,18 @@ public class ProxyFrame extends JFrame {
         JButton clearButton = new JButton();
         clearButton.setToolTipText("Clear");
         clearButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg"));
+        clearButton.addActionListener(e -> {
+            requestTablePane.removeAll();
+            responseTablePane.removeAll();
+            rootNode.removeAllChildren();
+            flowList.clear();
+            int childCount = overviewTreeTableModel.getChildCount(overviewTreeTableRoot);
+            for (int i = childCount - 1; i >= 0; i--) {
+                overviewTreeTableModel.removeNodeFromParent((MutableTreeTableNode) overviewTreeTableRoot.getChildAt(i));
+            }
+            flowTree.updateUI();
+            ProxyFrameHelper.currentRequestId = -1;
+        });
         JButton editButton = new JButton();
         editButton.setToolTipText("Edit");
         editButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/edit.svg"));
@@ -337,6 +353,14 @@ public class ProxyFrame extends JFrame {
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
+    }
+
+    public JScrollPane getResponseImageScrollPane() {
+        return responseImageScrollPane;
+    }
+
+    public JPanel getResponseImagePane() {
+        return responseImagePane;
     }
 
     public JTabbedPane getFlowTabPane() {

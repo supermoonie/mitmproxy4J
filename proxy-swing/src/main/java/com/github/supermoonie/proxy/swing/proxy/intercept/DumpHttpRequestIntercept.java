@@ -4,9 +4,12 @@ import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.entity.Request;
+import com.github.supermoonie.proxy.swing.gui.ProxyFrame;
+import com.github.supermoonie.proxy.swing.gui.ProxyFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.service.RequestService;
 import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
@@ -37,21 +40,30 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
         if (GlobalSetting.getInstance().getRecord()) {
             try {
                 final Request req = RequestService.saveRequest(ctx, request);
-                log.info("request saved, uri: {}", request.uri());
+                log.info("request saved, uri: {}", ctx.getConnectionInfo().getUrl());
                 ctx.setUserData(req);
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
-                        rootNode.add(req.getUri(), req.getId(), SvgIcons.UPLOAD);
-                        Application.PROXY_FRAME.getFlowTree().updateUI();
-                        Application.PROXY_FRAME.getFlowTree().expandPath(new TreePath(rootNode.getPath()));
                         FlowList flowList = Application.PROXY_FRAME.getFlowList();
                         Flow flow = new Flow();
                         flow.setRequestId(req.getId());
                         flow.setUrl(req.getUri());
                         flow.setIcon(SvgIcons.UPLOAD);
+                        if (null != FilterKeyListener.filter && !FilterKeyListener.filter.test(flow)) {
+                            return;
+                        }
                         flowList.add(flow);
                         flowList.updateUI();
+                        FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
+                        rootNode.add(flow);
+                        Application.PROXY_FRAME.getFlowTree().updateUI();
+//                        Application.PROXY_FRAME.getFlowTree().expandPath(new TreePath(rootNode.getPath()));
+                        if (ProxyFrameHelper.currentRequestId == -1
+                            || ProxyFrameHelper.currentRequestId == req.getId()) {
+                            ProxyFrameHelper.fillOverviewTab(req, null);
+                            ProxyFrameHelper.showRequestContent(req);
+                            ProxyFrameHelper.showResponseContent(req, null);
+                        }
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }

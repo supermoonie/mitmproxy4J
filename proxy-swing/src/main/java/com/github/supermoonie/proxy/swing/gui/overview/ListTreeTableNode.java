@@ -20,11 +20,6 @@ public class ListTreeTableNode extends AbstractMutableTreeTableNode {
         this.list = list;
     }
 
-    public ListTreeTableNode addNode(ListTreeTableNode child) {
-        super.add(child);
-        return this;
-    }
-
     @Override
     public Object getValueAt(int column) {
         return list.get(column);

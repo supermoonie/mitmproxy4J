@@ -24,4 +24,5 @@ hs_err_pid*
 logs/
 .idea/
 target/
+natives/
 *.iml

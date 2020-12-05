@@ -43,8 +43,6 @@ public class JavascriptBeautifierForJava {
         try {
             jsBeautifyEngine.eval("var global = this;");
             jsBeautifyEngine.eval(new InputStreamReader(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(BEAUTIFY_JS_RESOURCE))));
-//            cssBeautifyEngine.eval("var global = this;");
-//            cssBeautifyEngine.eval(new InputStreamReader(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(BEAUTIFY_JS_RESOURCE))));
             cssBeautifyEngine.eval(new InputStreamReader(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(BEAUTIFY_CSS_RESOURCE))));
         } catch (ScriptException e) {
             e.printStackTrace();

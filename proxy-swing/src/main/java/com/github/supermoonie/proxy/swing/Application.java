@@ -67,14 +67,15 @@ public class Application {
                 responseIntercepts.put("dumpHttpResponseIntercept", DumpHttpResponseIntercept.INSTANCE);
                 requestIntercepts.put("configurableIntercept", DefaultConfigIntercept.INSTANCE);
             });
-//            ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(100);
-//            ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(200);
+            ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(80);
+            ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(80);
             PROXY_FRAME = new ProxyFrame();
-            PROXY_FRAME.setPreferredSize(new Dimension(1280, 620));
+            PROXY_FRAME.setPreferredSize(new Dimension(1280, 800));
             // show frame
             PROXY_FRAME.pack();
             PROXY_FRAME.setLocationRelativeTo(null);
             PROXY_FRAME.setVisible(true);
+//            PROXY_FRAME.setExtendedState(PROXY_FRAME.getExtendedState() | JFrame.MAXIMIZED_BOTH);
             PROXY_FRAME.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         });
     }

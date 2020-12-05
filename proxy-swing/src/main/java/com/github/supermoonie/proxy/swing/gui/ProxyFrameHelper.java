@@ -1,12 +1,40 @@
 package com.github.supermoonie.proxy.swing.gui;
 
 import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.*;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
+import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
+import com.j256.ormlite.dao.Dao;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
+import org.jdesktop.swingx.treetable.MutableTreeTableNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import prettify.PrettifyParser;
+import syntaxhighlight.ParseResult;
+import syntaxhighlight.Parser;
 
 import javax.swing.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -15,8 +43,9 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class ProxyFrameHelper {
 
-    public static final AtomicInteger SHOWING_REQUEST_ID = new AtomicInteger(-1);
-    public static final AtomicReference<String> SHOWING_REQUEST_TAB_NAME = new AtomicReference<>();
+    private static final Logger log = LoggerFactory.getLogger(ProxyFrameHelper.class);
+
+    public static volatile int currentRequestId = -1;
     public static final AtomicReference<String> SHOWING_RESPONSE_TAB_NAME = new AtomicReference<>();
 
     private ProxyFrameHelper() {
@@ -41,7 +70,432 @@ public class ProxyFrameHelper {
         return flow;
     }
 
-    public static void showResponseCodeArea() {
 
+    // -- response tab
+
+    public static void showResponseContent(Request request, Response response) {
+        ProxyFrame proxyFrame = Application.PROXY_FRAME;
+        if (null == response) {
+            proxyFrame.getResponseTablePane().removeAll();
+            JPanel waitingPanel = new JPanel(new BorderLayout());
+            JProgressBar progressBar = new JProgressBar();
+            progressBar.setValue(0);
+            progressBar.setIndeterminate(true);
+            waitingPanel.add(progressBar, BorderLayout.SOUTH);
+            proxyFrame.getResponseTablePane().add("", waitingPanel);
+            return;
+        }
+        currentRequestId = request.getId();
+        try {
+            proxyFrame.getResponseTablePane().removeAll();
+            Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
+            Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+            List<Component> responseTabs = new ArrayList<>();
+            List<Header> responseHeaderList = headerDao.queryBuilder().where()
+                    .eq(Header.REQUEST_ID_FIELD_NAME, request.getId()).and()
+                    .eq(Header.RESPONSE_ID_FIELD_NAME, response.getId()).query();
+            fillResponseHeader(responseHeaderList, responseTabs);
+            Content content = null;
+            if (null != response.getContentId()) {
+                content = contentDao.queryForId(response.getContentId());
+            }
+            fillResponseContent(response, responseHeaderList, content, responseTabs);
+            JScrollPane responseRawScrollPane = proxyFrame.getResponseRawScrollPane();
+            responseRawScrollPane.setName("Raw");
+            responseTabs.add(responseRawScrollPane);
+            responseTabs.forEach(component -> proxyFrame.getResponseTablePane().add(component.getName(), component));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    private static void fillResponseContent(Response response, List<Header> responseHeaderList, Content content, List<Component> responseTabs) {
+        ProxyFrame proxyFrame = Application.PROXY_FRAME;
+        JTextArea responseTextArea = proxyFrame.getResponseTextArea();
+        RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
+        JTextArea responseRawArea = proxyFrame.getResponseRawArea();
+        responseTextArea.setText("");
+        responseCodeArea.setText("");
+        responseRawArea.setText("");
+        StringBuilder raw = new StringBuilder();
+        raw.append(response.getHttpVersion()).append(" ").append(response.getStatus()).append("\n");
+        for (Header header : responseHeaderList) {
+            raw.append(header.getName()).append(" ").append(header.getValue()).append("\n");
+        }
+        if (null != content && null != response.getContentType()) {
+            String contentType = response.getContentType();
+            String title = null;
+            if (contentType.contains("html")) {
+                title = "HTML";
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                raw.append("\n").append(body);
+            } else if (contentType.contains("json")) {
+                title = "JSON";
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                raw.append("\n").append(body);
+            } else if (contentType.contains("javascript")) {
+                title = "JavaScript";
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                raw.append("\n").append(body);
+            } else if (contentType.contains("css")) {
+                title = "CSS";
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                raw.append("\n").append(body);
+            } else if (contentType.contains("xml")) {
+                title = "XML";
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                raw.append("\n").append(body);
+            } else if (contentType.startsWith("image/")) {
+                ImageIcon image = new ImageIcon(content.getRawContent());
+                JLabel label = new JLabel();
+                label.setIcon(image);
+                JPanel responseImagePane = proxyFrame.getResponseImagePane();
+                responseImagePane.removeAll();
+                responseImagePane.add(new JLabel(image.getIconWidth() + " x " + image.getIconHeight()), BorderLayout.NORTH);
+                responseImagePane.add(label, BorderLayout.WEST);
+                JScrollPane responseImageScrollPane = proxyFrame.getResponseImageScrollPane();
+                responseImageScrollPane.setBorder(new EmptyBorder(5, 1, 5, 5));
+                responseImageScrollPane.setName("Image");
+                responseTabs.add(responseImageScrollPane);
+            }
+            if (null != title) {
+                JScrollPane responseTextAreaScrollPane = proxyFrame.getResponseTextAreaScrollPane();
+                responseTextAreaScrollPane.setName("Text");
+                responseTabs.add(responseTextAreaScrollPane);
+                proxyFrame.getResponseTextArea().setCaretPosition(0);
+                JPanel responseCodePane = proxyFrame.getResponseCodePane();
+                responseCodePane.setName(title);
+                responseTabs.add(responseCodePane);
+                proxyFrame.getResponseCodeArea().setCaretPosition(0);
+            }
+        }
+        responseRawArea.setText(raw.toString());
+        responseRawArea.setCaretPosition(0);
+    }
+
+    private static void fillResponseHeader(List<Header> headerList, List<Component> responseTabs) {
+        JTable responseHeaderTable = Application.PROXY_FRAME.getResponseHeaderTable();
+        resetHeaderTable(headerList, responseHeaderTable);
+        JScrollPane responseHeaderScrollPane = Application.PROXY_FRAME.getResponseHeaderScrollPane();
+        responseHeaderScrollPane.setName("Header");
+        responseTabs.add(responseHeaderScrollPane);
+        fitTableColumns(responseHeaderTable);
+    }
+    // -- response tab
+
+    // -- request tab
+
+    public static void showRequestContent(Request request) {
+        currentRequestId = request.getId();
+        try {
+            Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
+            Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+            List<Header> requestHeaderList = headerDao.queryBuilder().where()
+                    .eq(Header.REQUEST_ID_FIELD_NAME, request.getId()).and()
+                    .isNull(Header.RESPONSE_ID_FIELD_NAME).query();
+            Content requestContent = contentDao.queryForId(request.getContentId());
+            ProxyFrame proxyFrame = Application.PROXY_FRAME;
+            // 清除Request的所有Tab
+            proxyFrame.getRequestTablePane().removeAll();
+            List<Component> requestTabs = new ArrayList<>();
+            // 填充Request的Header Tab
+            fillRequestHeader(requestHeaderList, requestTabs);
+            // 填充Request的QueryString Tab
+            fillRequestQuery(request, requestTabs);
+            // 填充Request的Form Tab 以及Raw Tab
+            fillRequestForm(request, requestHeaderList, requestContent, requestTabs);
+            JScrollPane requestRawScrollPane = proxyFrame.getRequestRawScrollPane();
+            requestRawScrollPane.setName("Raw");
+            requestTabs.add(requestRawScrollPane);
+            requestTabs.forEach(component -> proxyFrame.getRequestTablePane().add(component.getName(), component));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    private static void fillRequestHeader(List<Header> headerList, List<Component> requestTabs) {
+        JTable requestHeaderTable = Application.PROXY_FRAME.getRequestHeaderTable();
+        // 重新加载Header
+        resetHeaderTable(headerList, requestHeaderTable);
+        JScrollPane requestHeaderScrollPane = Application.PROXY_FRAME.getRequestHeaderScrollPane();
+        requestHeaderScrollPane.setName("Header");
+        requestTabs.add(requestHeaderScrollPane);
+        // Table 宽度自适应
+        fitTableColumns(requestHeaderTable);
+    }
+
+    private static void fillRequestQuery(Request request, List<Component> requestTabs) {
+        URI uri;
+        try {
+            uri = new URI(request.getUri());
+        } catch (URISyntaxException e) {
+            log.error(e.getMessage(), e);
+            return;
+        }
+        String query = uri.getQuery();
+        ProxyFrame proxyFrame = Application.PROXY_FRAME;
+        DefaultTableModel model = (DefaultTableModel) proxyFrame.getRequestQueryTable().getModel();
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            model.removeRow(i);
+        }
+        if (null == query) {
+            return;
+        }
+        JScrollPane requestQueryScrollPane = proxyFrame.getRequestQueryScrollPane();
+        requestQueryScrollPane.setName("Query");
+        requestTabs.add(requestQueryScrollPane);
+        List<String[]> queryList = splitQuery(query);
+        for (String[] q : queryList) {
+            model.addRow(q);
+        }
+        fitTableColumns(proxyFrame.getRequestQueryTable());
+    }
+
+    private static void fillRequestForm(Request request, List<Header> requestHeaderList, Content requestContent, List<Component> requestTabs) {
+        ProxyFrame proxyFrame = Application.PROXY_FRAME;
+        DefaultTableModel requestFormModel = (DefaultTableModel) proxyFrame.getRequestFormTable().getModel();
+        // 清除FormTab、TextTab、JSONTab中的数据
+        int rowCount = requestFormModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            requestFormModel.removeRow(i);
+        }
+        JTextArea requestContentTextArea = proxyFrame.getRequestContentTextArea();
+        RSyntaxTextArea requestJsonArea = proxyFrame.getRequestJsonArea();
+        requestContentTextArea.setText("");
+        requestJsonArea.setText("");
+        if (null == request.getContentType()) {
+            // 只填充RawTab中的数据
+            fillRequestRaw(request, requestHeaderList, null);
+            return;
+        }
+        JScrollPane requestContentTextScrollPane = proxyFrame.getRequestContentTextScrollPane();
+        requestContentTextScrollPane.setName("Text");
+        requestTabs.add(requestContentTextScrollPane);
+        String contentType = request.getContentType().toLowerCase();
+        if (contentType.contains("x-www-form-urlencoded")) {
+            if (null == requestContent) {
+                fillRequestRaw(request, requestHeaderList, null);
+                return;
+            }
+            JScrollPane requestFormScrollPane = proxyFrame.getRequestFormScrollPane();
+            requestFormScrollPane.setName("Form");
+            requestTabs.add(requestFormScrollPane);
+            String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
+            requestContentTextArea.setText(body);
+            requestContentTextArea.setCaretPosition(0);
+            List<String[]> formList = splitQuery(body);
+            for (String[] form : formList) {
+                requestFormModel.addRow(form);
+            }
+            fillRequestRaw(request, requestHeaderList, body);
+        } else if (contentType.contains("json")) {
+            if (null == requestContent) {
+                fillRequestRaw(request, requestHeaderList, null);
+                return;
+            }
+            RTextScrollPane requestJsonScrollPane = proxyFrame.getRequestJsonScrollPane();
+            requestJsonScrollPane.setName("JSON");
+            requestTabs.add(requestJsonScrollPane);
+            proxyFrame.getRequestJsonArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+            String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
+            requestContentTextArea.setText(body);
+            requestContentTextArea.setCaretPosition(0);
+            try {
+                Parser parser = new PrettifyParser();
+                List<ParseResult> results = parser.parse("json", body);
+                StringBuilder sb = new StringBuilder();
+                for (ParseResult result : results) {
+                    sb.append(body, result.getOffset(), result.getOffset() + result.getLength());
+                }
+                requestJsonArea.setText(sb.toString());
+            } catch (Exception ignore) {
+                requestJsonArea.setText(body);
+            }
+            requestJsonArea.setCaretPosition(0);
+            fillRequestRaw(request, requestHeaderList, body);
+        } else {
+            if (null == requestContent) {
+                return;
+            }
+            String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
+            requestContentTextArea.setText(body);
+            fillRequestRaw(request, requestHeaderList, body);
+        }
+    }
+
+    private static void fillRequestRaw(Request request, List<Header> requestHeaderList, String body) {
+        JTextArea requestRawArea = Application.PROXY_FRAME.getRequestRawArea();
+        requestRawArea.setText("");
+        StringBuilder raw = new StringBuilder();
+        raw.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
+        for (Header header : requestHeaderList) {
+            raw.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
+        }
+        if (null != body) {
+            raw.append("\n").append(body);
+        }
+        requestRawArea.setText(raw.toString());
+        requestRawArea.setCaretPosition(0);
+    }
+
+    // -- request tab
+
+    // -- overview tab
+
+    public static void fillOverviewTab(Request request, Response response) {
+        if (currentRequestId == -1) {
+            FilterKeyListener.setTreeExpandedState(Application.PROXY_FRAME.getFlowTree(), true);
+            FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
+            FlowTreeNode leaf = rootNode.findLeaf(rootNode, request.getId());
+            Application.PROXY_FRAME.getFlowTree().setSelectionPath(new TreePath(leaf.getPath()));
+        }
+        currentRequestId = request.getId();
+        ListTreeTableNode root = Application.PROXY_FRAME.getOverviewTreeTableRoot();
+        DefaultTreeTableModel model = Application.PROXY_FRAME.getOverviewTreeTableModel();
+        int childCount = model.getChildCount(root);
+        for (int i = childCount - 1; i >= 0; i--) {
+            model.removeNodeFromParent((MutableTreeTableNode) root.getChildAt(i));
+        }
+        try {
+            Dao<ConnectionOverview, Integer> overviewDao = DaoCollections.getDao(ConnectionOverview.class);
+            ConnectionOverview connectionOverview = overviewDao.queryBuilder().where().eq(ConnectionOverview.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
+            int index = 0;
+            model.insertNodeInto(new ListTreeTableNode("Method", request.getMethod()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Url", request.getUri()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Status", null == response ? "Loading" : "Complete"), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Response Code", null == response ? "-" : response.getStatus()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Protocol", request.getHttpVersion()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Content-Type", null == response ? "-" : response.getContentType()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Host", request.getHost()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Port", request.getPort()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Client Address", connectionOverview.getClientHost() + ":" + connectionOverview.getClientPort()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Remote IP", Objects.requireNonNullElse(connectionOverview.getRemoteIp(), "-")), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("DNS", Objects.requireNonNullElse(connectionOverview.getDnsServer(), "-")), root, index++);
+            ListTreeTableNode tlsNode = new ListTreeTableNode("TLS", null == response ? "-" : connectionOverview.getServerProtocol() + " (" + connectionOverview.getServerCipherSuite() + ")");
+            ListTreeTableNode timingNode = new ListTreeTableNode("Timing", "");
+            model.insertNodeInto(tlsNode, root, index++);
+            model.insertNodeInto(timingNode, root, index);
+            model.insertNodeInto(new ListTreeTableNode("Client Session ID", Objects.requireNonNullElse(connectionOverview.getClientSessionId(), "-")), tlsNode, 0);
+            model.insertNodeInto(new ListTreeTableNode("Server Session ID", Objects.requireNonNullElse(connectionOverview.getServerSessionId(), "-")), tlsNode, 1);
+            ListTreeTableNode clientCertNode = new ListTreeTableNode("Client Certificate", "");
+            ListTreeTableNode serverCertNode = new ListTreeTableNode("Server Certificate", "");
+            model.insertNodeInto(clientCertNode, tlsNode, 2);
+            model.insertNodeInto(serverCertNode, tlsNode, 3);
+            Dao<CertificateMap, Integer> certificateMapDao = DaoCollections.getDao(CertificateMap.class);
+            List<CertificateMap> clientCertificateMapList = certificateMapDao.queryBuilder().where()
+                    .eq(CertificateMap.REQUEST_ID_FIELD_NAME, request.getId()).and()
+                    .isNull(CertificateMap.RESPONSE_ID_FIELD_NAME).query();
+            fillCertInfo(model, clientCertNode, clientCertificateMapList);
+            if (null != response) {
+                List<CertificateMap> serverCertificateMapList = certificateMapDao.queryBuilder().where()
+                        .eq(CertificateMap.REQUEST_ID_FIELD_NAME, request.getId()).and()
+                        .eq(CertificateMap.RESPONSE_ID_FIELD_NAME, response.getId()).query();
+                fillCertInfo(model, serverCertNode, serverCertificateMapList);
+            }
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            model.insertNodeInto(new ListTreeTableNode("Request Start Time", null == request.getStartTime() ? "-" : dateFormat.format(request.getStartTime())), timingNode, 0);
+            model.insertNodeInto(new ListTreeTableNode("Request End Time", null == request.getEndTime() ? "-" : dateFormat.format(request.getEndTime())), timingNode, 1);
+            model.insertNodeInto(new ListTreeTableNode("Connect Start Time", null == connectionOverview.getConnectStartTime() ? "-" : dateFormat.format(connectionOverview.getConnectStartTime())), timingNode, 2);
+            model.insertNodeInto(new ListTreeTableNode("Connect End Time", null == connectionOverview.getConnectEndTime() ? "-" : dateFormat.format(connectionOverview.getConnectEndTime())), timingNode, 3);
+            model.insertNodeInto(new ListTreeTableNode("Response Start Time", null == response ? "-" : dateFormat.format(response.getStartTime())), timingNode, 4);
+            model.insertNodeInto(new ListTreeTableNode("Response End Time", null == response ? "-" : dateFormat.format(response.getEndTime())), timingNode, 5);
+            model.insertNodeInto(new ListTreeTableNode("Request", null == request.getEndTime() ? "-" : request.getEndTime() - request.getStartTime() + " ms"), timingNode, 6);
+            model.insertNodeInto(new ListTreeTableNode("Response", null == response ? "-" : response.getEndTime() - response.getStartTime() + " ms"), timingNode, 7);
+            model.insertNodeInto(new ListTreeTableNode("Duration", null == response ? "-" : response.getEndTime() - request.getStartTime() + " ms"), timingNode, 8);
+            model.insertNodeInto(new ListTreeTableNode("DNS", null == response ? "-" : connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime() + " ms"), timingNode, 9);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+
+    }
+
+    private static void fillCertInfo(DefaultTreeTableModel model, ListTreeTableNode certNode, List<CertificateMap> certificateMapList) throws SQLException {
+        Dao<CertificateInfo, Integer> certificateDao = DaoCollections.getDao(CertificateInfo.class);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (int i = 0; i < certificateMapList.size(); i++) {
+            CertificateMap certificateMap = certificateMapList.get(i);
+            CertificateInfo certificateInfo = certificateDao.queryBuilder().where().eq(CertificateInfo.SERIAL_NUMBER_FIELD_NAME, certificateMap.getCertificateSerialNumber()).queryForFirst();
+            if (null != certificateInfo) {
+                ListTreeTableNode clientCertInfoNode = new ListTreeTableNode(certificateInfo.getSubjectCommonName(), "");
+                model.insertNodeInto(clientCertInfoNode, certNode, i);
+                model.insertNodeInto(new ListTreeTableNode("Serial Number", certificateInfo.getSerialNumber()), clientCertInfoNode, 0);
+                model.insertNodeInto(new ListTreeTableNode("Type", certificateInfo.getType()), clientCertInfoNode, 1);
+                ListTreeTableNode clientCertIssuedToNode = new ListTreeTableNode("Issued To", "");
+                model.insertNodeInto(clientCertIssuedToNode, clientCertInfoNode, 2);
+                ListTreeTableNode clientCertIssuedByNode = new ListTreeTableNode("Issued By", "");
+                model.insertNodeInto(clientCertIssuedByNode, clientCertInfoNode, 3);
+                model.insertNodeInto(new ListTreeTableNode("Not Valid Before", dateFormat.format(certificateInfo.getNotValidBefore())), clientCertInfoNode, 4);
+                model.insertNodeInto(new ListTreeTableNode("Not Valid After", dateFormat.format(certificateInfo.getNotValidAfter())), clientCertInfoNode, 5);
+                ListTreeTableNode clientFingerprintsNode = new ListTreeTableNode("Fingerprints", "");
+                model.insertNodeInto(clientFingerprintsNode, clientCertInfoNode, 6);
+                model.insertNodeInto(new ListTreeTableNode("Common Name", certificateInfo.getSubjectCommonName()), clientCertIssuedToNode, 0);
+                model.insertNodeInto(new ListTreeTableNode("Organization Unit", certificateInfo.getSubjectOrganizationDepartment()), clientCertIssuedToNode, 1);
+                model.insertNodeInto(new ListTreeTableNode("Organization Name", certificateInfo.getSubjectOrganizationName()), clientCertIssuedToNode, 2);
+                model.insertNodeInto(new ListTreeTableNode("Locality Name", certificateInfo.getSubjectLocalityName()), clientCertIssuedToNode, 3);
+                model.insertNodeInto(new ListTreeTableNode("State Name", certificateInfo.getSubjectStateName()), clientCertIssuedToNode, 4);
+                model.insertNodeInto(new ListTreeTableNode("Country", certificateInfo.getSubjectCountry()), clientCertIssuedToNode, 5);
+                model.insertNodeInto(new ListTreeTableNode("Common Name", certificateInfo.getIssuerCommonName()), clientCertIssuedByNode, 0);
+                model.insertNodeInto(new ListTreeTableNode("Organization Unit", certificateInfo.getIssuerOrganizationDepartment()), clientCertIssuedByNode, 1);
+                model.insertNodeInto(new ListTreeTableNode("Organization Name", certificateInfo.getIssuerOrganizationName()), clientCertIssuedByNode, 2);
+                model.insertNodeInto(new ListTreeTableNode("Locality Name", certificateInfo.getIssuerLocalityName()), clientCertIssuedByNode, 3);
+                model.insertNodeInto(new ListTreeTableNode("State Name", certificateInfo.getIssuerStateName()), clientCertIssuedByNode, 4);
+                model.insertNodeInto(new ListTreeTableNode("Country", certificateInfo.getIssuerCountry()), clientCertIssuedByNode, 5);
+                model.insertNodeInto(new ListTreeTableNode("SHA-1", certificateInfo.getShaOne()), clientFingerprintsNode, 0);
+                model.insertNodeInto(new ListTreeTableNode("SHA-256", certificateInfo.getShaTwoFiveSix()), clientFingerprintsNode, 1);
+            }
+        }
+    }
+
+    // --overview tab
+
+    public static List<String[]> splitQuery(String query) {
+        List<String[]> list = new LinkedList<>();
+        String[] params = query.split("&");
+        for (String param : params) {
+            String[] form = param.split("=");
+            if (form.length == 1) {
+                list.add(new String[]{form[0], ""});
+            } else if (form.length == 2) {
+                list.add(new String[]{form[0], URLDecoder.decode(form[1], StandardCharsets.UTF_8)});
+            }
+        }
+        return list;
+    }
+
+    private static void resetHeaderTable(List<Header> headerList, JTable headerTable) {
+        DefaultTableModel model = (DefaultTableModel) headerTable.getModel();
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            model.removeRow(i);
+        }
+        for (Header header : headerList) {
+            model.addRow(new String[]{header.getName(), header.getValue()});
+        }
+    }
+
+    public static void fitTableColumns(JTable myTable) {
+        JTableHeader header = myTable.getTableHeader();
+        int rowCount = myTable.getRowCount();
+        Enumeration<TableColumn> columns = myTable.getColumnModel().getColumns();
+        while (columns.hasMoreElements()) {
+            TableColumn column = columns.nextElement();
+            int col = header.getColumnModel().getColumnIndex(column.getIdentifier());
+            int width = (int) myTable.getTableHeader().getDefaultRenderer()
+                    .getTableCellRendererComponent(myTable, column.getIdentifier()
+                            , false, false, -1, col).getPreferredSize().getWidth();
+            for (int row = 0; row < rowCount; row++) {
+                int preferredWidth = (int) myTable.getCellRenderer(row, col).getTableCellRendererComponent(myTable,
+                        myTable.getValueAt(row, col), false, false, row, col).getPreferredSize().getWidth();
+                width = Math.max(width, preferredWidth);
+            }
+            header.setResizingColumn(column); // 此行很重要
+            column.setWidth(width + myTable.getIntercellSpacing().width + 10);
+        }
     }
 }

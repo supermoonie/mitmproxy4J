@@ -15,13 +15,18 @@ import java.util.Objects;
 public class FlowTreeCellRender extends DefaultTreeCellRenderer {
 
     @Override
-    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean select, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component c = super.getTreeCellRendererComponent(tree, value,
                 selected, expanded, leaf, row, hasFocus);
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
         Flow flow = (Flow) node.getUserObject();
         if (null != flow && flow.getFlowType().equals(FlowType.TARGET)) {
             setIcon(Objects.requireNonNullElse(flow.getIcon(), SvgIcons.ANY_TYPE));
+        }
+        if (hasFocus && select) {
+            setForeground(Color.WHITE);
+        } else {
+            setForeground(Color.BLACK);
         }
         return c;
     }

@@ -4,6 +4,8 @@ import javax.swing.table.DefaultTableModel;
 import java.util.Vector;
 
 /**
+ * 不可编辑的TableModel
+ *
  * @author supermoonie
  * @since 2020/11/29
  */
@@ -36,4 +38,6 @@ public class NoneEditTableModel extends DefaultTableModel {
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return false;
     }
+
+
 }
