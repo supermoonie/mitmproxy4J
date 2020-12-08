@@ -21,44 +21,6 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
-    <repositories>
-<!--        <repository>-->
-<!--            <name>mvnrepository</name>-->
-<!--            <id>panda-repository</id>-->
-<!--            <url>https://repo.panda-lang.org/</url>-->
-<!--            <layout>default</layout>-->
-<!--            <releases>-->
-<!--                <enabled>true</enabled>-->
-<!--            </releases>-->
-<!--            <snapshots>-->
-<!--                <enabled>false</enabled>-->
-<!--            </snapshots>-->
-<!--        </repository>-->
-<!--        <repository>-->
-<!--            <id>jitpack.io</id>-->
-<!--            <url>https://jitpack.io</url>-->
-<!--        </repository>-->
-        <repository>
-            <id>jcef-maven</id>
-            <name>JCef Maven Repository</name>
-            <url>https://friwi.me/jcef/maven</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>jcef-maven</id>
-            <name>JCef Maven Repository</name>
-            <url>https://friwi.me/jcef/maven</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
-
 
     <dependencies>
         <dependency>
@@ -67,36 +29,6 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.jetbrains.intellij.deps.jcef/jcef -->
-<!--        <dependency>-->
-<!--            <groupId>org.jetbrains.intellij.deps.jcef</groupId>-->
-<!--            <artifactId>jcef</artifactId>-->
-<!--            <version>84.3.8-gc8a556f-chromium-84.0.4147.105-api-1.2</version>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>org.cef</groupId>
-            <artifactId>jcef</artifactId>
-            <version>84.3.8+gc8a556f+chromium-84.0.4147.105-build-16</version>
-        </dependency>
-        <dependency>
-            <groupId>org.cef</groupId>
-            <artifactId>jcef-natives-macosx64</artifactId>
-            <version>84.3.8+gc8a556f+chromium-84.0.4147.105</version>
-        </dependency>
-
-        <!--        <dependency>-->
-<!--            <groupId>org.panda-lang</groupId>-->
-<!--            <artifactId>pandomium</artifactId>-->
-<!--            <version>67.0.6</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.github.codebrig</groupId>-->
-<!--            <artifactId>journey</artifactId>-->
-<!--            <version>0.4.0-online</version>-->
-
-<!--            &lt;!&ndash; or use the offline version (includes native CEF files for all platforms; ~300MB) &ndash;&gt;-->
-<!--            &lt;!&ndash; <version>0.4.0-offline</version> &ndash;&gt;-->
-<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/com.eclipsesource.j2v8/j2v8_macosx_x86_64 -->
         <dependency>
             <groupId>com.eclipsesource.j2v8</groupId>
@@ -219,63 +151,4 @@
             <version>1.0.4</version>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>${project.artifactId}-jar-with-dependencies</finalName>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <manifestEntries>
-                                        <Main-Class>com.github.supermoonie.proxy.swing.MainFrame</Main-Class>
-                                    </manifestEntries>
-                                </transformer>
-                            </transformers>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>jcef-natives-*.jar</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.cef</groupId>
-                <artifactId>jcef-bundle-maven-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <id>mac</id>
-                        <goals>
-                            <goal>macosx64</goal>
-                        </goals>
-                        <configuration>
-                            <exportType>targz</exportType>
-                            <relocations>
-                                <relocation>${project.artifactId}-jar-with-dependencies.jar:${project.artifactId}.jar</relocation>
-                            </relocations>
-                            <mainClass>com.github.supermoonie.proxy.swing.MainFrame</mainClass>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

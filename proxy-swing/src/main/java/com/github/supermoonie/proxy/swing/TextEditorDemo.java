@@ -8,11 +8,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 
-import com.github.supermoonie.proxy.swing.gui.ProxyFrameHelper;
-import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import org.apache.commons.io.FileUtils;
-import org.fife.ui.rtextarea.*;
-import org.fife.ui.rsyntaxtextarea.*;
 
 /**
  * @author supermoonie

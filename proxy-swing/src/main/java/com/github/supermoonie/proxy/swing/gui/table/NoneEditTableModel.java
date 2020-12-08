@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.swing.gui.content;
+package com.github.supermoonie.proxy.swing.gui.table;
 
 import javax.swing.table.DefaultTableModel;
 import java.util.Vector;

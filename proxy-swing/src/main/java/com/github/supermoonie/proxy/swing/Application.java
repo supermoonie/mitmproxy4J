@@ -6,7 +6,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.gui.ProxyFrame;
+import com.github.supermoonie.proxy.swing.gui.MainFrame;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DumpHttpRequestIntercept;
@@ -36,7 +36,7 @@ public class Application {
 
     private static final String PREFS_ROOT_PATH = "/proxy-swing";
 
-    public static ProxyFrame PROXY_FRAME;
+    public static MainFrame MAIN_FRAME;
 
     public static void main(String[] args) {
         // on macOS enable screen menu bar
@@ -51,7 +51,7 @@ public class Application {
             // application specific UI defaults
             FlatLaf.registerCustomDefaultsSource("com.github.supermoonie.proxy.swing");
             // set look and feel
-            ApplicationPreferences.initLaf(args);
+            ApplicationPreferences.initLaf();
             // install inspectors
             FlatInspector.install("ctrl shift alt X");
             FlatUIDefaultsInspector.install("ctrl shift alt Y");
@@ -69,14 +69,14 @@ public class Application {
             });
             ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(80);
             ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(80);
-            PROXY_FRAME = new ProxyFrame();
-            PROXY_FRAME.setPreferredSize(new Dimension(1280, 800));
+            MAIN_FRAME = new MainFrame();
+            MAIN_FRAME.setPreferredSize(new Dimension(1280, 800));
             // show frame
-            PROXY_FRAME.pack();
-            PROXY_FRAME.setLocationRelativeTo(null);
-            PROXY_FRAME.setVisible(true);
+            MAIN_FRAME.pack();
+            MAIN_FRAME.setLocationRelativeTo(null);
+            MAIN_FRAME.setVisible(true);
 //            PROXY_FRAME.setExtendedState(PROXY_FRAME.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-            PROXY_FRAME.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            MAIN_FRAME.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         });
     }
 }

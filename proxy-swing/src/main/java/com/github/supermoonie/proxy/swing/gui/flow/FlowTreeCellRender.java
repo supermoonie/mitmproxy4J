@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.flow;
 
+import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 
 import javax.swing.*;
@@ -23,10 +24,14 @@ public class FlowTreeCellRender extends DefaultTreeCellRenderer {
         if (null != flow && flow.getFlowType().equals(FlowType.TARGET)) {
             setIcon(Objects.requireNonNullElse(flow.getIcon(), SvgIcons.ANY_TYPE));
         }
-        if (hasFocus && select) {
-            setForeground(Color.WHITE);
+        if (ThemeManager.isDark()) {
+            setForeground(Color.decode("#bbbbbb"));
         } else {
-            setForeground(Color.BLACK);
+            if (hasFocus && select) {
+                setForeground(Color.WHITE);
+            } else {
+                setForeground(Color.BLACK);
+            }
         }
         return c;
     }

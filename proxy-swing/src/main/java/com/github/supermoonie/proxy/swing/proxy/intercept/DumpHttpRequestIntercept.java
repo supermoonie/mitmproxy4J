@@ -4,8 +4,7 @@ import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.entity.Request;
-import com.github.supermoonie.proxy.swing.gui.ProxyFrame;
-import com.github.supermoonie.proxy.swing.gui.ProxyFrameHelper;
+import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
@@ -19,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.tree.TreePath;
 import java.sql.SQLException;
 
 /**
@@ -44,7 +42,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                 ctx.setUserData(req);
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        FlowList flowList = Application.PROXY_FRAME.getFlowList();
+                        FlowList flowList = Application.MAIN_FRAME.getFlowList();
                         Flow flow = new Flow();
                         flow.setRequestId(req.getId());
                         flow.setUrl(req.getUri());
@@ -54,15 +52,15 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                         }
                         flowList.add(flow);
                         flowList.updateUI();
-                        FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
+                        FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
                         rootNode.add(flow);
-                        Application.PROXY_FRAME.getFlowTree().updateUI();
+                        Application.MAIN_FRAME.getFlowTree().updateUI();
 //                        Application.PROXY_FRAME.getFlowTree().expandPath(new TreePath(rootNode.getPath()));
-                        if (ProxyFrameHelper.currentRequestId == -1
-                            || ProxyFrameHelper.currentRequestId == req.getId()) {
-                            ProxyFrameHelper.fillOverviewTab(req, null);
-                            ProxyFrameHelper.showRequestContent(req);
-                            ProxyFrameHelper.showResponseContent(req, null);
+                        if (MainFrameHelper.currentRequestId == -1
+                            || MainFrameHelper.currentRequestId == req.getId()) {
+                            MainFrameHelper.fillOverviewTab(req, null);
+                            MainFrameHelper.showRequestContent(req);
+                            MainFrameHelper.showResponseContent(req, null);
                         }
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);

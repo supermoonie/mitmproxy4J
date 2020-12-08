@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui;
 
+import com.formdev.flatlaf.FlatLaf;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.*;
@@ -7,7 +8,8 @@ import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
-import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
+import com.github.supermoonie.proxy.swing.gui.table.TableHelper;
+import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.j256.ormlite.dao.Dao;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -35,36 +37,35 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author supermoonie
  * @since 2020/12/1
  */
-public class ProxyFrameHelper {
+public class MainFrameHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(ProxyFrameHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(MainFrameHelper.class);
 
     public static volatile int currentRequestId = -1;
-    public static final AtomicReference<String> SHOWING_RESPONSE_TAB_NAME = new AtomicReference<>();
+    public static volatile boolean firstFlow = true;
 
-    private ProxyFrameHelper() {
+    private MainFrameHelper() {
         throw new UnsupportedOperationException();
     }
 
     public static Flow getSelectedFlow() {
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        JPanel selectedComponent = (JPanel) proxyFrame.getFlowTabPane().getSelectedComponent();
+        MainFrame mainFrame = Application.MAIN_FRAME;
+        JPanel selectedComponent = (JPanel) mainFrame.getFlowTabPane().getSelectedComponent();
         Flow flow;
-        if (selectedComponent.equals(proxyFrame.getStructureTab())) {
-            JTree flowTree = proxyFrame.getFlowTree();
+        if (selectedComponent.equals(mainFrame.getStructureTab())) {
+            JTree flowTree = mainFrame.getFlowTree();
             FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
             if (null == node || !node.isLeaf()) {
                 return null;
             }
             flow = (Flow) node.getUserObject();
         } else {
-            FlowList flowList = proxyFrame.getFlowList();
+            FlowList flowList = mainFrame.getFlowList();
             flow = flowList.getSelectedValue();
         }
         return flow;
@@ -74,20 +75,20 @@ public class ProxyFrameHelper {
     // -- response tab
 
     public static void showResponseContent(Request request, Response response) {
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
+        MainFrame mainFrame = Application.MAIN_FRAME;
         if (null == response) {
-            proxyFrame.getResponseTablePane().removeAll();
+            mainFrame.getResponseTablePane().removeAll();
             JPanel waitingPanel = new JPanel(new BorderLayout());
             JProgressBar progressBar = new JProgressBar();
             progressBar.setValue(0);
             progressBar.setIndeterminate(true);
             waitingPanel.add(progressBar, BorderLayout.SOUTH);
-            proxyFrame.getResponseTablePane().add("", waitingPanel);
+            mainFrame.getResponseTablePane().add("", waitingPanel);
             return;
         }
         currentRequestId = request.getId();
         try {
-            proxyFrame.getResponseTablePane().removeAll();
+            mainFrame.getResponseTablePane().removeAll();
             Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
             Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
             List<Component> responseTabs = new ArrayList<>();
@@ -100,20 +101,24 @@ public class ProxyFrameHelper {
                 content = contentDao.queryForId(response.getContentId());
             }
             fillResponseContent(response, responseHeaderList, content, responseTabs);
-            JScrollPane responseRawScrollPane = proxyFrame.getResponseRawScrollPane();
+            JScrollPane responseRawScrollPane = mainFrame.getResponseRawScrollPane();
             responseRawScrollPane.setName("Raw");
             responseTabs.add(responseRawScrollPane);
-            responseTabs.forEach(component -> proxyFrame.getResponseTablePane().add(component.getName(), component));
+            responseTabs.forEach(component -> mainFrame.getResponseTablePane().add(component.getName(), component));
+            if (firstFlow) {
+                FlatLaf.updateUI();
+            }
+            firstFlow = false;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
     }
 
     private static void fillResponseContent(Response response, List<Header> responseHeaderList, Content content, List<Component> responseTabs) {
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        JTextArea responseTextArea = proxyFrame.getResponseTextArea();
-        RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
-        JTextArea responseRawArea = proxyFrame.getResponseRawArea();
+        MainFrame mainFrame = Application.MAIN_FRAME;
+        JTextArea responseTextArea = mainFrame.getResponseTextArea();
+        RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
+        JTextArea responseRawArea = mainFrame.getResponseRawArea();
         responseTextArea.setText("");
         responseCodeArea.setText("");
         responseRawArea.setText("");
@@ -154,24 +159,24 @@ public class ProxyFrameHelper {
                 ImageIcon image = new ImageIcon(content.getRawContent());
                 JLabel label = new JLabel();
                 label.setIcon(image);
-                JPanel responseImagePane = proxyFrame.getResponseImagePane();
+                JPanel responseImagePane = mainFrame.getResponseImagePane();
                 responseImagePane.removeAll();
                 responseImagePane.add(new JLabel(image.getIconWidth() + " x " + image.getIconHeight()), BorderLayout.NORTH);
                 responseImagePane.add(label, BorderLayout.WEST);
-                JScrollPane responseImageScrollPane = proxyFrame.getResponseImageScrollPane();
+                JScrollPane responseImageScrollPane = mainFrame.getResponseImageScrollPane();
                 responseImageScrollPane.setBorder(new EmptyBorder(5, 1, 5, 5));
                 responseImageScrollPane.setName("Image");
                 responseTabs.add(responseImageScrollPane);
             }
             if (null != title) {
-                JScrollPane responseTextAreaScrollPane = proxyFrame.getResponseTextAreaScrollPane();
+                JScrollPane responseTextAreaScrollPane = mainFrame.getResponseTextAreaScrollPane();
                 responseTextAreaScrollPane.setName("Text");
                 responseTabs.add(responseTextAreaScrollPane);
-                proxyFrame.getResponseTextArea().setCaretPosition(0);
-                JPanel responseCodePane = proxyFrame.getResponseCodePane();
+                mainFrame.getResponseTextArea().setCaretPosition(0);
+                JPanel responseCodePane = mainFrame.getResponseCodePane();
                 responseCodePane.setName(title);
                 responseTabs.add(responseCodePane);
-                proxyFrame.getResponseCodeArea().setCaretPosition(0);
+                mainFrame.getResponseCodeArea().setCaretPosition(0);
             }
         }
         responseRawArea.setText(raw.toString());
@@ -179,12 +184,12 @@ public class ProxyFrameHelper {
     }
 
     private static void fillResponseHeader(List<Header> headerList, List<Component> responseTabs) {
-        JTable responseHeaderTable = Application.PROXY_FRAME.getResponseHeaderTable();
+        JTable responseHeaderTable = Application.MAIN_FRAME.getResponseHeaderTable();
         resetHeaderTable(headerList, responseHeaderTable);
-        JScrollPane responseHeaderScrollPane = Application.PROXY_FRAME.getResponseHeaderScrollPane();
+        JScrollPane responseHeaderScrollPane = Application.MAIN_FRAME.getResponseHeaderScrollPane();
         responseHeaderScrollPane.setName("Header");
         responseTabs.add(responseHeaderScrollPane);
-        fitTableColumns(responseHeaderTable);
+        TableHelper.fitTableColumns(responseHeaderTable);
     }
     // -- response tab
 
@@ -199,9 +204,9 @@ public class ProxyFrameHelper {
                     .eq(Header.REQUEST_ID_FIELD_NAME, request.getId()).and()
                     .isNull(Header.RESPONSE_ID_FIELD_NAME).query();
             Content requestContent = contentDao.queryForId(request.getContentId());
-            ProxyFrame proxyFrame = Application.PROXY_FRAME;
+            MainFrame mainFrame = Application.MAIN_FRAME;
             // 清除Request的所有Tab
-            proxyFrame.getRequestTablePane().removeAll();
+            mainFrame.getRequestTablePane().removeAll();
             List<Component> requestTabs = new ArrayList<>();
             // 填充Request的Header Tab
             fillRequestHeader(requestHeaderList, requestTabs);
@@ -209,24 +214,27 @@ public class ProxyFrameHelper {
             fillRequestQuery(request, requestTabs);
             // 填充Request的Form Tab 以及Raw Tab
             fillRequestForm(request, requestHeaderList, requestContent, requestTabs);
-            JScrollPane requestRawScrollPane = proxyFrame.getRequestRawScrollPane();
+            JScrollPane requestRawScrollPane = mainFrame.getRequestRawScrollPane();
             requestRawScrollPane.setName("Raw");
             requestTabs.add(requestRawScrollPane);
-            requestTabs.forEach(component -> proxyFrame.getRequestTablePane().add(component.getName(), component));
+            requestTabs.forEach(component -> mainFrame.getRequestTablePane().add(component.getName(), component));
+            if (firstFlow) {
+                FlatLaf.updateUI();
+            }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
     }
 
     private static void fillRequestHeader(List<Header> headerList, List<Component> requestTabs) {
-        JTable requestHeaderTable = Application.PROXY_FRAME.getRequestHeaderTable();
+        JTable requestHeaderTable = Application.MAIN_FRAME.getRequestHeaderTable();
         // 重新加载Header
         resetHeaderTable(headerList, requestHeaderTable);
-        JScrollPane requestHeaderScrollPane = Application.PROXY_FRAME.getRequestHeaderScrollPane();
+        JScrollPane requestHeaderScrollPane = Application.MAIN_FRAME.getRequestHeaderScrollPane();
         requestHeaderScrollPane.setName("Header");
         requestTabs.add(requestHeaderScrollPane);
         // Table 宽度自适应
-        fitTableColumns(requestHeaderTable);
+        TableHelper.fitTableColumns(requestHeaderTable);
     }
 
     private static void fillRequestQuery(Request request, List<Component> requestTabs) {
@@ -238,8 +246,8 @@ public class ProxyFrameHelper {
             return;
         }
         String query = uri.getQuery();
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        DefaultTableModel model = (DefaultTableModel) proxyFrame.getRequestQueryTable().getModel();
+        MainFrame mainFrame = Application.MAIN_FRAME;
+        DefaultTableModel model = (DefaultTableModel) mainFrame.getRequestQueryTable().getModel();
         int rowCount = model.getRowCount();
         for (int i = rowCount - 1; i >= 0; i--) {
             model.removeRow(i);
@@ -247,26 +255,26 @@ public class ProxyFrameHelper {
         if (null == query) {
             return;
         }
-        JScrollPane requestQueryScrollPane = proxyFrame.getRequestQueryScrollPane();
+        JScrollPane requestQueryScrollPane = mainFrame.getRequestQueryScrollPane();
         requestQueryScrollPane.setName("Query");
         requestTabs.add(requestQueryScrollPane);
         List<String[]> queryList = splitQuery(query);
         for (String[] q : queryList) {
             model.addRow(q);
         }
-        fitTableColumns(proxyFrame.getRequestQueryTable());
+        TableHelper.fitTableColumns(mainFrame.getRequestQueryTable());
     }
 
     private static void fillRequestForm(Request request, List<Header> requestHeaderList, Content requestContent, List<Component> requestTabs) {
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        DefaultTableModel requestFormModel = (DefaultTableModel) proxyFrame.getRequestFormTable().getModel();
+        MainFrame mainFrame = Application.MAIN_FRAME;
+        DefaultTableModel requestFormModel = (DefaultTableModel) mainFrame.getRequestFormTable().getModel();
         // 清除FormTab、TextTab、JSONTab中的数据
         int rowCount = requestFormModel.getRowCount();
         for (int i = rowCount - 1; i >= 0; i--) {
             requestFormModel.removeRow(i);
         }
-        JTextArea requestContentTextArea = proxyFrame.getRequestContentTextArea();
-        RSyntaxTextArea requestJsonArea = proxyFrame.getRequestJsonArea();
+        JTextArea requestContentTextArea = mainFrame.getRequestContentTextArea();
+        RSyntaxTextArea requestJsonArea = mainFrame.getRequestJsonArea();
         requestContentTextArea.setText("");
         requestJsonArea.setText("");
         if (null == request.getContentType()) {
@@ -274,7 +282,7 @@ public class ProxyFrameHelper {
             fillRequestRaw(request, requestHeaderList, null);
             return;
         }
-        JScrollPane requestContentTextScrollPane = proxyFrame.getRequestContentTextScrollPane();
+        JScrollPane requestContentTextScrollPane = mainFrame.getRequestContentTextScrollPane();
         requestContentTextScrollPane.setName("Text");
         requestTabs.add(requestContentTextScrollPane);
         String contentType = request.getContentType().toLowerCase();
@@ -283,7 +291,7 @@ public class ProxyFrameHelper {
                 fillRequestRaw(request, requestHeaderList, null);
                 return;
             }
-            JScrollPane requestFormScrollPane = proxyFrame.getRequestFormScrollPane();
+            JScrollPane requestFormScrollPane = mainFrame.getRequestFormScrollPane();
             requestFormScrollPane.setName("Form");
             requestTabs.add(requestFormScrollPane);
             String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
@@ -299,10 +307,10 @@ public class ProxyFrameHelper {
                 fillRequestRaw(request, requestHeaderList, null);
                 return;
             }
-            RTextScrollPane requestJsonScrollPane = proxyFrame.getRequestJsonScrollPane();
+            RTextScrollPane requestJsonScrollPane = mainFrame.getRequestJsonScrollPane();
             requestJsonScrollPane.setName("JSON");
             requestTabs.add(requestJsonScrollPane);
-            proxyFrame.getRequestJsonArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+            mainFrame.getRequestJsonArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
             String body = new String(requestContent.getRawContent(), StandardCharsets.UTF_8);
             requestContentTextArea.setText(body);
             requestContentTextArea.setCaretPosition(0);
@@ -330,7 +338,7 @@ public class ProxyFrameHelper {
     }
 
     private static void fillRequestRaw(Request request, List<Header> requestHeaderList, String body) {
-        JTextArea requestRawArea = Application.PROXY_FRAME.getRequestRawArea();
+        JTextArea requestRawArea = Application.MAIN_FRAME.getRequestRawArea();
         requestRawArea.setText("");
         StringBuilder raw = new StringBuilder();
         raw.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
@@ -350,14 +358,14 @@ public class ProxyFrameHelper {
 
     public static void fillOverviewTab(Request request, Response response) {
         if (currentRequestId == -1) {
-            FilterKeyListener.setTreeExpandedState(Application.PROXY_FRAME.getFlowTree(), true);
-            FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
+            FilterKeyListener.setTreeExpandedState(Application.MAIN_FRAME.getFlowTree(), true);
+            FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
             FlowTreeNode leaf = rootNode.findLeaf(rootNode, request.getId());
-            Application.PROXY_FRAME.getFlowTree().setSelectionPath(new TreePath(leaf.getPath()));
+            Application.MAIN_FRAME.getFlowTree().setSelectionPath(new TreePath(leaf.getPath()));
         }
         currentRequestId = request.getId();
-        ListTreeTableNode root = Application.PROXY_FRAME.getOverviewTreeTableRoot();
-        DefaultTreeTableModel model = Application.PROXY_FRAME.getOverviewTreeTableModel();
+        ListTreeTableNode root = Application.MAIN_FRAME.getOverviewTreeTableRoot();
+        DefaultTreeTableModel model = Application.MAIN_FRAME.getOverviewTreeTableModel();
         int childCount = model.getChildCount(root);
         for (int i = childCount - 1; i >= 0; i--) {
             model.removeNodeFromParent((MutableTreeTableNode) root.getChildAt(i));
@@ -377,7 +385,7 @@ public class ProxyFrameHelper {
             model.insertNodeInto(new ListTreeTableNode("Client Address", connectionOverview.getClientHost() + ":" + connectionOverview.getClientPort()), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Remote IP", Objects.requireNonNullElse(connectionOverview.getRemoteIp(), "-")), root, index++);
             model.insertNodeInto(new ListTreeTableNode("DNS", Objects.requireNonNullElse(connectionOverview.getDnsServer(), "-")), root, index++);
-            ListTreeTableNode tlsNode = new ListTreeTableNode("TLS", null == response ? "-" : connectionOverview.getServerProtocol() + " (" + connectionOverview.getServerCipherSuite() + ")");
+            ListTreeTableNode tlsNode = new ListTreeTableNode("TLS", null == response || null == connectionOverview.getServerProtocol() ? "-" : connectionOverview.getServerProtocol() + " (" + connectionOverview.getServerCipherSuite() + ")");
             ListTreeTableNode timingNode = new ListTreeTableNode("Timing", "");
             model.insertNodeInto(tlsNode, root, index++);
             model.insertNodeInto(timingNode, root, index);
@@ -476,26 +484,6 @@ public class ProxyFrameHelper {
         }
         for (Header header : headerList) {
             model.addRow(new String[]{header.getName(), header.getValue()});
-        }
-    }
-
-    public static void fitTableColumns(JTable myTable) {
-        JTableHeader header = myTable.getTableHeader();
-        int rowCount = myTable.getRowCount();
-        Enumeration<TableColumn> columns = myTable.getColumnModel().getColumns();
-        while (columns.hasMoreElements()) {
-            TableColumn column = columns.nextElement();
-            int col = header.getColumnModel().getColumnIndex(column.getIdentifier());
-            int width = (int) myTable.getTableHeader().getDefaultRenderer()
-                    .getTableCellRendererComponent(myTable, column.getIdentifier()
-                            , false, false, -1, col).getPreferredSize().getWidth();
-            for (int row = 0; row < rowCount; row++) {
-                int preferredWidth = (int) myTable.getCellRenderer(row, col).getTableCellRendererComponent(myTable,
-                        myTable.getValueAt(row, col), false, false, row, col).getPreferredSize().getWidth();
-                width = Math.max(width, preferredWidth);
-            }
-            header.setResizingColumn(column); // 此行很重要
-            column.setWidth(width + myTable.getIntercellSpacing().width + 10);
         }
     }
 }

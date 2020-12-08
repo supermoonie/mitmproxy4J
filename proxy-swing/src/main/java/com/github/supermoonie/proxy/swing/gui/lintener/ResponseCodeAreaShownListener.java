@@ -4,8 +4,8 @@ import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Content;
 import com.github.supermoonie.proxy.swing.entity.Response;
-import com.github.supermoonie.proxy.swing.gui.ProxyFrame;
-import com.github.supermoonie.proxy.swing.gui.ProxyFrameHelper;
+import com.github.supermoonie.proxy.swing.gui.MainFrame;
+import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.prettify.JavascriptBeautifierForJava;
 import com.j256.ormlite.dao.Dao;
@@ -42,9 +42,9 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
 
     @Override
     public void componentShown(ComponentEvent e) {
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
-        Flow flow = ProxyFrameHelper.getSelectedFlow();
+        MainFrame mainFrame = Application.MAIN_FRAME;
+        RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
+        Flow flow = MainFrameHelper.getSelectedFlow();
         if (null == flow || null == flow.getResponseId() || null == flow.getContentType()) {
             responseCodeArea.setText(null);
             log.info("flow is null");
@@ -82,9 +82,9 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
     }
 
     private void prettifyAndShow(String style, Content content) {
-        ProxyFrame proxyFrame = Application.PROXY_FRAME;
-        JPanel responseCodePane = proxyFrame.getResponseCodePane();
-        RSyntaxTextArea responseCodeArea = proxyFrame.getResponseCodeArea();
+        MainFrame mainFrame = Application.MAIN_FRAME;
+        JPanel responseCodePane = mainFrame.getResponseCodePane();
+        RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
         responseCodePane.removeAll();
         responseCodePane.add(processBar, BorderLayout.SOUTH);
         processBar.setValue(0);

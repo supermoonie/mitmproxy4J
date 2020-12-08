@@ -1,7 +1,9 @@
 package com.github.supermoonie.proxy.swing;
 
-import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.Locale;
@@ -13,13 +15,9 @@ import java.util.prefs.Preferences;
  */
 public class ApplicationPreferences {
 
-    public static final String KEY_LAF = "laf";
-    public static final String KEY_LAF_THEME = "lafTheme";
+    private final static Logger log = LoggerFactory.getLogger(ApplicationPreferences.class);
 
-    public static final String RESOURCE_PREFIX = "res:";
-    public static final String FILE_PREFIX = "file:";
-
-    public static final String THEME_UI_KEY = "__FlatLaf.proxy.theme";
+    public static final String KEY_IS_DARK_THEME = "isDarkTheme";
 
     private static Preferences state;
 
@@ -27,25 +25,23 @@ public class ApplicationPreferences {
         state = Preferences.userRoot().node(rootPath);
     }
 
-    public static void initLaf(String[] args) {
+    public static void initLaf() {
         // set look and feel
         try {
-            FlatDarkLaf.install();
-            FlatLightLaf.install();
-            Locale.setDefault(Locale.ENGLISH);
-            String lafClassName = state.get(KEY_LAF, FlatLightLaf.class.getName());
-            UIManager.setLookAndFeel(lafClassName);
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-            // fallback
-            FlatLightLaf.install();
-        }
-
-        // remember active look and feel
-        UIManager.addPropertyChangeListener(e -> {
-            if ("lookAndFeel".equals(e.getPropertyName())) {
-                state.put(KEY_LAF, UIManager.getLookAndFeel().getClass().getName());
+            ThemeManager.install();
+            boolean isDarkTheme = state.getBoolean(KEY_IS_DARK_THEME, false);
+            if (isDarkTheme) {
+                ThemeManager.setDarkLookFeel();
+            } else {
+                ThemeManager.setLightLookFeel();
             }
-        });
+            Locale.setDefault(Locale.ENGLISH);
+        } catch (Throwable e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public static Preferences getState() {
+        return state;
     }
 }

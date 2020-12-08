@@ -3,15 +3,16 @@ package com.github.supermoonie.proxy.swing.gui;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
-import com.github.supermoonie.proxy.swing.gui.content.NoneEditTableModel;
+import com.github.supermoonie.proxy.swing.ThemeManager;
+import com.github.supermoonie.proxy.swing.gui.panel.SendRequestDialog;
+import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
-import com.github.supermoonie.proxy.swing.gui.overview.ListTreeTableNode;
+import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
@@ -20,30 +21,29 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
+import java.awt.event.*;
 import java.util.List;
 
 /**
  * @author supermoonie
  * @date 2020-11-21
  */
-public class ProxyFrame extends JFrame {
+public class MainFrame extends JFrame {
 
+    // 菜单栏
     private JCheckBoxMenuItem recordMenuItem;
     private JCheckBoxMenuItem throttlingMenuItem;
     private JCheckBoxMenuItem remoteMapMenuItem;
     private JCheckBoxMenuItem blockListMenuItem;
     private JCheckBoxMenuItem allowListMenuItem;
 
+    // Flow 显示的两种形式
     private JPanel structureTab;
     private JPanel sequenceTab;
-
+    // Tree 的根结点
     private final FlowTreeNode rootNode = new FlowTreeNode();
     private final JTree flowTree = new JTree(rootNode);
+    // List 容器
     private final FlowList flowList = new FlowList(new FilterListModel<>());
 
     private ListTreeTableNode overviewTreeTableRoot;
@@ -77,7 +77,7 @@ public class ProxyFrame extends JFrame {
     private JPanel responseImagePane;
 
 
-    public ProxyFrame() {
+    public MainFrame() {
         setTitle("Lightning:10801");
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
@@ -96,37 +96,22 @@ public class ProxyFrame extends JFrame {
     private void initSplitPanel() {
         JPanel container = new JPanel(new BorderLayout());
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerSize(2);
         splitPane.setDividerLocation(200);
+        JPanel flowPanel = initLeftFlowPanel();
+        JPanel flowDetailPanel = initRightFlowDetailPanel();
+        splitPane.setLeftComponent(flowPanel);
+        splitPane.setRightComponent(flowDetailPanel);
+        container.add(splitPane, BorderLayout.CENTER);
+        getContentPane().add(container, BorderLayout.CENTER);
+    }
 
-        // Flow panel
-        JPanel flowPanel = new JPanel();
-        flowPanel.setMinimumSize(new Dimension(200, 0));
-        flowPanel.setLayout(new BorderLayout());
-        JTextField filter = new JTextField();
-        filter.addKeyListener(new FilterKeyListener(filter));
-        flowPanel.add(filter, BorderLayout.NORTH);
-        // Flow table panel
-        flowTabPane = new JTabbedPane();
-        // Structure tab
-        structureTab = new JPanel(new BorderLayout());
-        structureTab.setMinimumSize(new Dimension(100, 0));
-        structureTab.add(new JScrollPane(flowTree), BorderLayout.CENTER);
-        flowTree.setRootVisible(false);
-        flowTree.setShowsRootHandles(true);
-        flowTree.setCellRenderer(new FlowTreeCellRender());
-        flowTree.addMouseListener(new FlowMouseListener());
-        // Sequence tab
-        sequenceTab = new JPanel(new BorderLayout());
-        sequenceTab.setMinimumSize(new Dimension(100, 0));
-        flowList.setCellRenderer(new FlowListCellRenderer());
-        flowList.addMouseListener(new FlowMouseListener());
-        sequenceTab.add(new JScrollPane(flowList), BorderLayout.CENTER);
-        flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
-        flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
-        flowPanel.add(flowTabPane, BorderLayout.CENTER);
-
-        // Flow detail panel
+    /**
+     * 初始化右侧面板
+     *
+     * @return {@link JPanel}
+     */
+    private JPanel initRightFlowDetailPanel() {
+        // Flow detail 容器
         JPanel detailPanel = new JPanel();
         detailPanel.setLayout(new BorderLayout());
         JTabbedPane flowDetailTablePane = new JTabbedPane();
@@ -154,6 +139,7 @@ public class ProxyFrame extends JFrame {
         overviewTreeTable.setRootVisible(false);
         overviewTab.add(overviewScrollPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Overview", overviewTab);
+        // Content tab
         JPanel contentTab = new JPanel(new BorderLayout());
         JSplitPane contentSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         requestTablePane = new JTabbedPane();
@@ -169,14 +155,6 @@ public class ProxyFrame extends JFrame {
         requestContentTextArea.setEditable(false);
         requestContentTextScrollPane = new JScrollPane(requestContentTextArea);
         requestJsonArea = new RSyntaxTextArea();
-        Theme theme;
-        try {
-            theme = Theme.load(getClass().getResourceAsStream("/com/github/supermoonie/proxy/swing/light.xml"));
-            theme.apply(requestJsonArea);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            return;
-        }
         requestJsonArea.setCodeFoldingEnabled(true);
         requestJsonArea.setEditable(false);
         requestJsonScrollPane = new RTextScrollPane(requestJsonArea);
@@ -193,7 +171,6 @@ public class ProxyFrame extends JFrame {
         responseCodeArea = new RSyntaxTextArea();
         responseCodeArea.setCodeFoldingEnabled(true);
         responseCodeArea.setEditable(false);
-        theme.apply(responseCodeArea);
         responseCodePane = new JPanel(new BorderLayout());
         responseCodePane.add(new RTextScrollPane(responseCodeArea));
         responseCodePane.addComponentListener(new ResponseCodeAreaShownListener());
@@ -208,10 +185,42 @@ public class ProxyFrame extends JFrame {
         contentTab.add(contentSplitPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Content", contentTab);
         detailPanel.add(flowDetailTablePane, BorderLayout.CENTER);
-        splitPane.setLeftComponent(flowPanel);
-        splitPane.setRightComponent(detailPanel);
-        container.add(splitPane, BorderLayout.CENTER);
-        getContentPane().add(container, BorderLayout.CENTER);
+        return detailPanel;
+    }
+
+    /**
+     * 初始化左侧面板
+     *
+     * @return {@link JPanel}
+     */
+    private JPanel initLeftFlowPanel() {
+        // 左侧Flow panel
+        JPanel flowPanel = new JPanel();
+        flowPanel.setMinimumSize(new Dimension(200, 0));
+        flowPanel.setLayout(new BorderLayout());
+        JTextField filter = new JTextField();
+        filter.addKeyListener(new FilterKeyListener(filter));
+        flowPanel.add(filter, BorderLayout.NORTH);
+        // Tab容器
+        flowTabPane = new JTabbedPane();
+        // Structure tab
+        structureTab = new JPanel(new BorderLayout());
+        structureTab.setMinimumSize(new Dimension(100, 0));
+        structureTab.add(new JScrollPane(flowTree), BorderLayout.CENTER);
+        flowTree.setRootVisible(false);
+        flowTree.setShowsRootHandles(true);
+        flowTree.setCellRenderer(new FlowTreeCellRender());
+        flowTree.addMouseListener(new FlowMouseListener());
+        // Sequence tab
+        sequenceTab = new JPanel(new BorderLayout());
+        sequenceTab.setMinimumSize(new Dimension(100, 0));
+        flowList.setCellRenderer(new FlowListCellRenderer());
+        flowList.addMouseListener(new FlowMouseListener());
+        sequenceTab.add(new JScrollPane(flowList), BorderLayout.CENTER);
+        flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
+        flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
+        flowPanel.add(flowTabPane, BorderLayout.CENTER);
+        return flowPanel;
     }
 
 
@@ -233,7 +242,8 @@ public class ProxyFrame extends JFrame {
                 overviewTreeTableModel.removeNodeFromParent((MutableTreeTableNode) overviewTreeTableRoot.getChildAt(i));
             }
             flowTree.updateUI();
-            ProxyFrameHelper.currentRequestId = -1;
+            MainFrameHelper.currentRequestId = -1;
+            MainFrameHelper.firstFlow = true;
         });
         JButton editButton = new JButton();
         editButton.setToolTipText("Edit");
@@ -335,7 +345,7 @@ public class ProxyFrame extends JFrame {
         jsonViewerMenuItem.addActionListener(e -> saveAsActionPerformed());
         toolsMenu.add(jsonViewerMenuItem);
         JMenuItem sendRequestMenuItem = new JMenuItem("Send Request");
-        sendRequestMenuItem.addActionListener(e -> saveAsActionPerformed());
+        sendRequestMenuItem.addActionListener(e -> new SendRequestDialog(this, "Send Request", true));
         toolsMenu.add(sendRequestMenuItem);
 
         // Help menu
@@ -345,7 +355,13 @@ public class ProxyFrame extends JFrame {
         helpMenu.add(downloadRootCertificateMenuItem);
         helpMenu.add(new JSeparator());
         JMenuItem aboutMenuItem = new JMenuItem("About");
-        aboutMenuItem.addActionListener(e -> saveAsActionPerformed());
+        aboutMenuItem.addActionListener(e -> {
+            if (ThemeManager.isDark()) {
+                ThemeManager.setLightLookFeel();
+            } else {
+                ThemeManager.setDarkLookFeel();
+            }
+        });
         helpMenu.add(aboutMenuItem);
 
         menuBar.add(fileMenu);

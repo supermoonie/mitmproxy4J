@@ -43,9 +43,9 @@ public class FilterKeyListener extends KeyAdapter {
             String text = filterField.getText();
             filter = flow -> flow.getUrl().contains(text);
             try {
-                FlowList flowList = Application.PROXY_FRAME.getFlowList();
+                FlowList flowList = Application.MAIN_FRAME.getFlowList();
                 flowList.filter(filter);
-                FlowTreeNode rootNode = Application.PROXY_FRAME.getRootNode();
+                FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
                 rootNode.removeAllChildren();
                 flowList.clear();
                 Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
@@ -76,8 +76,8 @@ public class FilterKeyListener extends KeyAdapter {
                     }
                 }
                 flowList.updateUI();
-                setTreeExpandedState(Application.PROXY_FRAME.getFlowTree(), true);
-                Application.PROXY_FRAME.getFlowTree().updateUI();
+                setTreeExpandedState(Application.MAIN_FRAME.getFlowTree(), true);
+                Application.MAIN_FRAME.getFlowTree().updateUI();
             } catch (SQLException | URISyntaxException ex) {
                 ex.printStackTrace();
             }

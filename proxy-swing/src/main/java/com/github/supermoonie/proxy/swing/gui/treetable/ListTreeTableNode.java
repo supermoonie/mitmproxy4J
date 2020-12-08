@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.swing.gui.overview;
+package com.github.supermoonie.proxy.swing.gui.treetable;
 
 import org.jdesktop.swingx.treetable.AbstractMutableTreeTableNode;
 
