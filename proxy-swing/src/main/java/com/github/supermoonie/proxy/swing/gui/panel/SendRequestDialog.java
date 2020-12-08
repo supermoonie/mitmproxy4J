@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
+import com.github.supermoonie.proxy.swing.gui.table.CurdTable;
 import com.github.supermoonie.proxy.swing.gui.table.TableHelper;
 
 import javax.swing.*;
@@ -37,19 +38,16 @@ public class SendRequestDialog extends JDialog {
         super.add(northPanel, BorderLayout.NORTH);
         // center panel
         JTabbedPane centerPane = new JTabbedPane();
-        JTable queryTable = new JTable(new DefaultTableModel(new Object[][]{
-                {true, "foo", "bar"},
-                {false, "abc", "123"}
-        }, new String[]{"", "Name", "Value"}) {
-            final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class};
+        JTable queryTable = new CurdTable(new DefaultTableModel(new Object[][]{
+                {"foo", "bar", "Del"},
+                {"abc", "123", "Del"}
+        }, new String[]{"Name", "Value", ""}) {
+            final Class<?>[] columnTypes = new Class<?>[]{String.class, String.class, Object.class};
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 return columnTypes[columnIndex];
             }
         });
-        TableColumn column = queryTable.getColumnModel().getColumn(0);
-        queryTable.getTableHeader().setResizingColumn(column);
-        column.setWidth(50);
         JScrollPane queryScrollPane = new JScrollPane(queryTable);
         centerPane.add("Query", queryScrollPane);
         JTable headerTable = new JTable(new DefaultTableModel(null, new String[]{"Name", "Value"}));
