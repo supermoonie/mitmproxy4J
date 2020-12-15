@@ -54,34 +54,30 @@ public class ThemeManager {
      * 设置明亮主题
      */
     public static void setLightLookFeel() {
-        EventQueue.invokeLater(() -> {
-            FlatAnimatedLafChange.showSnapshot();
-            try {
-                UIManager.setLookAndFeel(FlatLightLaf.class.getName());
-                dark = false;
-            } catch (Exception ignore) {
+        FlatAnimatedLafChange.showSnapshot();
+        try {
+            UIManager.setLookAndFeel(FlatLightLaf.class.getName());
+            dark = false;
+        } catch (Exception ignore) {
 
-            }
-            FlatLaf.updateUI();
-            FlatAnimatedLafChange.hideSnapshotWithAnimation();
-        });
+        }
+        FlatLaf.updateUI();
+        FlatAnimatedLafChange.hideSnapshotWithAnimation();
     }
 
     /**
      * 设置黑暗主题
      */
     public static void setDarkLookFeel() {
-        EventQueue.invokeLater(() -> {
-            FlatAnimatedLafChange.showSnapshot();
-            try {
-                UIManager.setLookAndFeel(FlatDarkLaf.class.getName());
-                dark = true;
-            } catch (Exception ignore) {
+        FlatAnimatedLafChange.showSnapshot();
+        try {
+            UIManager.setLookAndFeel(FlatDarkLaf.class.getName());
+            dark = true;
+        } catch (Exception ignore) {
 
-            }
-            FlatLaf.updateUI();
-            FlatAnimatedLafChange.hideSnapshotWithAnimation();
-        });
+        }
+        FlatLaf.updateUI();
+        FlatAnimatedLafChange.hideSnapshotWithAnimation();
     }
 
     public static boolean isDark() {

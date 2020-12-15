@@ -1,47 +1,51 @@
 package com.github.supermoonie.proxy.swing.gui.table;
 
-import com.github.supermoonie.proxy.swing.ThemeManager;
-
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
+import java.util.Vector;
 
 /**
  * @author supermoonie
- * @since 2020/12/7
+ * @since 2020/12/9
  */
 public class CurdTable extends JTable {
 
-    public CurdTable(TableModel dm) {
-        super(dm);
-        super.setShowHorizontalLines(true);
-        super.setShowVerticalLines(true);
-        super.setRowSelectionAllowed(true);
-        super.setColumnSelectionAllowed(true);
-        int columnCount = super.getColumnModel().getColumnCount();
-        super.setDefaultRenderer(Object.class, new BorderLessTableCellRenderer());
-        TableColumn lastColumn = super.getColumnModel().getColumn(columnCount - 1);
-        lastColumn.setCellRenderer(new ButtonRenderer());
-        lastColumn.setCellEditor(new ButtonEditor(new JCheckBox()));
-        super.getColumnModel().getColumn(0).setPreferredWidth(600);
-        super.getColumnModel().getColumn(1).setPreferredWidth(600);
-        lastColumn.setPreferredWidth(200);
-        getModel().addTableModelListener(e -> {
-            if ((e.getLastRow() + 1) == getModel().getRowCount()) {
-                addRow();
-            }
-        });
-        ((DefaultTableModel) getModel()).addRow(new Object[]{"", "", "Del"});
+    public CurdTable() {
     }
 
-    private void addRow() {
+    public CurdTable(TableModel dm) {
+        super(dm);
+    }
+
+    public CurdTable(TableModel dm, TableColumnModel cm) {
+        super(dm, cm);
+    }
+
+    public CurdTable(TableModel dm, TableColumnModel cm, ListSelectionModel sm) {
+        super(dm, cm, sm);
+    }
+
+    public CurdTable(int numRows, int numColumns) {
+        super(numRows, numColumns);
+    }
+
+    public CurdTable(Vector<? extends Vector> rowData, Vector<?> columnNames) {
+        super(rowData, columnNames);
+    }
+
+    public CurdTable(Object[][] rowData, Object[] columnNames) {
+        super(rowData, columnNames);
+    }
+
+    protected void addRow() {
         int rowCount = getModel().getRowCount();
         int columnCount = getModel().getColumnCount();
         boolean addFlag = false;
         if (rowCount > 0) {
             for (int i = 0; i < columnCount - 1; i++) {
                 Object value = getModel().getValueAt(rowCount - 1, i);
-                if (!value.toString().equals("")) {
+                if (null == value || !value.toString().equals("")) {
                     addFlag = true;
                     break;
                 }
@@ -50,41 +54,21 @@ public class CurdTable extends JTable {
             addFlag = true;
         }
         if (addFlag) {
-            ((DefaultTableModel) getModel()).addRow(new Object[]{"", "", "Del"});
-        }
-    }
-
-    static class BorderLessTableCellRenderer extends DefaultTableCellRenderer {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public Component getTableCellRendererComponent(
-                final JTable table,
-                final Object value,
-                final boolean isSelected,
-                final boolean hasFocus,
-                final int row,
-                final int col) {
-            return super.getTableCellRendererComponent(
-                    table,
-                    value,
-                    isSelected,
-                    false,
-                    row,
-                    col
-            );
+            Object[] rowData = new Object[columnCount];
+            for (int i = 0; i < columnCount - 1; i ++) {
+                rowData[i] = "";
+            }
+            rowData[columnCount - 1] = "Del";
+            ((DefaultTableModel) getModel()).addRow(rowData);
         }
     }
 
     static class ButtonRenderer extends JButton implements TableCellRenderer {
 
-        public ButtonRenderer() {
+        public ButtonRenderer(String text) {
             setOpaque(true);
-            if (ThemeManager.isDark()) {
-                setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.decode("#5e6364")));
-            } else {
-                setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.decode("#f7f7f7")));
-            }
+            setText(text);
+            setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Table.gridColor")));
         }
 
         @Override
@@ -94,24 +78,23 @@ public class CurdTable extends JTable {
                 setForeground(table.getSelectionForeground());
                 setBackground(table.getSelectionBackground());
             } else {
-                setForeground(Color.decode("#0095ff"));
-                setBackground(UIManager.getColor("Button.background"));
+                setBackground(UIManager.getColor("Table.background"));
             }
             setText((value == null) ? "" : value.toString());
-            int columnCount = table.getModel().getColumnCount();
-            for (int i = 0; i < columnCount - 1; i++) {
+            for (int i = 0; i < 2; i++) {
                 Object v = table.getModel().getValueAt(row, i);
                 if (null != v && !v.toString().equals("")) {
                     this.setEnabled(true);
+                    setForeground(Color.decode("#0095ff"));
                     return this;
                 }
             }
-            this.setEnabled(false);
+            setForeground(Color.GRAY);
             return this;
         }
     }
 
-    class ButtonEditor extends DefaultCellEditor {
+    protected class ButtonEditor extends DefaultCellEditor {
         protected JButton button;
 
         private String label;
@@ -123,6 +106,9 @@ public class CurdTable extends JTable {
             button.addActionListener(e -> {
                 fireEditingStopped();
                 int selectedRow = CurdTable.this.getSelectedRow();
+                if (-1 == selectedRow) {
+                    return;
+                }
                 ((DefaultTableModel) CurdTable.this.getModel()).removeRow(selectedRow);
                 CurdTable.this.clearSelection();
                 addRow();
@@ -158,5 +144,4 @@ public class CurdTable extends JTable {
             super.fireEditingStopped();
         }
     }
-
 }
