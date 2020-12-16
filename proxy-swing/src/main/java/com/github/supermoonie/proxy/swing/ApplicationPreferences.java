@@ -28,8 +28,8 @@ public class ApplicationPreferences {
     public static void initLaf() {
         // set look and feel
         try {
-            ThemeManager.install();
             boolean isDarkTheme = state.getBoolean(KEY_IS_DARK_THEME, false);
+            ThemeManager.install(isDarkTheme);
             if (isDarkTheme) {
                 ThemeManager.setDarkLookFeel();
             } else {

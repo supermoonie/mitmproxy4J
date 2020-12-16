@@ -25,7 +25,7 @@ public class ThemeManager {
     /**
      * 加载主题
      */
-    public static void install() {
+    public static void install(boolean dark) {
         FlatDarkLaf.install();
         FlatLightLaf.install();
         try {
@@ -34,6 +34,7 @@ public class ThemeManager {
         } catch (IOException ignore) {
             // never
         }
+        ThemeManager.dark = dark;
         // remember active look and feel
         UIManager.addPropertyChangeListener(e -> {
             if ("lookAndFeel".equals(e.getPropertyName())) {
@@ -82,5 +83,13 @@ public class ThemeManager {
 
     public static boolean isDark() {
         return dark;
+    }
+
+    public static Theme getCodeAreaLightTheme() {
+        return codeAreaLightTheme;
+    }
+
+    public static Theme getCodeAreaDarkTheme() {
+        return codeAreaDarkTheme;
     }
 }

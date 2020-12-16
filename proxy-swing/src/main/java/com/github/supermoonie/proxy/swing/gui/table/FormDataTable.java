@@ -134,6 +134,8 @@ public class FormDataTable extends CurdTable {
             button.setBorder(null);
             // Dialog which will do the actual editing
             fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setMultiSelectionEnabled(false);
         }
 
         @Override

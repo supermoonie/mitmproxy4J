@@ -14,7 +14,7 @@
     <background color="ffffff" />
     <caret color="000000" />
     <selection fg="ffffff" bg="526da5" />
-    <currentLineHighlight color="ffffd7" fade="false" />
+    <currentLineHighlight color="fcfaed" fade="false" />
     <marginLine fg="b0b4b9" />
     <markAllHighlight color="ccccff" />
     <markOccurrencesHighlight color="ccccff" border="false" />
