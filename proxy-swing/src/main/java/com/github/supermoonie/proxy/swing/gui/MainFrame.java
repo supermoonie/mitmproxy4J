@@ -4,7 +4,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
 import com.github.supermoonie.proxy.swing.ThemeManager;
-import com.github.supermoonie.proxy.swing.gui.panel.SendRequestDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
 import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
@@ -85,6 +85,13 @@ public class MainFrame extends JFrame {
         initToolBar();
         initSplitPanel();
         setIconImages(SVGUtils.createWindowIconImages("/com/github/supermoonie/proxy/swing/icon/lighting.svg"));
+        if (ThemeManager.isDark()) {
+            ThemeManager.getCodeAreaDarkTheme().apply(requestJsonArea);
+            ThemeManager.getCodeAreaDarkTheme().apply(responseCodeArea);
+        } else {
+            ThemeManager.getCodeAreaLightTheme().apply(requestJsonArea);
+            ThemeManager.getCodeAreaLightTheme().apply(responseCodeArea);
+        }
     }
 
     @Override
@@ -248,6 +255,10 @@ public class MainFrame extends JFrame {
         JButton editButton = new JButton();
         editButton.setToolTipText("Edit");
         editButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/edit.svg"));
+        editButton.addActionListener(e -> {
+            Flow selectedFlow = MainFrameHelper.getSelectedFlow();
+            new ComposeDialog(this, "Compose", selectedFlow, true);
+        });
         JButton repeatButton = new JButton();
         repeatButton.setToolTipText("Repeat");
         repeatButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/repeat.svg"));
@@ -344,9 +355,9 @@ public class MainFrame extends JFrame {
         JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
         jsonViewerMenuItem.addActionListener(e -> saveAsActionPerformed());
         toolsMenu.add(jsonViewerMenuItem);
-        JMenuItem sendRequestMenuItem = new JMenuItem("Send Request");
-        sendRequestMenuItem.addActionListener(e -> new SendRequestDialog(this, "Send Request", true));
-        toolsMenu.add(sendRequestMenuItem);
+        JMenuItem composeMenuItem = new JMenuItem("Compose");
+        composeMenuItem.addActionListener(e -> new ComposeDialog(this, "Compose", null,true));
+        toolsMenu.add(composeMenuItem);
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");

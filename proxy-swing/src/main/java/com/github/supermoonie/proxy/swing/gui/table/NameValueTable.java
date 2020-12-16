@@ -31,12 +31,6 @@ public class NameValueTable extends CurdTable {
         super.getColumnModel().getColumn(1).setCellEditor(valueCellEditor);
         super.getColumnModel().getColumn(0).setPreferredWidth(600);
         super.getColumnModel().getColumn(1).setPreferredWidth(600);
-        getModel().addTableModelListener(e -> {
-            if ((e.getLastRow() + 1) == getModel().getRowCount()) {
-                addRow();
-            }
-        });
-        ((DefaultTableModel) getModel()).addRow(new Object[]{"", "", "Del"});
     }
 
     @Override

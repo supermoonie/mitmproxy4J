@@ -70,7 +70,7 @@ public class FormDataTable extends CurdTable {
     }
 
     @Override
-    protected void addRow() {
+    public void addRow() {
         int rowCount = getModel().getRowCount();
         int columnCount = getModel().getColumnCount();
         boolean addFlag = false;

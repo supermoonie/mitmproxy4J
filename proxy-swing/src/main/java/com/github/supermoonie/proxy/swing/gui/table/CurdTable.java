@@ -38,7 +38,7 @@ public class CurdTable extends JTable {
         super(rowData, columnNames);
     }
 
-    protected void addRow() {
+    public void addRow() {
         int rowCount = getModel().getRowCount();
         int columnCount = getModel().getColumnCount();
         boolean addFlag = false;
