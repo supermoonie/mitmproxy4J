@@ -9,6 +9,7 @@ import com.github.supermoonie.proxy.swing.entity.Header;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
+import com.github.supermoonie.proxy.swing.gui.table.CurdTable;
 import com.github.supermoonie.proxy.swing.gui.table.FormDataTable;
 import com.github.supermoonie.proxy.swing.gui.table.NameValueTable;
 import com.github.supermoonie.proxy.swing.mime.MimeMappings;
@@ -31,24 +32,21 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @author supermoonie
@@ -131,30 +129,49 @@ public class ComposeDialog extends JDialog {
         headerTable.setRowHeight(25);
         urlEncodedTable.setRowHeight(25);
         formDataTable.setRowHeight(25);
-        queryTable.getModel().addTableModelListener(e -> {
-            if ((e.getLastRow() + 1) == queryTable.getModel().getRowCount()) {
-                queryTable.addRow();
+        urlTextField.getDocument().addDocumentListener(urlTextFieldDocumentListener);
+        queryTable.getModel().addTableModelListener(queryTableModelListener);
+        queryTable.getButtonEditor().addActionListener(e -> {
+            urlTextField.getDocument().removeDocumentListener(urlTextFieldDocumentListener);
+            queryTable.getButtonEditor().fireEditingStopped();
+            int selectedRow = queryTable.getSelectedRow();
+            if (-1 == selectedRow) {
+                return;
             }
-            StringBuilder urlBuilder = new StringBuilder();
-            String url = urlTextField.getText();
-            if (null != url && !"".equals(url)) {
-                if (url.contains("?")) {
-                    urlBuilder.append(url, 0, url.indexOf("?") + 1);
-                } else {
-                    urlBuilder.append(url).append("?");
-                }
+            ((DefaultTableModel) queryTable.getModel()).removeRow(selectedRow);
+            queryTable.clearSelection();
+            queryTable.addRow();
+            urlTextField.getDocument().addDocumentListener(urlTextFieldDocumentListener);
+        });
+        headerTable.getButtonEditor().addActionListener(e -> {
+            headerTable.getButtonEditor().fireEditingStopped();
+            int selectedRow = headerTable.getSelectedRow();
+            if (-1 == selectedRow) {
+                return;
             }
-            DefaultTableModel queryModel = (DefaultTableModel) queryTable.getModel();
-            int rowCount = queryModel.getRowCount();
-            for (int i = 0; i < rowCount; i ++) {
-                String name = Objects.requireNonNullElse(queryModel.getValueAt(i, 0), "").toString();
-                String value = Objects.requireNonNullElse(queryModel.getValueAt(i, 1), "").toString();
-                if ("".equals(name) && "".equals(value)) {
-                    continue;
-                }
-                urlBuilder.append(name).append("=").append(value).append("&");
+            ((DefaultTableModel) headerTable.getModel()).removeRow(selectedRow);
+            headerTable.clearSelection();
+            headerTable.addRow();
+        });
+        urlEncodedTable.getButtonEditor().addActionListener(e -> {
+            urlEncodedTable.getButtonEditor().fireEditingStopped();
+            int selectedRow = urlEncodedTable.getSelectedRow();
+            if (-1 == selectedRow) {
+                return;
             }
-            urlTextField.setText(urlBuilder.substring(0, urlBuilder.length() -1));
+            ((DefaultTableModel) urlEncodedTable.getModel()).removeRow(selectedRow);
+            urlEncodedTable.clearSelection();
+            urlEncodedTable.addRow();
+        });
+        formDataTable.getButtonEditor().addActionListener(e -> {
+            formDataTable.getButtonEditor().fireEditingStopped();
+            int selectedRow = formDataTable.getSelectedRow();
+            if (-1 == selectedRow) {
+                return;
+            }
+            ((DefaultTableModel) formDataTable.getModel()).removeRow(selectedRow);
+            formDataTable.clearSelection();
+            formDataTable.addRow();
         });
         headerTable.getModel().addTableModelListener(e -> {
             if ((e.getLastRow() + 1) == headerTable.getModel().getRowCount()) {
@@ -169,11 +186,83 @@ public class ComposeDialog extends JDialog {
         closeWindowCheckBox.setSelected(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_CLOSE_AFTER_SEND, false));
         closeWindowCheckBox.addActionListener(e -> ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_CLOSE_AFTER_SEND, closeWindowCheckBox.isSelected()));
 
+        super.setFocusable(true);
         super.setPreferredSize(new Dimension(800, 600));
         super.pack();
         super.setLocationRelativeTo(null);
         super.setVisible(true);
     }
+
+    private final TableModelListener queryTableModelListener = e -> {
+        if ((e.getLastRow() + 1) == queryTable.getModel().getRowCount()) {
+            System.out.println("add row");
+            queryTable.addRow();
+        }
+        StringBuilder urlBuilder = new StringBuilder();
+        String url = urlTextField.getText();
+        if (null != url && !"".equals(url)) {
+            if (url.contains("?")) {
+                urlBuilder.append(url, 0, url.indexOf("?") + 1);
+            } else {
+                urlBuilder.append(url).append("?");
+            }
+        }
+        DefaultTableModel queryModel = (DefaultTableModel) queryTable.getModel();
+        int rowCount = queryModel.getRowCount();
+        for (int i = 0; i < rowCount; i++) {
+            String name = Objects.requireNonNullElse(queryModel.getValueAt(i, 0), "").toString();
+            String value = Objects.requireNonNullElse(queryModel.getValueAt(i, 1), "").toString();
+            if ("".equals(name) && "".equals(value)) {
+                continue;
+            }
+            urlBuilder.append(name).append("=").append(value).append("&");
+        }
+        urlTextField.setText(urlBuilder.substring(0, urlBuilder.length() - 1));
+    };
+
+    private final DocumentListener urlTextFieldDocumentListener = new DocumentListener() {
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            onChange();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            onChange();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            onChange();
+        }
+
+        public void onChange() {
+            try {
+                URI uri = new URI(urlTextField.getText());
+                String query = uri.getQuery();
+                if (null == query) {
+                    return;
+                }
+                List<String[]> queryList = MainFrameHelper.splitQuery(query);
+                DefaultTableModel queryModel = (DefaultTableModel) queryTable.getModel();
+                queryModel.removeTableModelListener(queryTableModelListener);
+                int rowCount = queryModel.getRowCount();
+                System.out.println(rowCount);
+                for (int i = rowCount - 1; i >= 0; i--) {
+                    queryModel.removeRow(i);
+                }
+                queryModel.fireTableDataChanged();
+                for (String[] queryArr : queryList) {
+                    queryModel.addRow(new String[]{queryArr[0], queryArr[1], "Del"});
+                }
+                queryModel.addRow(new String[]{"", "", "Del"});
+                queryModel.addTableModelListener(queryTableModelListener);
+            } catch (URISyntaxException ignore) {
+
+            }
+        }
+
+    };
 
     private void fillFlow(Flow flow) {
         if (null != flow) {

@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.swing.gui.table;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.Vector;
 
 /**
@@ -63,7 +64,7 @@ public class CurdTable extends JTable {
         }
     }
 
-    static class ButtonRenderer extends JButton implements TableCellRenderer {
+    public static class ButtonRenderer extends JButton implements TableCellRenderer {
 
         public ButtonRenderer(String text) {
             setOpaque(true);
@@ -94,7 +95,7 @@ public class CurdTable extends JTable {
         }
     }
 
-    protected class ButtonEditor extends DefaultCellEditor {
+    public class ButtonEditor extends DefaultCellEditor {
         protected JButton button;
 
         private String label;
@@ -103,16 +104,20 @@ public class CurdTable extends JTable {
             super(checkBox);
             button = new JButton();
             button.setOpaque(true);
-            button.addActionListener(e -> {
-                fireEditingStopped();
-                int selectedRow = CurdTable.this.getSelectedRow();
-                if (-1 == selectedRow) {
-                    return;
-                }
-                ((DefaultTableModel) CurdTable.this.getModel()).removeRow(selectedRow);
-                CurdTable.this.clearSelection();
-                addRow();
-            });
+//            button.addActionListener(e -> {
+//                fireEditingStopped();
+//                int selectedRow = CurdTable.this.getSelectedRow();
+//                if (-1 == selectedRow) {
+//                    return;
+//                }
+//                ((DefaultTableModel) CurdTable.this.getModel()).removeRow(selectedRow);
+//                CurdTable.this.clearSelection();
+//                addRow();
+//            });
+        }
+
+        public void addActionListener(ActionListener listener) {
+            button.addActionListener(listener);
         }
 
         public Component getTableCellEditorComponent(JTable table, Object value,
@@ -140,7 +145,7 @@ public class CurdTable extends JTable {
         }
 
         @Override
-        protected void fireEditingStopped() {
+        public void fireEditingStopped() {
             super.fireEditingStopped();
         }
     }

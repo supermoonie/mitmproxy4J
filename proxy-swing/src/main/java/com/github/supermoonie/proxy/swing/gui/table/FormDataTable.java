@@ -11,6 +11,8 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class FormDataTable extends CurdTable {
 
     private final Class<?>[] columnTypes = new Class<?>[]{String.class, FormDataValue.class, String.class, String.class, Object.class};
+    private final ButtonEditor buttonEditor = new ButtonEditor(new JCheckBox());
 
     public FormDataTable() {
         super(new DefaultTableModel(null, new String[]{"Name", "Value", "File", "ContentType", ""}));
@@ -30,10 +33,17 @@ public class FormDataTable extends CurdTable {
         super.setShowVerticalLines(true);
         super.setRowSelectionAllowed(true);
         super.setColumnSelectionAllowed(true);
-        DefaultCellEditor nameCellEditor = new DefaultCellEditor(new JTextField());
+        JTextField nameTextField = new JTextField();
+        DefaultCellEditor nameCellEditor = new DefaultCellEditor(nameTextField);
+        nameTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                nameCellEditor.stopCellEditing();
+            }
+        });
         nameCellEditor.setClickCountToStart(1);
         super.getColumnModel().getColumn(0).setCellEditor(nameCellEditor);
-        DefaultCellEditor valueCellEditor = new DefaultCellEditor(new JTextField() {
+        JTextField valueTextField = new JTextField() {
             {
                 addActionListener(e -> {
                     int selectedRow = FormDataTable.this.getSelectedRow();
@@ -42,6 +52,13 @@ public class FormDataTable extends CurdTable {
                     }
                     FormDataTable.this.getModel().setValueAt("Select...", selectedRow, 2);
                 });
+            }
+        };
+        DefaultCellEditor valueCellEditor = new DefaultCellEditor(valueTextField);
+        valueTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                valueCellEditor.stopCellEditing();
             }
         });
         valueCellEditor.setClickCountToStart(1);
@@ -54,7 +71,7 @@ public class FormDataTable extends CurdTable {
         contentTypeComboBox.setEditable(true);
         AutoCompleteDecorator.decorate(contentTypeComboBox);
         super.getColumnModel().getColumn(3).setCellEditor(new ComboBoxCellEditor(contentTypeComboBox));
-        super.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JCheckBox()));
+        super.getColumnModel().getColumn(4).setCellEditor(buttonEditor);
         super.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer("Del"));
         super.getColumnModel().getColumn(0).setPreferredWidth(600);
         super.getColumnModel().getColumn(1).setPreferredWidth(600);
@@ -162,5 +179,9 @@ public class FormDataTable extends CurdTable {
             button.setToolTipText(file);
             return button;
         }
+    }
+
+    public ButtonEditor getButtonEditor() {
+        return buttonEditor;
     }
 }
