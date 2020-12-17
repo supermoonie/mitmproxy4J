@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
 import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Content;
@@ -30,11 +31,18 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -113,6 +121,61 @@ public class ComposeDialog extends JDialog {
         super.add(southPanel, BorderLayout.SOUTH);
         cancelButton.addActionListener(e -> setVisible(false));
         sendButton.addActionListener(e -> onSendButtonClicked());
+
+        fillFlow(flow);
+
+        ((DefaultTableModel) queryTable.getModel()).addRow(new Object[]{"", "", "Del"});
+        ((DefaultTableModel) headerTable.getModel()).addRow(new Object[]{"", "", "Del"});
+        ((DefaultTableModel) urlEncodedTable.getModel()).addRow(new Object[]{"", "", "Del"});
+        queryTable.setRowHeight(25);
+        headerTable.setRowHeight(25);
+        urlEncodedTable.setRowHeight(25);
+        formDataTable.setRowHeight(25);
+        queryTable.getModel().addTableModelListener(e -> {
+            if ((e.getLastRow() + 1) == queryTable.getModel().getRowCount()) {
+                queryTable.addRow();
+            }
+            StringBuilder urlBuilder = new StringBuilder();
+            String url = urlTextField.getText();
+            if (null != url && !"".equals(url)) {
+                if (url.contains("?")) {
+                    urlBuilder.append(url, 0, url.indexOf("?") + 1);
+                } else {
+                    urlBuilder.append(url).append("?");
+                }
+            }
+            DefaultTableModel queryModel = (DefaultTableModel) queryTable.getModel();
+            int rowCount = queryModel.getRowCount();
+            for (int i = 0; i < rowCount; i ++) {
+                String name = Objects.requireNonNullElse(queryModel.getValueAt(i, 0), "").toString();
+                String value = Objects.requireNonNullElse(queryModel.getValueAt(i, 1), "").toString();
+                if ("".equals(name) && "".equals(value)) {
+                    continue;
+                }
+                urlBuilder.append(name).append("=").append(value).append("&");
+            }
+            urlTextField.setText(urlBuilder.substring(0, urlBuilder.length() -1));
+        });
+        headerTable.getModel().addTableModelListener(e -> {
+            if ((e.getLastRow() + 1) == headerTable.getModel().getRowCount()) {
+                headerTable.addRow();
+            }
+        });
+        urlEncodedTable.getModel().addTableModelListener(e -> {
+            if ((e.getLastRow() + 1) == urlEncodedTable.getModel().getRowCount()) {
+                urlEncodedTable.addRow();
+            }
+        });
+        closeWindowCheckBox.setSelected(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_CLOSE_AFTER_SEND, false));
+        closeWindowCheckBox.addActionListener(e -> ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_CLOSE_AFTER_SEND, closeWindowCheckBox.isSelected()));
+
+        super.setPreferredSize(new Dimension(800, 600));
+        super.pack();
+        super.setLocationRelativeTo(null);
+        super.setVisible(true);
+    }
+
+    private void fillFlow(Flow flow) {
         if (null != flow) {
             try {
                 Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
@@ -193,34 +256,6 @@ public class ComposeDialog extends JDialog {
                 log.error(e.getMessage(), e);
             }
         }
-
-        ((DefaultTableModel) queryTable.getModel()).addRow(new Object[]{"", "", "Del"});
-        ((DefaultTableModel) headerTable.getModel()).addRow(new Object[]{"", "", "Del"});
-        ((DefaultTableModel) urlEncodedTable.getModel()).addRow(new Object[]{"", "", "Del"});
-        queryTable.setRowHeight(25);
-        headerTable.setRowHeight(25);
-        urlEncodedTable.setRowHeight(25);
-        formDataTable.setRowHeight(25);
-        queryTable.getModel().addTableModelListener(e -> {
-            if ((e.getLastRow() + 1) == queryTable.getModel().getRowCount()) {
-                queryTable.addRow();
-            }
-        });
-        headerTable.getModel().addTableModelListener(e -> {
-            if ((e.getLastRow() + 1) == headerTable.getModel().getRowCount()) {
-                headerTable.addRow();
-            }
-        });
-        urlEncodedTable.getModel().addTableModelListener(e -> {
-            if ((e.getLastRow() + 1) == urlEncodedTable.getModel().getRowCount()) {
-                urlEncodedTable.addRow();
-            }
-        });
-
-        super.setPreferredSize(new Dimension(800, 600));
-        super.pack();
-        super.setLocationRelativeTo(null);
-        super.setVisible(true);
     }
 
     private void onSendButtonClicked() {

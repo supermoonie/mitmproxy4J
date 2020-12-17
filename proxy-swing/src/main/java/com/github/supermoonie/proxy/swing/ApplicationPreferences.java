@@ -18,6 +18,7 @@ public class ApplicationPreferences {
     private final static Logger log = LoggerFactory.getLogger(ApplicationPreferences.class);
 
     public static final String KEY_IS_DARK_THEME = "isDarkTheme";
+    public static final String KEY_CLOSE_AFTER_SEND = "closeAfterSend";
 
     private static Preferences state;
 
