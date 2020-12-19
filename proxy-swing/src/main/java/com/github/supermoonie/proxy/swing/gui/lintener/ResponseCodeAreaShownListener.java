@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.swing.gui.lintener;
 
 import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Content;
 import com.github.supermoonie.proxy.swing.entity.Response;
@@ -86,9 +87,9 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
         JPanel responseCodePane = mainFrame.getResponseCodePane();
         RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
         responseCodePane.removeAll();
-        responseCodePane.add(processBar, BorderLayout.SOUTH);
         processBar.setValue(0);
         processBar.setIndeterminate(true);
+        responseCodePane.add(processBar, BorderLayout.SOUTH);
         Application.EXECUTOR.execute(() -> {
             String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
             final AtomicReference<String> codeText = new AtomicReference<>();
@@ -114,6 +115,7 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
                 responseCodePane.updateUI();
                 responseCodeArea.setSyntaxEditingStyle(style);
                 responseCodeArea.setText(codeText.get());
+                responseCodeArea.setFont(ApplicationPreferences.getFont());
                 responseCodeArea.setCaretPosition(0);
             });
         });
@@ -129,6 +131,9 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
         List<ParseResult> results = parser.parse(extension, content);
         StringBuilder sb = new StringBuilder();
         for (ParseResult result : results) {
+//            String substring = content.substring(result.getOffset(), result.getOffset() + result.getLength());
+//            System.out.println(substring);
+//            sb.append(substring.replace("\n  ", "\n    "));
             sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
         }
         return sb.toString();

@@ -55,7 +55,6 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                         FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
                         rootNode.add(flow);
                         Application.MAIN_FRAME.getFlowTree().updateUI();
-//                        Application.PROXY_FRAME.getFlowTree().expandPath(new TreePath(rootNode.getPath()));
                         if (MainFrameHelper.currentRequestId == -1
                             || MainFrameHelper.currentRequestId == req.getId()) {
                             MainFrameHelper.fillOverviewTab(req, null);

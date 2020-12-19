@@ -1,11 +1,9 @@
 package com.github.supermoonie.proxy.swing;
 
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import java.awt.*;
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
@@ -19,6 +17,11 @@ public class ApplicationPreferences {
 
     public static final String KEY_IS_DARK_THEME = "isDarkTheme";
     public static final String KEY_CLOSE_AFTER_SEND = "closeAfterSend";
+    public static final String KEY_FONT_FAMILY = "fontFamily";
+    public static final String KEY_FONT_SIZE = "fontSize";
+
+    public static final String VALUE_DEFAULT_FONT_FAMILY = "Helvetica Neue";
+    public static final int VALUE_DEFAULT_FONT_SIZE = 14;
 
     private static Preferences state;
 
@@ -37,9 +40,17 @@ public class ApplicationPreferences {
                 ThemeManager.setLightLookFeel();
             }
             Locale.setDefault(Locale.ENGLISH);
+            Font font = getFont();
+            ThemeManager.setFont(font.getFamily(), font.getSize());
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    public static Font getFont() {
+        String family = state.get(KEY_FONT_FAMILY, VALUE_DEFAULT_FONT_FAMILY);
+        int fontSize = state.getInt(KEY_FONT_SIZE, VALUE_DEFAULT_FONT_SIZE);
+        return new Font(family, Font.PLAIN, fontSize);
     }
 
     public static Preferences getState() {

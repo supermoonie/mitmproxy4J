@@ -195,7 +195,6 @@ public class ComposeDialog extends JDialog {
 
     private final TableModelListener queryTableModelListener = e -> {
         if ((e.getLastRow() + 1) == queryTable.getModel().getRowCount()) {
-            System.out.println("add row");
             queryTable.addRow();
         }
         StringBuilder urlBuilder = new StringBuilder();
@@ -247,7 +246,6 @@ public class ComposeDialog extends JDialog {
                 DefaultTableModel queryModel = (DefaultTableModel) queryTable.getModel();
                 queryModel.removeTableModelListener(queryTableModelListener);
                 int rowCount = queryModel.getRowCount();
-                System.out.println(rowCount);
                 for (int i = rowCount - 1; i >= 0; i--) {
                     queryModel.removeRow(i);
                 }

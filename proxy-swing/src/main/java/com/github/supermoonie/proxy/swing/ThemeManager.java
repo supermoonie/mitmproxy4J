@@ -4,9 +4,13 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rsyntaxtextarea.Token;
 
 import javax.swing.*;
+import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.io.IOException;
 
@@ -77,6 +81,21 @@ public class ThemeManager {
         } catch (Exception ignore) {
 
         }
+        FlatLaf.updateUI();
+        FlatAnimatedLafChange.hideSnapshotWithAnimation();
+    }
+
+    public static void setFont(String fontFamily, int fontSize) {
+        FlatAnimatedLafChange.showSnapshot();
+        Font font = UIManager.getFont("defaultFont");
+        Font newFont = new Font(fontFamily, font.getStyle(), fontSize);
+        UIManager.put("defaultFont", newFont);
+        SwingUtilities.invokeLater(() -> {
+            Application.MAIN_FRAME.getRequestJsonArea().setFont(newFont);
+            Application.MAIN_FRAME.getResponseCodeArea().setFont(newFont);
+            Application.MAIN_FRAME.getRequestJsonArea().revalidate();
+            Application.MAIN_FRAME.getResponseCodeArea().revalidate();
+        });
         FlatLaf.updateUI();
         FlatAnimatedLafChange.hideSnapshotWithAnimation();
     }

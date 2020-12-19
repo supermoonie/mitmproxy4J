@@ -3,8 +3,10 @@ package com.github.supermoonie.proxy.swing.gui;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
+import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
 import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
@@ -45,7 +47,9 @@ public class MainFrame extends JFrame {
     private final JTree flowTree = new JTree(rootNode);
     // List 容器
     private final FlowList flowList = new FlowList(new FilterListModel<>());
-
+    /**
+     * OverView的根结点
+     */
     private ListTreeTableNode overviewTreeTableRoot;
     private DefaultTreeTableModel overviewTreeTableModel;
 
@@ -103,7 +107,7 @@ public class MainFrame extends JFrame {
     private void initSplitPanel() {
         JPanel container = new JPanel(new BorderLayout());
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(200);
+        splitPane.setDividerLocation(205);
         JPanel flowPanel = initLeftFlowPanel();
         JPanel flowDetailPanel = initRightFlowDetailPanel();
         splitPane.setLeftComponent(flowPanel);
@@ -163,6 +167,7 @@ public class MainFrame extends JFrame {
         requestContentTextScrollPane = new JScrollPane(requestContentTextArea);
         requestJsonArea = new RSyntaxTextArea();
         requestJsonArea.setCodeFoldingEnabled(true);
+        requestJsonArea.setPaintTabLines(false);
         requestJsonArea.setEditable(false);
         requestJsonScrollPane = new RTextScrollPane(requestJsonArea);
         requestRawArea = new JTextArea();
@@ -177,6 +182,7 @@ public class MainFrame extends JFrame {
         responseTextAreaScrollPane = new JScrollPane(responseTextArea);
         responseCodeArea = new RSyntaxTextArea();
         responseCodeArea.setCodeFoldingEnabled(true);
+        responseCodeArea.setPaintTabLines(false);
         responseCodeArea.setEditable(false);
         responseCodePane = new JPanel(new BorderLayout());
         responseCodePane.add(new RTextScrollPane(responseCodeArea));
@@ -203,7 +209,7 @@ public class MainFrame extends JFrame {
     private JPanel initLeftFlowPanel() {
         // 左侧Flow panel
         JPanel flowPanel = new JPanel();
-        flowPanel.setMinimumSize(new Dimension(200, 0));
+//        flowPanel.setMinimumSize(new Dimension(310, 0));
         flowPanel.setLayout(new BorderLayout());
         JTextField filter = new JTextField();
         filter.addKeyListener(new FilterKeyListener(filter));
@@ -238,7 +244,7 @@ public class MainFrame extends JFrame {
         toolBar.setMargin(new Insets(3, 5, 3, 5));
         JButton clearButton = new JButton();
         clearButton.setToolTipText("Clear");
-        clearButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg"));
+        clearButton.setIcon(SvgIcons.CLEAR);
         clearButton.addActionListener(e -> {
             requestTablePane.removeAll();
             responseTablePane.removeAll();
@@ -252,10 +258,10 @@ public class MainFrame extends JFrame {
             MainFrameHelper.currentRequestId = -1;
             MainFrameHelper.firstFlow = true;
         });
-        JButton editButton = new JButton();
-        editButton.setToolTipText("Edit");
-        editButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/edit.svg"));
-        editButton.addActionListener(e -> {
+        JButton composeButton = new JButton();
+        composeButton.setToolTipText("Compose");
+        composeButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/edit.svg"));
+        composeButton.addActionListener(e -> {
             Flow selectedFlow = MainFrameHelper.getSelectedFlow();
             new ComposeDialog(this, "Compose", selectedFlow, true);
         });
@@ -277,7 +283,7 @@ public class MainFrame extends JFrame {
         recordButton.setToolTipText("Record");
         recordButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/play.svg"));
         toolBar.add(clearButton);
-        toolBar.add(editButton);
+        toolBar.add(composeButton);
         toolBar.add(repeatButton);
         toolBar.add(throttlingButton);
         toolBar.add(recordButton);
@@ -311,6 +317,12 @@ public class MainFrame extends JFrame {
         saveMenuItem.setMnemonic('S');
         saveMenuItem.addActionListener(e -> saveAsActionPerformed());
         fileMenu.add(saveMenuItem);
+        fileMenu.add(new JSeparator());
+        JMenuItem preferencesMenuItem = new JMenuItem("Preferences...");
+        preferencesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        preferencesMenuItem.setMnemonic(',');
+        preferencesMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", true));
+        fileMenu.add(preferencesMenuItem);
 
         // Proxy menu
         JMenu proxyMenu = new JMenu("Proxy");
@@ -352,12 +364,12 @@ public class MainFrame extends JFrame {
         allowListMenuItem.addActionListener(e -> saveAsActionPerformed());
         toolsMenu.add(allowListMenuItem);
         toolsMenu.add(new JSeparator());
-        JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
-        jsonViewerMenuItem.addActionListener(e -> saveAsActionPerformed());
-        toolsMenu.add(jsonViewerMenuItem);
         JMenuItem composeMenuItem = new JMenuItem("Compose");
         composeMenuItem.addActionListener(e -> new ComposeDialog(this, "Compose", null,true));
         toolsMenu.add(composeMenuItem);
+        JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
+        jsonViewerMenuItem.addActionListener(e -> saveAsActionPerformed());
+        toolsMenu.add(jsonViewerMenuItem);
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");
@@ -366,13 +378,6 @@ public class MainFrame extends JFrame {
         helpMenu.add(downloadRootCertificateMenuItem);
         helpMenu.add(new JSeparator());
         JMenuItem aboutMenuItem = new JMenuItem("About");
-        aboutMenuItem.addActionListener(e -> {
-            if (ThemeManager.isDark()) {
-                ThemeManager.setLightLookFeel();
-            } else {
-                ThemeManager.setDarkLookFeel();
-            }
-        });
         helpMenu.add(aboutMenuItem);
 
         menuBar.add(fileMenu);

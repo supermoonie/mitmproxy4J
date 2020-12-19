@@ -2,6 +2,7 @@ package com.github.supermoonie.proxy.swing.gui;
 
 import com.formdev.flatlaf.FlatLaf;
 import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.*;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
@@ -25,8 +26,6 @@ import syntaxhighlight.Parser;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.net.URI;
@@ -35,8 +34,10 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.*;
+import java.util.Objects;
 
 /**
  * @author supermoonie
@@ -325,6 +326,7 @@ public class MainFrameHelper {
             } catch (Exception ignore) {
                 requestJsonArea.setText(body);
             }
+            requestJsonArea.setFont(ApplicationPreferences.getFont());
             requestJsonArea.setCaretPosition(0);
             fillRequestRaw(request, requestHeaderList, body);
         } else {
@@ -379,7 +381,7 @@ public class MainFrameHelper {
             model.insertNodeInto(new ListTreeTableNode("Status", null == response ? "Loading" : "Complete"), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Response Code", null == response ? "-" : response.getStatus()), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Protocol", request.getHttpVersion()), root, index++);
-            model.insertNodeInto(new ListTreeTableNode("Content-Type", null == response ? "-" : response.getContentType()), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Content-Type", null != response && null != response.getContentType() ? response.getContentType() : "-"), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Host", request.getHost()), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Port", request.getPort()), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Client Address", connectionOverview.getClientHost() + ":" + connectionOverview.getClientPort()), root, index++);

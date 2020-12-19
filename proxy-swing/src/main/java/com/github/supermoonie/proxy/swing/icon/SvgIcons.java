@@ -31,6 +31,7 @@ public interface SvgIcons {
     FlatSVGIcon WEB_ROOT = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/web_root.svg");
     FlatSVGIcon LEAF = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/leaf.svg");
     FlatSVGIcon BRANCH = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/branch.svg");
+    FlatSVGIcon CLEAR = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg");
 
     static Icon loadIcon(int status, String contentType) {
         if (status >= HttpResponseStatus.OK.code() && status < HttpResponseStatus.MULTIPLE_CHOICES.code()) {
