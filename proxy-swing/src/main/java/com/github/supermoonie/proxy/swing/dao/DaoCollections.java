@@ -35,8 +35,12 @@ public class DaoCollections {
         }
     }
 
-    public static <T> Dao<T, Integer> getDao(Class<T> clazz) throws SQLException {
-        return DaoManager.createDao(connectionSource, clazz);
+    public static <T> Dao<T, Integer> getDao(Class<T> clazz) {
+        try {
+            return DaoManager.createDao(connectionSource, clazz);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void setupDatabase(JdbcConnectionSource connectionSource) throws SQLException {
@@ -47,6 +51,7 @@ public class DaoCollections {
         TableUtils.createTableIfNotExists(connectionSource, ConnectionOverview.class);
         TableUtils.createTableIfNotExists(connectionSource, Content.class);
         TableUtils.createTableIfNotExists(connectionSource, Header.class);
+        TableUtils.createTableIfNotExists(connectionSource, AccessControl.class);
     }
 
     private static String dbPath() {

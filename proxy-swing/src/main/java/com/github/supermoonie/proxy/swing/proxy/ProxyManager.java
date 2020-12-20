@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.swing.proxy;
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.platform.mac.NetworkSetup;
+import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.util.internal.PlatformDependent;
 
@@ -25,12 +26,12 @@ public class ProxyManager {
         if (null != internalProxy) {
             return;
         }
-        newHttpProxy(null, port, auth, username, password, interceptInitializer);
+        newHttpProxy(port, auth, username, password, interceptInitializer);
     }
 
-    private static void newHttpProxy(String host, int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
+    private static void newHttpProxy(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
         internalProxy = new InternalProxy(interceptInitializer);
-        internalProxy.setHost(host);
+        internalProxy.setHost(null);
         internalProxy.setPort(port);
         internalProxy.setAuth(auth);
         internalProxy.setUsername(username);
@@ -46,8 +47,9 @@ public class ProxyManager {
     }
 
     public static void restart(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
-        internalProxy.close();
-        newHttpProxy(null, port, auth, username, password, interceptInitializer);
+        InternalProxy oldProxy = internalProxy;
+        newHttpProxy(port, auth, username, password, interceptInitializer);
+        Application.EXECUTOR.execute(oldProxy::close);
     }
 
     public static void enableSystemProxy() throws IOException {

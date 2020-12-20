@@ -9,11 +9,10 @@ import com.github.supermoonie.proxy.swing.entity.Header;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
-import com.github.supermoonie.proxy.swing.gui.table.CurdTable;
 import com.github.supermoonie.proxy.swing.gui.table.FormDataTable;
 import com.github.supermoonie.proxy.swing.gui.table.NameValueTable;
 import com.github.supermoonie.proxy.swing.mime.MimeMappings;
-import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
+import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.util.HttpClientUtil;
 import com.j256.ormlite.dao.Dao;
 import org.apache.http.HttpHeaders;
@@ -37,8 +36,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -350,7 +347,7 @@ public class ComposeDialog extends JDialog {
         sendButton.setEnabled(false);
         Application.EXECUTOR.execute(() -> {
             try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
-                    .setProxy(new HttpHost("127.0.0.1", GlobalSetting.getInstance().getPort()))
+                    .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
                     .build()) {
                 String method = Objects.requireNonNullElse(methodComboBox.getSelectedItem(), "GET").toString();
                 String url = urlTextField.getText();

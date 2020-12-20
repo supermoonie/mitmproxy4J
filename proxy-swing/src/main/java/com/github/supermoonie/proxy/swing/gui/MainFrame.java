@@ -14,6 +14,7 @@ import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
+import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
@@ -82,7 +83,7 @@ public class MainFrame extends JFrame {
 
 
     public MainFrame() {
-        setTitle("Lightning:10801");
+        setTitle("Lightning:" + ProxyManager.getInternalProxy().getPort());
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
         initMenuBar();

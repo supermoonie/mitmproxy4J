@@ -110,7 +110,7 @@ public class MainFrameHelper {
                 FlatLaf.updateUI();
             }
             firstFlow = false;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
     }

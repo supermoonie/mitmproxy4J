@@ -57,7 +57,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void verifyAuth(HttpRequest request) {
+    private void verifyAuth() {
         if (this.internalProxy.isAuth() && null != this.internalProxy.getUsername() && null != this.internalProxy.getPassword()) {
             String auth = "Basic " + Base64.getEncoder().encodeToString((this.internalProxy.getUsername() + ":" + this.internalProxy.getPassword()).getBytes(StandardCharsets.UTF_8));
             if (null == connectionInfo.getAuthorization() || !connectionInfo.getAuthorization().equals(auth)) {
@@ -111,7 +111,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                 }
             }
             logger.debug("pipeline: " + ctx.pipeline());
-            verifyAuth(request);
+            verifyAuth();
             String separator = "/";
             if (request.uri().startsWith(separator)) {
                 connectionInfo.setUrl((connectionInfo.isHttps() ? "https://" : "http://") + connectionInfo.getRemoteHost() + request.uri());

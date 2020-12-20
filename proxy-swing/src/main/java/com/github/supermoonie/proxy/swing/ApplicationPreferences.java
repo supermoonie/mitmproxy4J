@@ -1,11 +1,17 @@
 package com.github.supermoonie.proxy.swing;
 
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.AccessControl;
+import com.j256.ormlite.dao.Dao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.util.Locale;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.List;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -19,14 +25,30 @@ public class ApplicationPreferences {
     public static final String KEY_CLOSE_AFTER_SEND = "closeAfterSend";
     public static final String KEY_FONT_FAMILY = "fontFamily";
     public static final String KEY_FONT_SIZE = "fontSize";
+    public static final String KEY_PROXY_PORT = "proxyPort";
+    public static final String KEY_PROXY_AUTH = "proxyAuth";
+    public static final String KEY_PROXY_AUTH_USER = "proxyAuthUser";
+    public static final String KEY_PROXY_AUTH_PWD = "proxyAuthPwd";
 
     public static final String VALUE_DEFAULT_FONT_FAMILY = "Helvetica Neue";
     public static final int VALUE_DEFAULT_FONT_SIZE = 14;
+    public static final int VALUE_DEFAULT_PROXY_PORT = 10801;
+    public static final boolean VALUE_DEFAULT_PROXY_AUTH = false;
 
     private static Preferences state;
+    private static Set<String> accessControl = new HashSet<>();
 
     public static void init(String rootPath) {
         state = Preferences.userRoot().node(rootPath);
+        try {
+            Dao<AccessControl, Integer> accessDao = DaoCollections.getDao(AccessControl.class);
+            List<AccessControl> accessControls = accessDao.queryForAll();
+            if (null != accessControls && accessControls.size() > 0) {
+                accessControls.forEach(ac -> accessControl.add(ac.getAccessIp()));
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
+        }
     }
 
     public static void initLaf() {
@@ -43,7 +65,7 @@ public class ApplicationPreferences {
             Font font = getFont();
             ThemeManager.setFont(font.getFamily(), font.getSize());
         } catch (Throwable e) {
-            log.error(e.getMessage(), e);
+            Application.showError(e);
         }
     }
 
@@ -56,4 +78,26 @@ public class ApplicationPreferences {
     public static Preferences getState() {
         return state;
     }
+
+    public static Set<String> getAccessControl() {
+        return accessControl;
+    }
+
+    public static void setAccessControl(Set<String> accessControl) {
+        ApplicationPreferences.accessControl = accessControl;
+        Dao<AccessControl, Integer> accessDao = DaoCollections.getDao(AccessControl.class);
+        try {
+            accessDao.deleteBuilder().delete();
+            List<AccessControl> list = accessControl.stream().map(ip -> {
+                AccessControl ac = new AccessControl();
+                ac.setAccessIp(ip);
+                ac.setTimeCreated(new Date());
+                return ac;
+            }).collect(Collectors.toList());
+            accessDao.create(list);
+        } catch (SQLException e) {
+            Application.showError(e);
+        }
+    }
+
 }
