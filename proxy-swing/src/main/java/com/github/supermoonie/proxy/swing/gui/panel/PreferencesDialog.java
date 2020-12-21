@@ -66,10 +66,16 @@ public class PreferencesDialog extends JDialog {
                 }
                 current = selected;
                 rightPanel.removeAll();
-                if ("Appearance".equals(selected)) {
-                    rightPanel.add(appearancePanel());
-                } else if ("Proxy".equals(selected)) {
-                    rightPanel.add(proxyPanel());
+                switch (selected) {
+                    case "Appearance":
+                        rightPanel.add(appearancePanel());
+                        break;
+                    case "Proxy":
+                        rightPanel.add(proxyPanel());
+                        break;
+                    case "Throttling":
+                        rightPanel.add(throttlingPanel());
+                        break;
                 }
                 rightPanel.updateUI();
             }
@@ -335,6 +341,17 @@ public class PreferencesDialog extends JDialog {
             model.addRow(new String[]{ip});
         }
         return proxySettingPanel;
+    }
+
+    private JPanel throttlingPanel() {
+        JPanel throttlingSettingPanel = new JPanel(new BorderLayout());
+        throttlingSettingPanel.getInsets().set(10, 10, 10, 10);
+        JPanel container = new JPanel();
+        container.setBorder(BorderFactory.createTitledBorder("Throttling"));
+        BoxLayout containerLayout = new BoxLayout(container, BoxLayout.Y_AXIS);
+        container.setLayout(containerLayout);
+
+        return throttlingSettingPanel;
     }
 
     private static class CellEditor extends DefaultCellEditor {

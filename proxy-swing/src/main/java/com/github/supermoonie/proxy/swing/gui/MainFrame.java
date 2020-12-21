@@ -225,6 +225,26 @@ public class MainFrame extends JFrame {
         flowTree.setShowsRootHandles(true);
         flowTree.setCellRenderer(new FlowTreeCellRender());
         flowTree.addMouseListener(new FlowMouseListener());
+        JPopupMenu popup = new JPopupMenu();
+        popup.add(new JMenuItem("Copy URL"));
+        popup.add(new JMenuItem("Copy Response"));
+        popup.add(new JMenuItem("Save Response"));
+        popup.add(new JSeparator());
+        popup.add(new JMenuItem("Compose"));
+        popup.add(new JMenuItem("Repeat"));
+        popup.add(new JSeparator());
+        popup.add(new JMenuItem("Block List"));
+        popup.add(new JMenuItem("Allow List"));
+        popup.add(new JSeparator());
+        popup.add(new JMenuItem("Map Remote"));
+        popup.add(new JMenuItem("Map Local"));
+        flowTree.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    popup.show((JComponent) e.getSource(), e.getX(), e.getY());
+                }
+            }
+        });
         // Sequence tab
         sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
