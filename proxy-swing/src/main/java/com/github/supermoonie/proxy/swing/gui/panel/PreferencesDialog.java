@@ -46,7 +46,7 @@ public class PreferencesDialog extends JDialog {
         JPanel rightPanel = new JPanel(new BorderLayout());
         splitPane.setLeftComponent(leftPanel);
         splitPane.setRightComponent(rightPanel);
-        splitPane.setDividerLocation(120);
+        splitPane.setDividerLocation(200);
         // left
         JTree preferenceTree = new JTree();
         preferenceTree.setShowsRootHandles(false);
@@ -70,7 +70,7 @@ public class PreferencesDialog extends JDialog {
                     case "Appearance":
                         rightPanel.add(appearancePanel());
                         break;
-                    case "Proxy":
+                    case "Proxy & Access Control":
                         rightPanel.add(proxyPanel());
                         break;
                     case "Throttling":
@@ -85,7 +85,7 @@ public class PreferencesDialog extends JDialog {
         treeModel.setRoot(root);
         DefaultMutableTreeNode appearanceNode = new DefaultMutableTreeNode("Appearance");
         root.add(appearanceNode);
-        root.add(new DefaultMutableTreeNode("Proxy"));
+        root.add(new DefaultMutableTreeNode("Proxy & Access Control"));
         preferenceTree.setSelectionPath(new TreePath(appearanceNode.getPath()));
         leftPanel.add(new JScrollPane(preferenceTree), BorderLayout.CENTER);
         // default right panel

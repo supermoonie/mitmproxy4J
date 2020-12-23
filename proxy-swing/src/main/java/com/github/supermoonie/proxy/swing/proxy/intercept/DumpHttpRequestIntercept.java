@@ -8,6 +8,7 @@ import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
+import com.github.supermoonie.proxy.swing.gui.flow.FlowType;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.service.RequestService;
@@ -45,6 +46,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                         FlowList flowList = Application.MAIN_FRAME.getFlowList();
                         Flow flow = new Flow();
                         flow.setRequestId(req.getId());
+                        flow.setFlowType(FlowType.BASE_URL);
                         flow.setUrl(req.getUri());
                         flow.setIcon(SvgIcons.UPLOAD);
                         if (null != FilterKeyListener.filter && !FilterKeyListener.filter.test(flow)) {

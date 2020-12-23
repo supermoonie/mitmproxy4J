@@ -5,16 +5,26 @@ import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ThemeManager;
-import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
-import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
-import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.Content;
+import com.github.supermoonie.proxy.swing.entity.Header;
+import com.github.supermoonie.proxy.swing.entity.Request;
+import com.github.supermoonie.proxy.swing.entity.Response;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
+import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
+import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
+import com.github.supermoonie.proxy.swing.util.ClipboardUtil;
+import com.github.supermoonie.proxy.swing.util.Jackson;
+import com.j256.ormlite.dao.Dao;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
@@ -24,8 +34,17 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.*;
 
 /**
  * @author supermoonie
@@ -226,12 +245,129 @@ public class MainFrame extends JFrame {
         flowTree.setCellRenderer(new FlowTreeCellRender());
         flowTree.addMouseListener(new FlowMouseListener());
         JPopupMenu popup = new JPopupMenu();
-        popup.add(new JMenuItem("Copy URL"));
-        popup.add(new JMenuItem("Copy Response"));
-        popup.add(new JMenuItem("Save Response"));
+        JMenuItem copyResponseMenuItem = new JMenuItem("Copy Response");
+        JMenuItem saveResponseMenuItem = new JMenuItem("Save Response"){{
+            addActionListener(e -> {
+                JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
+                Flow flow;
+                if (selectedComponent.equals(structureTab)) {
+                    FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
+                    if (null == node || !node.isLeaf()) {
+                        return;
+                    }
+                    flow = (Flow) node.getUserObject();
+                } else {
+                    flow = flowList.getSelectedValue();
+                    if (null == flow) {
+                        return;
+                    }
+                }
+                Integer responseId = flow.getResponseId();
+                if (null == responseId) {
+                    return;
+                }
+                Integer requestId = flow.getRequestId();
+                Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+                Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
+                Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
+                Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+                try {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    Map<String, Object> map = new HashMap<>(5);
+                    Request request = requestDao.queryForId(requestId);
+                    Map<String, Object> requestMap = new HashMap<>(16);
+                    requestMap.put("url", request.getUri());
+                    requestMap.put("method", request.getMethod());
+                    requestMap.put("httpVersion", request.getHttpVersion());
+                    requestMap.put("host", request.getHost());
+                    requestMap.put("port", request.getPort());
+                    requestMap.put("contentType", request.getContentType());
+                    requestMap.put("startTime", dateFormat.format(request.getStartTime()));
+                    requestMap.put("endTime", dateFormat.format(request.getEndTime()));
+                    List<Header> requestHeaderList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, requestId)
+                            .and().isNull(Header.RESPONSE_ID_FIELD_NAME).query();
+                    List<Map<String, String>> requestHeaders = new ArrayList<>();
+                    for (Header header : requestHeaderList) {
+                        requestHeaders.add(Map.of("name", header.getName(), "value", header.getValue()));
+                    }
+                    requestMap.put("header", requestHeaders);
+                    if (null != request.getContentId()) {
+                        Content content = contentDao.queryForId(request.getContentId());
+                        requestMap.put("content", Hex.encodeHexString(content.getRawContent()));
+                    }
+                    map.put("request", requestMap);
+                    Map<String, Object> responseMap = new HashMap<>(16);
+                    Response response = responseDao.queryForId(responseId);
+                    responseMap.put("contentType", response.getContentType());
+                    responseMap.put("status", response.getStatus());
+                    responseMap.put("httpVersion", response.getHttpVersion());
+                    responseMap.put("startTime", dateFormat.format(response.getStartTime()));
+                    responseMap.put("endTime", dateFormat.format(response.getEndTime()));
+                    List<Header> responseHeaderList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, requestId)
+                            .and().eq(Header.RESPONSE_ID_FIELD_NAME, responseId).query();
+                    List<Map<String, String>> responseHeaders = new ArrayList<>();
+                    for (Header header : responseHeaderList) {
+                        responseHeaders.add(Map.of("name", header.getName(), "value", header.getValue()));
+                    }
+                    responseMap.put("header", responseHeaders);
+                    if (null != response.getContentId()) {
+                        Content content = contentDao.queryForId(response.getContentId());
+                        responseMap.put("content", Hex.encodeHexString(content.getRawContent()));
+                    }
+                    map.put("response", responseMap);
+
+                    String json = Jackson.toJsonString(map, true);
+                    JFileChooser fileChooser = new JFileChooser();
+                    int i = fileChooser.showSaveDialog(this);
+                    if (i == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        FileUtils.writeStringToFile(selectedFile, json, StandardCharsets.UTF_8);
+                    }
+                } catch (SQLException | IOException t) {
+                    Application.showError(t);
+                }
+            });
+        }};
+        JMenuItem composeMenuItem = new JMenuItem("Compose");
+        JMenuItem repeatMenuItem = new JMenuItem("Repeat");
+        popup.add(new JMenuItem("Copy URL") {{
+            addActionListener(e -> {
+                JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
+                if (selectedComponent.equals(structureTab)) {
+                    FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
+                    if (null == node) {
+                        return;
+                    }
+                    Flow flow = (Flow) node.getUserObject();
+                    if (flow.getFlowType().equals(FlowType.BASE_URL)) {
+                        ClipboardUtil.copyText(flow.getUrl());
+                    } else {
+                        List<String> urlList = new ArrayList<>();
+                        urlList.add(flow.getUrl());
+                        FlowTreeNode parent = (FlowTreeNode) node.getParent();
+                        while (null != parent && !parent.equals(rootNode)) {
+                            flow = (Flow) parent.getUserObject();
+                            urlList.add(flow.getUrl());
+                            parent = (FlowTreeNode) parent.getParent();
+                        }
+                        Collections.reverse(urlList);
+                        String url = String.join("/", urlList);
+                        ClipboardUtil.copyText(url);
+                    }
+                } else {
+                    Flow flow = flowList.getSelectedValue();
+                    if (null == flow) {
+                        return;
+                    }
+                    ClipboardUtil.copyText(flow.getUrl());
+                }
+            });
+        }});
+        popup.add(copyResponseMenuItem);
+        popup.add(saveResponseMenuItem);
         popup.add(new JSeparator());
-        popup.add(new JMenuItem("Compose"));
-        popup.add(new JMenuItem("Repeat"));
+        popup.add(composeMenuItem);
+        popup.add(repeatMenuItem);
         popup.add(new JSeparator());
         popup.add(new JMenuItem("Block List"));
         popup.add(new JMenuItem("Allow List"));
@@ -241,6 +377,14 @@ public class MainFrame extends JFrame {
         flowTree.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
+                    FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
+                    if (null == node) {
+                        return;
+                    }
+                    copyResponseMenuItem.setEnabled(node.isLeaf());
+                    saveResponseMenuItem.setEnabled(node.isLeaf());
+                    composeMenuItem.setEnabled(node.isLeaf());
+                    repeatMenuItem.setEnabled(node.isLeaf());
                     popup.show((JComponent) e.getSource(), e.getX(), e.getY());
                 }
             }
@@ -250,6 +394,18 @@ public class MainFrame extends JFrame {
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         flowList.setCellRenderer(new FlowListCellRenderer());
         flowList.addMouseListener(new FlowMouseListener());
+        flowList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    Flow flow = flowList.getSelectedValue();
+                    if (null == flow) {
+                        return;
+                    }
+                    popup.show((JComponent) e.getSource(), e.getX(), e.getY());
+                }
+            }
+        });
         sequenceTab.add(new JScrollPane(flowList), BorderLayout.CENTER);
         flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
         flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
@@ -262,7 +418,6 @@ public class MainFrame extends JFrame {
         JPanel container = new JPanel(new BorderLayout());
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        toolBar.setMargin(new Insets(3, 5, 3, 5));
         JButton clearButton = new JButton();
         clearButton.setToolTipText("Clear");
         clearButton.setIcon(SvgIcons.CLEAR);
@@ -304,12 +459,24 @@ public class MainFrame extends JFrame {
         recordButton.setToolTipText("Record");
         recordButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/play.svg"));
         toolBar.add(clearButton);
+        toolBar.add(Box.createHorizontalStrut(20));
+        toolBar.add(recordButton);
+        toolBar.add(throttlingButton);
+        toolBar.add(Box.createHorizontalStrut(20));
         toolBar.add(composeButton);
         toolBar.add(repeatButton);
-        toolBar.add(throttlingButton);
-        toolBar.add(recordButton);
-        container.add(toolBar, BorderLayout.EAST);
+        JPanel toolBarPanel = new JPanel(new FlowLayout(FlowLayout.CENTER) {{
+            setHgap(0);
+            setVgap(0);
+            getInsets().set(0, 0, 0, 0);
+        }}) {{
+            getInsets().set(0, 0, 0, 0);
+        }};
+        toolBarPanel.add(toolBar);
+        container.add(toolBarPanel, BorderLayout.CENTER);
         container.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.SOUTH);
+        container.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        container.setPreferredSize(new Dimension(200, 28));
         getContentPane().add(container, BorderLayout.NORTH);
 
     }
@@ -386,7 +553,7 @@ public class MainFrame extends JFrame {
         toolsMenu.add(allowListMenuItem);
         toolsMenu.add(new JSeparator());
         JMenuItem composeMenuItem = new JMenuItem("Compose");
-        composeMenuItem.addActionListener(e -> new ComposeDialog(this, "Compose", null,true));
+        composeMenuItem.addActionListener(e -> new ComposeDialog(this, "Compose", null, true));
         toolsMenu.add(composeMenuItem);
         JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
         jsonViewerMenuItem.addActionListener(e -> saveAsActionPerformed());

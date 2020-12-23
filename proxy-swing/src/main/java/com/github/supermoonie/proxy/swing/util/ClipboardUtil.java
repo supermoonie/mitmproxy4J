@@ -4,6 +4,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.util.List;
 
@@ -30,8 +32,10 @@ public class ClipboardUtil {
     }
 
     public static void copyText(String text) {
-        final ClipboardContent clipboardContent = new ClipboardContent();
-        clipboardContent.putString(text);
-        Clipboard.getSystemClipboard().setContent(clipboardContent);
+        java.awt.datatransfer.Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        systemClipboard.setContents(new StringSelection(text), null);
+//        final ClipboardContent clipboardContent = new ClipboardContent();
+//        clipboardContent.putString(text);
+//        Clipboard.getSystemClipboard().setContent(clipboardContent);
     }
 }

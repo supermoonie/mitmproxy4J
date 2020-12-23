@@ -61,13 +61,15 @@ public class Application {
             // install inspectors
             FlatInspector.install("ctrl shift alt X");
             FlatUIDefaultsInspector.install("ctrl shift alt Y");
-            int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.VALUE_DEFAULT_PROXY_PORT);
-            boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.VALUE_DEFAULT_PROXY_AUTH);
-            String username = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_USER, "");
-            String password = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_PWD, "");
-            ProxyManager.start(port, auth, username, password, new InternalProxyInterceptInitializer());
-            ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(80);
-            ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(80);
+            Application.EXECUTOR.execute(() -> {
+                int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.VALUE_DEFAULT_PROXY_PORT);
+                boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.VALUE_DEFAULT_PROXY_AUTH);
+                String username = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_USER, "");
+                String password = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_PWD, "");
+                ProxyManager.start(port, auth, username, password, new InternalProxyInterceptInitializer());
+                ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(80);
+                ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(80);
+            });
             MAIN_FRAME = new MainFrame();
             MAIN_FRAME.setPreferredSize(new Dimension(1280, 800));
             // show frame
