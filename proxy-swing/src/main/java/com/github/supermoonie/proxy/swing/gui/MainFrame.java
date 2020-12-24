@@ -6,10 +6,7 @@ import com.formdev.flatlaf.extras.SVGUtils;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.entity.Content;
-import com.github.supermoonie.proxy.swing.entity.Header;
-import com.github.supermoonie.proxy.swing.entity.Request;
-import com.github.supermoonie.proxy.swing.entity.Response;
+import com.github.supermoonie.proxy.swing.entity.*;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
@@ -23,6 +20,7 @@ import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.util.ClipboardUtil;
 import com.github.supermoonie.proxy.swing.util.Jackson;
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.Where;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -31,6 +29,7 @@ import org.jdesktop.swingx.JXTreeTable;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
@@ -38,6 +37,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -229,7 +229,6 @@ public class MainFrame extends JFrame {
     private JPanel initLeftFlowPanel() {
         // 左侧Flow panel
         JPanel flowPanel = new JPanel();
-//        flowPanel.setMinimumSize(new Dimension(310, 0));
         flowPanel.setLayout(new BorderLayout());
         JTextField filter = new JTextField();
         filter.addKeyListener(new FilterKeyListener(filter));
@@ -245,92 +244,7 @@ public class MainFrame extends JFrame {
         flowTree.setCellRenderer(new FlowTreeCellRender());
         flowTree.addMouseListener(new FlowMouseListener());
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem copyResponseMenuItem = new JMenuItem("Copy Response");
-        JMenuItem saveResponseMenuItem = new JMenuItem("Save Response"){{
-            addActionListener(e -> {
-                JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
-                Flow flow;
-                if (selectedComponent.equals(structureTab)) {
-                    FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
-                    if (null == node || !node.isLeaf()) {
-                        return;
-                    }
-                    flow = (Flow) node.getUserObject();
-                } else {
-                    flow = flowList.getSelectedValue();
-                    if (null == flow) {
-                        return;
-                    }
-                }
-                Integer responseId = flow.getResponseId();
-                if (null == responseId) {
-                    return;
-                }
-                Integer requestId = flow.getRequestId();
-                Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
-                Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
-                Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
-                Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
-                try {
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    Map<String, Object> map = new HashMap<>(5);
-                    Request request = requestDao.queryForId(requestId);
-                    Map<String, Object> requestMap = new HashMap<>(16);
-                    requestMap.put("url", request.getUri());
-                    requestMap.put("method", request.getMethod());
-                    requestMap.put("httpVersion", request.getHttpVersion());
-                    requestMap.put("host", request.getHost());
-                    requestMap.put("port", request.getPort());
-                    requestMap.put("contentType", request.getContentType());
-                    requestMap.put("startTime", dateFormat.format(request.getStartTime()));
-                    requestMap.put("endTime", dateFormat.format(request.getEndTime()));
-                    List<Header> requestHeaderList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, requestId)
-                            .and().isNull(Header.RESPONSE_ID_FIELD_NAME).query();
-                    List<Map<String, String>> requestHeaders = new ArrayList<>();
-                    for (Header header : requestHeaderList) {
-                        requestHeaders.add(Map.of("name", header.getName(), "value", header.getValue()));
-                    }
-                    requestMap.put("header", requestHeaders);
-                    if (null != request.getContentId()) {
-                        Content content = contentDao.queryForId(request.getContentId());
-                        requestMap.put("content", Hex.encodeHexString(content.getRawContent()));
-                    }
-                    map.put("request", requestMap);
-                    Map<String, Object> responseMap = new HashMap<>(16);
-                    Response response = responseDao.queryForId(responseId);
-                    responseMap.put("contentType", response.getContentType());
-                    responseMap.put("status", response.getStatus());
-                    responseMap.put("httpVersion", response.getHttpVersion());
-                    responseMap.put("startTime", dateFormat.format(response.getStartTime()));
-                    responseMap.put("endTime", dateFormat.format(response.getEndTime()));
-                    List<Header> responseHeaderList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, requestId)
-                            .and().eq(Header.RESPONSE_ID_FIELD_NAME, responseId).query();
-                    List<Map<String, String>> responseHeaders = new ArrayList<>();
-                    for (Header header : responseHeaderList) {
-                        responseHeaders.add(Map.of("name", header.getName(), "value", header.getValue()));
-                    }
-                    responseMap.put("header", responseHeaders);
-                    if (null != response.getContentId()) {
-                        Content content = contentDao.queryForId(response.getContentId());
-                        responseMap.put("content", Hex.encodeHexString(content.getRawContent()));
-                    }
-                    map.put("response", responseMap);
-
-                    String json = Jackson.toJsonString(map, true);
-                    JFileChooser fileChooser = new JFileChooser();
-                    int i = fileChooser.showSaveDialog(this);
-                    if (i == JFileChooser.APPROVE_OPTION) {
-                        File selectedFile = fileChooser.getSelectedFile();
-                        FileUtils.writeStringToFile(selectedFile, json, StandardCharsets.UTF_8);
-                    }
-                } catch (SQLException | IOException t) {
-                    Application.showError(t);
-                }
-            });
-        }};
-        JMenuItem composeMenuItem = new JMenuItem("Compose");
-        JMenuItem repeatMenuItem = new JMenuItem("Repeat");
-        popup.add(new JMenuItem("Copy URL") {{
+        JMenuItem copyUrlMenuItem = new JMenuItem("Copy URL") {{
             addActionListener(e -> {
                 JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
                 if (selectedComponent.equals(structureTab)) {
@@ -362,9 +276,94 @@ public class MainFrame extends JFrame {
                     ClipboardUtil.copyText(flow.getUrl());
                 }
             });
-        }});
+        }};
+        JMenuItem copyResponseMenuItem = new JMenuItem("Copy Response") {{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+                if (null == flow) {
+                    return;
+                }
+                Integer responseId = flow.getResponseId();
+                if (null == responseId) {
+                    return;
+                }
+                Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
+                Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+                try {
+                    Response response = responseDao.queryForId(responseId);
+                    if (null == response.getContentId()) {
+                        return;
+                    }
+                    Content content = contentDao.queryForId(response.getContentId());
+                    if (response.getContentType().toLowerCase().startsWith("image/")) {
+                        ClipboardUtil.copyImage(ImageIO.read(new ByteArrayInputStream(content.getRawContent())));
+                    } else {
+                        ClipboardUtil.copyText(new String(content.getRawContent(), StandardCharsets.UTF_8));
+                    }
+                } catch (SQLException | IOException t) {
+                    Application.showError(t);
+                }
+            });
+        }};
+        JMenuItem saveResponseMenuItem = new JMenuItem("Save Response") {{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+                if (null == flow) {
+                    return;
+                }
+                Integer responseId = flow.getResponseId();
+                if (null == responseId) {
+                    return;
+                }
+                Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
+                Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+                try {
+                    Response response = responseDao.queryForId(responseId);
+                    if (null == response.getContentId()) {
+                        return;
+                    }
+                    Content content = contentDao.queryForId(response.getContentId());
+                    JFileChooser fileChooser = new JFileChooser();
+                    int i = fileChooser.showSaveDialog(this);
+                    if (i == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        FileUtils.writeByteArrayToFile(selectedFile, content.getRawContent());
+                    }
+                } catch (SQLException | IOException t) {
+                    Application.showError(t);
+                }
+            });
+        }};
+        JMenuItem copyAllMenuItem = new JMenuItem("Copy All") {{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+                String json = flowToJson(flow);
+                ClipboardUtil.copyText(json);
+            });
+        }};
+        JMenuItem saveAllMenuItem = new JMenuItem("Save All") {{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+                String json = flowToJson(flow);
+                JFileChooser fileChooser = new JFileChooser();
+                int i = fileChooser.showSaveDialog(this);
+                if (i == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    try {
+                        FileUtils.writeStringToFile(selectedFile, json, StandardCharsets.UTF_8);
+                    } catch (IOException t) {
+                        Application.showError(t);
+                    }
+                }
+            });
+        }};
+        JMenuItem composeMenuItem = new JMenuItem("Compose");
+        JMenuItem repeatMenuItem = new JMenuItem("Repeat");
+        popup.add(copyUrlMenuItem);
         popup.add(copyResponseMenuItem);
         popup.add(saveResponseMenuItem);
+        popup.add(copyAllMenuItem);
+        popup.add(saveAllMenuItem);
         popup.add(new JSeparator());
         popup.add(composeMenuItem);
         popup.add(repeatMenuItem);
@@ -383,6 +382,8 @@ public class MainFrame extends JFrame {
                     }
                     copyResponseMenuItem.setEnabled(node.isLeaf());
                     saveResponseMenuItem.setEnabled(node.isLeaf());
+                    copyAllMenuItem.setEnabled(node.isLeaf());
+                    saveAllMenuItem.setEnabled(node.isLeaf());
                     composeMenuItem.setEnabled(node.isLeaf());
                     repeatMenuItem.setEnabled(node.isLeaf());
                     popup.show((JComponent) e.getSource(), e.getX(), e.getY());
@@ -402,6 +403,12 @@ public class MainFrame extends JFrame {
                     if (null == flow) {
                         return;
                     }
+                    copyResponseMenuItem.setEnabled(true);
+                    saveResponseMenuItem.setEnabled(true);
+                    copyAllMenuItem.setEnabled(true);
+                    saveAllMenuItem.setEnabled(true);
+                    composeMenuItem.setEnabled(true);
+                    repeatMenuItem.setEnabled(true);
                     popup.show((JComponent) e.getSource(), e.getX(), e.getY());
                 }
             }
@@ -411,6 +418,51 @@ public class MainFrame extends JFrame {
         flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
         flowPanel.add(flowTabPane, BorderLayout.CENTER);
         return flowPanel;
+    }
+
+    public List<Map<String, Object>> certificateInfo(Integer requestId, Integer responseId) throws SQLException {
+        Dao<CertificateMap, Integer> certificateMapDao = DaoCollections.getDao(CertificateMap.class);
+        Dao<CertificateInfo, Integer> certificateInfoDao = DaoCollections.getDao(CertificateInfo.class);
+        Where<CertificateMap, Integer> certificateMapWhere = certificateMapDao.queryBuilder().where().eq(CertificateMap.REQUEST_ID_FIELD_NAME, requestId);
+        if (null == responseId) {
+            certificateMapWhere.and().isNull(CertificateMap.RESPONSE_ID_FIELD_NAME);
+        } else {
+            certificateMapWhere.and().eq(CertificateMap.RESPONSE_ID_FIELD_NAME, responseId);
+        }
+        List<CertificateMap> localCertificateMaps = certificateMapWhere.query();
+        List<Map<String, Object>> localCertificateList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (CertificateMap localCertMap : localCertificateMaps) {
+            CertificateInfo certificateInfo = certificateInfoDao.queryBuilder().where().eq(CertificateInfo.SERIAL_NUMBER_FIELD_NAME, localCertMap.getCertificateSerialNumber()).queryForFirst();
+            Map<String, Object> localCert = new HashMap<>();
+            localCert.put("serialNumber", certificateInfo.getSerialNumber());
+            localCert.put("type", certificateInfo.getType());
+            localCert.put("issuedTo", Map.of(
+                    "commonName", certificateInfo.getSubjectCommonName(),
+                    "organizationUnit", certificateInfo.getSubjectOrganizationDepartment(),
+                    "organizationName", certificateInfo.getSubjectOrganizationName(),
+                    "localityName", certificateInfo.getSubjectLocalityName(),
+                    "stateName", certificateInfo.getSubjectStateName(),
+                    "country", certificateInfo.getSubjectCountry()
+            ));
+            localCert.put("issuedBy", Map.of(
+                    "commonName", certificateInfo.getIssuerCommonName(),
+                    "organizationUnit", certificateInfo.getIssuerOrganizationDepartment(),
+                    "organizationName", certificateInfo.getIssuerOrganizationName(),
+                    "localityName", certificateInfo.getIssuerLocalityName(),
+                    "stateName", certificateInfo.getIssuerStateName(),
+                    "country", certificateInfo.getIssuerCountry()
+            ));
+            localCert.put("notValidBefore", dateFormat.format(certificateInfo.getNotValidBefore()));
+            localCert.put("notValidAfter", dateFormat.format(certificateInfo.getNotValidAfter()));
+            localCert.put("fingerprints", Map.of(
+                    "SHA-1", certificateInfo.getShaOne(),
+                    "SHA-256", certificateInfo.getShaOne()
+            ));
+            localCert.put("detail", certificateInfo.getFullDetail());
+            localCertificateList.add(localCert);
+        }
+        return localCertificateList;
     }
 
 
@@ -573,6 +625,86 @@ public class MainFrame extends JFrame {
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
+    }
+
+    private String flowToJson(Flow flow) {
+        if (null == flow) {
+            return null;
+        }
+        Integer responseId = flow.getResponseId();
+        if (null == responseId) {
+            return null;
+        }
+        Integer requestId = flow.getRequestId();
+        Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+        Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
+        Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
+        Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Map<String, Object> map = new HashMap<>(5);
+            Request request = requestDao.queryForId(requestId);
+            Map<String, Object> requestMap = new HashMap<>(16);
+            requestMap.put("url", request.getUri());
+            requestMap.put("method", request.getMethod());
+            requestMap.put("httpVersion", request.getHttpVersion());
+            requestMap.put("host", request.getHost());
+            requestMap.put("port", request.getPort());
+            requestMap.put("contentType", request.getContentType());
+            requestMap.put("startTime", dateFormat.format(request.getStartTime()));
+            requestMap.put("endTime", dateFormat.format(request.getEndTime()));
+            List<Header> requestHeaderList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, requestId)
+                    .and().isNull(Header.RESPONSE_ID_FIELD_NAME).query();
+            List<Map<String, String>> requestHeaders = new ArrayList<>();
+            for (Header header : requestHeaderList) {
+                requestHeaders.add(Map.of("name", header.getName(), "value", header.getValue()));
+            }
+            requestMap.put("header", requestHeaders);
+            if (null != request.getContentId()) {
+                Content content = contentDao.queryForId(request.getContentId());
+                requestMap.put("content", Hex.encodeHexString(content.getRawContent()));
+            }
+            map.put("request", requestMap);
+            Map<String, Object> responseMap = new HashMap<>(16);
+            Response response = responseDao.queryForId(responseId);
+            responseMap.put("contentType", response.getContentType());
+            responseMap.put("status", response.getStatus());
+            responseMap.put("httpVersion", response.getHttpVersion());
+            responseMap.put("startTime", dateFormat.format(response.getStartTime()));
+            responseMap.put("endTime", dateFormat.format(response.getEndTime()));
+            List<Header> responseHeaderList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, requestId)
+                    .and().eq(Header.RESPONSE_ID_FIELD_NAME, responseId).query();
+            List<Map<String, String>> responseHeaders = new ArrayList<>();
+            for (Header header : responseHeaderList) {
+                responseHeaders.add(Map.of("name", header.getName(), "value", header.getValue()));
+            }
+            responseMap.put("header", responseHeaders);
+            if (null != response.getContentId()) {
+                Content content = contentDao.queryForId(response.getContentId());
+                responseMap.put("content", Hex.encodeHexString(content.getRawContent()));
+            }
+            map.put("response", responseMap);
+            map.put("tls", Map.of("local", certificateInfo(requestId, null), "server", certificateInfo(requestId, responseId)));
+            return Jackson.toJsonString(map, true);
+        } catch (SQLException t) {
+            Application.showError(t);
+            return null;
+        }
+    }
+
+    private Flow getSelectedFlow() {
+        JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
+        Flow flow;
+        if (selectedComponent.equals(structureTab)) {
+            FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
+            if (null == node || !node.isLeaf()) {
+                return null;
+            }
+            flow = (Flow) node.getUserObject();
+        } else {
+            flow = flowList.getSelectedValue();
+        }
+        return flow;
     }
 
     public JScrollPane getResponseImageScrollPane() {
