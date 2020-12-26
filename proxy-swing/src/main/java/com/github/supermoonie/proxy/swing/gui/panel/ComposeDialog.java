@@ -351,7 +351,7 @@ public class ComposeDialog extends JDialog {
                     .build()) {
                 String method = Objects.requireNonNullElse(methodComboBox.getSelectedItem(), "GET").toString();
                 String url = urlTextField.getText();
-                RequestBuilder requestBuilder = RequestBuilder.create(method).setUri(url);
+                RequestBuilder requestBuilder = RequestBuilder.create(method.toUpperCase()).setUri(url);
                 int headerRowCount = headerTable.getModel().getRowCount();
                 for (int row = 0; row < headerRowCount; row++) {
                     String name = headerTable.getModel().getValueAt(row, 0).toString();

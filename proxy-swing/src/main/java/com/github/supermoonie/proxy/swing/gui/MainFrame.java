@@ -18,11 +18,17 @@ import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.util.ClipboardUtil;
+import com.github.supermoonie.proxy.swing.util.HttpClientUtil;
 import com.github.supermoonie.proxy.swing.util.Jackson;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.Where;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.BasicHttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTreeTable;
@@ -102,7 +108,7 @@ public class MainFrame extends JFrame {
 
 
     public MainFrame() {
-        setTitle("Lightning:" + ProxyManager.getInternalProxy().getPort());
+        setTitle("Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
         initMenuBar();
@@ -357,18 +363,35 @@ public class MainFrame extends JFrame {
                 }
             });
         }};
-        JMenuItem composeMenuItem = new JMenuItem("Compose");
-        JMenuItem repeatMenuItem = new JMenuItem("Repeat");
+        JMenuItem composeMenuItem = new JMenuItem("Compose") {{
+            addActionListener(e -> {
+                Flow selectedFlow = getSelectedFlow();
+                if (null == selectedFlow) {
+                    return;
+                }
+                new ComposeDialog(MainFrame.this, "Compose", selectedFlow, true);
+            });
+        }};
+        JMenuItem repeatMenuItem = new JMenuItem("Repeat") {{
+            addActionListener(e -> {
+                Flow selectedFlow = getSelectedFlow();
+                repeat(selectedFlow);
+            });
+        }};
         popup.add(copyUrlMenuItem);
-        popup.add(copyResponseMenuItem);
-        popup.add(saveResponseMenuItem);
         popup.add(copyAllMenuItem);
         popup.add(saveAllMenuItem);
+        popup.add(copyResponseMenuItem);
+        popup.add(saveResponseMenuItem);
         popup.add(new JSeparator());
         popup.add(composeMenuItem);
         popup.add(repeatMenuItem);
         popup.add(new JSeparator());
-        popup.add(new JMenuItem("Block List"));
+        popup.add(new JMenuItem("Block List"){{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+            });
+        }});
         popup.add(new JMenuItem("Allow List"));
         popup.add(new JSeparator());
         popup.add(new JMenuItem("Map Remote"));
@@ -420,7 +443,7 @@ public class MainFrame extends JFrame {
         return flowPanel;
     }
 
-    public List<Map<String, Object>> certificateInfo(Integer requestId, Integer responseId) throws SQLException {
+    private List<Map<String, Object>> certificateInfo(Integer requestId, Integer responseId) throws SQLException {
         Dao<CertificateMap, Integer> certificateMapDao = DaoCollections.getDao(CertificateMap.class);
         Dao<CertificateInfo, Integer> certificateInfoDao = DaoCollections.getDao(CertificateInfo.class);
         Where<CertificateMap, Integer> certificateMapWhere = certificateMapDao.queryBuilder().where().eq(CertificateMap.REQUEST_ID_FIELD_NAME, requestId);
@@ -474,6 +497,8 @@ public class MainFrame extends JFrame {
         clearButton.setToolTipText("Clear");
         clearButton.setIcon(SvgIcons.CLEAR);
         clearButton.addActionListener(e -> {
+            flowTree.clearSelection();
+            flowList.clearSelection();
             requestTablePane.removeAll();
             responseTablePane.removeAll();
             rootNode.removeAllChildren();
@@ -495,7 +520,11 @@ public class MainFrame extends JFrame {
         });
         JButton repeatButton = new JButton();
         repeatButton.setToolTipText("Repeat");
-        repeatButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/repeat.svg"));
+        repeatButton.setIcon(SvgIcons.REPEAT);
+        repeatButton.addActionListener(e -> {
+            Flow flow = getSelectedFlow();
+            repeat(flow);
+        });
         JButton throttlingButton = new JButton();
         throttlingButton.setToolTipText("Throttling");
         throttlingButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/throttling_stop.svg"));
@@ -625,6 +654,40 @@ public class MainFrame extends JFrame {
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
         setJMenuBar(menuBar);
+    }
+
+    private void repeat(Flow selectedFlow) {
+        if (null == selectedFlow) {
+            return;
+        }
+        Application.EXECUTOR.execute(() -> {
+            try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
+                    .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
+                    .build()) {
+                Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+                Request request = requestDao.queryForId(selectedFlow.getRequestId());
+                RequestBuilder requestBuilder = RequestBuilder.create(request.getMethod().toUpperCase()).setUri(request.getUri());
+                Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
+                List<Header> headerList = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, request.getId())
+                        .and().isNull(Header.RESPONSE_ID_FIELD_NAME).query();
+                for (Header header : headerList) {
+                    if (header.getName().toLowerCase().equals("content-length")) {
+                        continue;
+                    }
+                    requestBuilder.addHeader(header.getName(), header.getValue());
+                }
+                if (null != request.getContentId()) {
+                    Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+                    Content content = contentDao.queryForId(request.getContentId());
+                    BasicHttpEntity entity = new BasicHttpEntity();
+                    entity.setContent(new ByteArrayInputStream(content.getRawContent()));
+                    requestBuilder.setEntity(entity);
+                }
+                httpClient.execute(requestBuilder.build()).close();
+            } catch (Exception t) {
+                Application.showError(t);
+            }
+        });
     }
 
     private String flowToJson(Flow flow) {

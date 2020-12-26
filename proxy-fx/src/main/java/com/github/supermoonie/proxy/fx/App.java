@@ -168,7 +168,7 @@ public class App extends Application {
     }
 
     public static void setCommonIcon(Stage stage) {
-        setCommonIcon(stage, "Lightning:" + ProxyManager.getInternalProxy().getPort());
+        setCommonIcon(stage, "Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
     }
 
     public static void setCommonIcon(Stage stage, String title) {

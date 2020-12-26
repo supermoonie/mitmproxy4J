@@ -14,6 +14,7 @@ import javax.swing.*;
 public interface SvgIcons {
 
     FlatSVGIcon LIGHTING = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/lighting.svg");
+    FlatSVGIcon REPEAT = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/repeat.svg");
     Icon HTML = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/html.svg", Application.class.getClassLoader());
     FlatSVGIcon JSON = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/json.svg", Application.class.getClassLoader());
     FlatSVGIcon JAVA_SCRIPT = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/js.svg");

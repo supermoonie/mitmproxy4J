@@ -3,25 +3,35 @@ package com.github.supermoonie.proxy.swing.gui.panel;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.ThemeManager;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.AllowBlock;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
+import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.InternalProxyInterceptInitializer;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.plaf.UIResource;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.text.NumberFormatter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.HashSet;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author supermoonie
@@ -56,29 +66,32 @@ public class PreferencesDialog extends JDialog {
             setClosedIcon(null);
             setOpenIcon(null);
         }});
-        preferenceTree.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) preferenceTree.getLastSelectedPathComponent();
-                String selected = node.getUserObject().toString();
-                if (selected.equals(current)) {
-                    return;
-                }
-                current = selected;
-                rightPanel.removeAll();
-                switch (selected) {
-                    case "Appearance":
-                        rightPanel.add(appearancePanel());
-                        break;
-                    case "Proxy & Access Control":
-                        rightPanel.add(proxyPanel());
-                        break;
-                    case "Throttling":
-                        rightPanel.add(throttlingPanel());
-                        break;
-                }
-                rightPanel.updateUI();
+        preferenceTree.addTreeSelectionListener(e -> {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) preferenceTree.getLastSelectedPathComponent();
+            String selected = node.getUserObject().toString();
+            if (selected.equals(current)) {
+                return;
             }
+            current = selected;
+            rightPanel.removeAll();
+            switch (selected) {
+                case "Appearance":
+                    rightPanel.add(appearancePanel());
+                    break;
+                case "Proxy & Access Control":
+                    rightPanel.add(proxyPanel());
+                    break;
+                case "Throttling":
+                    rightPanel.add(throttlingPanel());
+                    break;
+                case "Allow List":
+                    rightPanel.add(allowListPanel());
+                    break;
+                case "Block List":
+                    rightPanel.add(blockListPanel());
+                    break;
+            }
+            rightPanel.updateUI();
         });
         DefaultTreeModel treeModel = (DefaultTreeModel) preferenceTree.getModel();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode();
@@ -86,6 +99,8 @@ public class PreferencesDialog extends JDialog {
         DefaultMutableTreeNode appearanceNode = new DefaultMutableTreeNode("Appearance");
         root.add(appearanceNode);
         root.add(new DefaultMutableTreeNode("Proxy & Access Control"));
+        root.add(new DefaultMutableTreeNode("Allow List"));
+        root.add(new DefaultMutableTreeNode("Block List"));
         preferenceTree.setSelectionPath(new TreePath(appearanceNode.getPath()));
         leftPanel.add(new JScrollPane(preferenceTree), BorderLayout.CENTER);
         // default right panel
@@ -305,7 +320,7 @@ public class PreferencesDialog extends JDialog {
                     ProxyManager.getInternalProxy().setUsername(username);
                     ProxyManager.getInternalProxy().setPassword(password);
                 }
-                Application.MAIN_FRAME.setTitle("Lightning:" + ProxyManager.getInternalProxy().getPort());
+                Application.MAIN_FRAME.setTitle("Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
                 ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_PROXY_PORT, port);
                 ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_PROXY_AUTH, auth);
                 ApplicationPreferences.getState().put(ApplicationPreferences.KEY_PROXY_AUTH_USER, username);
@@ -324,7 +339,8 @@ public class PreferencesDialog extends JDialog {
                     try {
                         Thread.sleep(300);
                         SwingUtilities.invokeLater(() -> this.setText("Apply"));
-                    } catch (InterruptedException ignore) {}
+                    } catch (InterruptedException ignore) {
+                    }
                 });
             });
         }});
@@ -352,6 +368,315 @@ public class PreferencesDialog extends JDialog {
         container.setLayout(containerLayout);
 
         return throttlingSettingPanel;
+    }
+
+    private JPanel allowListPanel() {
+        JPanel allowSettingPanel = new JPanel(new BorderLayout());
+        allowSettingPanel.getInsets().set(10, 10, 10, 10);
+        JPanel container = new JPanel();
+        container.setBorder(BorderFactory.createTitledBorder("Allow List"));
+        BoxLayout containerLayout = new BoxLayout(container, BoxLayout.Y_AXIS);
+        container.setLayout(containerLayout);
+
+        JPanel enableAllowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JCheckBox enableCheckBox = new JCheckBox("Enable Allow List");
+        enableAllowPanel.add(enableCheckBox);
+        enableAllowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        container.add(enableAllowPanel);
+        DefaultTableModel allowTableModel = new DefaultTableModel(null, new String[]{"Enable", "Location Regex"}) {{
+            addTableModelListener(e -> {
+                if (e.getType() == TableModelEvent.DELETE || e.getType() == TableModelEvent.UPDATE) {
+                    Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+                    try {
+                        DeleteBuilder<AllowBlock, Integer> deleteBuilder = allowBlockDao.deleteBuilder();
+                        deleteBuilder.where().eq(AllowBlock.TYPE_FIELD_NAME, AllowBlock.TYPE_ALLOW);
+                        deleteBuilder.delete();
+                        Set<String> allowSet = new HashSet<>();
+                        int rowCount = getRowCount();
+                        for (int i = 0; i < rowCount; i++) {
+                            boolean enable = (boolean) getValueAt(i, 0);
+                            String location = (String) getValueAt(i, 1);
+                            if (null != location && !"".equals(location)) {
+                                AllowBlock allowBlock = new AllowBlock();
+                                allowBlock.setEnable(enable ? AllowBlock.ENABLE : AllowBlock.DISABLE);
+                                allowBlock.setType(AllowBlock.TYPE_ALLOW);
+                                allowBlock.setLocation(location);
+                                allowBlock.setTimeCreated(new Date());
+                                allowBlockDao.create(allowBlock);
+                            }
+                            if (enable) {
+                                allowSet.add(location);
+                            }
+                        }
+                        DefaultConfigIntercept.INSTANCE.getAllowUriList().clear();
+                        DefaultConfigIntercept.INSTANCE.getAllowUriList().addAll(allowSet);
+                    } catch (SQLException t) {
+                        Application.showError(t);
+                    }
+                }
+            });
+        }};
+        JTable allowTable = new JTable(allowTableModel) {
+            private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class};
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                return columnTypes[column];
+            }
+
+            {
+                addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusLost(FocusEvent e) {
+                        clearSelection();
+                    }
+                });
+            }
+        };
+        allowTable.setShowHorizontalLines(true);
+        allowTable.setShowVerticalLines(true);
+        allowTable.setShowGrid(false);
+        allowTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        allowTable.getColumnModel().getColumn(1).setPreferredWidth(600);
+        allowTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
+        allowTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setBorder(BorderFactory.createEmptyBorder());
+                return this;
+            }
+        });
+        JTextField locationTextField = new JTextField();
+        DefaultCellEditor locationCellEditor = new DefaultCellEditor(locationTextField);
+        locationTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                locationCellEditor.stopCellEditing();
+            }
+        });
+        locationCellEditor.setClickCountToStart(2);
+        allowTable.getColumnModel().getColumn(1).setCellEditor(locationCellEditor);
+        JPanel allowTablePanel = new JPanel(new BorderLayout());
+        allowTablePanel.add(new JScrollPane(allowTable));
+        JPanel allowTableButtonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton addButton = new JButton("Add") {{
+            addActionListener(e -> {
+                allowTable.clearSelection();
+                allowTableModel.addRow(new Object[]{true, ""});
+                allowTable.setShowHorizontalLines(true);
+            });
+        }};
+        JButton removeButton = new JButton("Remove") {{
+            addActionListener(e -> {
+                int[] selectedRows = allowTable.getSelectedRows();
+                for (int i = selectedRows.length - 1; i >= 0; i--) {
+                    int row = selectedRows[i];
+                    allowTableModel.removeRow(row);
+                }
+                allowTable.clearSelection();
+                allowTable.setShowHorizontalLines(true);
+            });
+        }};
+        allowTableButtonsPanel.add(addButton);
+        allowTableButtonsPanel.add(removeButton);
+        allowTablePanel.add(allowTableButtonsPanel, BorderLayout.SOUTH);
+        container.add(allowTablePanel);
+        allowSettingPanel.add(container);
+
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, ApplicationPreferences.VALUE_ALLOW_LIST_ENABLE);
+        enableCheckBox.setSelected(enable);
+        addButton.setEnabled(enable);
+        removeButton.setEnabled(enable);
+        allowTable.setEnabled(enable);
+        enableCheckBox.addActionListener(e -> {
+            allowTable.setEnabled(enableCheckBox.isSelected());
+            addButton.setEnabled(enableCheckBox.isSelected());
+            removeButton.setEnabled(enableCheckBox.isSelected());
+            DefaultConfigIntercept.INSTANCE.setAllowFlag(enableCheckBox.isSelected());
+            ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, enableCheckBox.isSelected());
+        });
+        Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+        try {
+            List<AllowBlock> allowBlockList = allowBlockDao.queryForAll();
+            for (AllowBlock allowBlock : allowBlockList) {
+                if (allowBlock.getType().equals(AllowBlock.TYPE_ALLOW)) {
+                    allowTableModel.addRow(new Object[]{allowBlock.getEnable().equals(AllowBlock.ENABLE), allowBlock.getLocation()});
+                }
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
+        }
+        return allowSettingPanel;
+    }
+
+    private JPanel blockListPanel() {
+        JPanel blockSettingPanel = new JPanel(new BorderLayout());
+        blockSettingPanel.getInsets().set(10, 10, 10, 10);
+        JPanel container = new JPanel();
+        container.setBorder(BorderFactory.createTitledBorder("Block List"));
+        BoxLayout containerLayout = new BoxLayout(container, BoxLayout.Y_AXIS);
+        container.setLayout(containerLayout);
+
+        JPanel enableBlockPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JCheckBox enableCheckBox = new JCheckBox("Enable Block List");
+        enableBlockPanel.add(enableCheckBox);
+        enableBlockPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        container.add(enableBlockPanel);
+        DefaultTableModel blockTableModel = new DefaultTableModel(null, new String[]{"Enable", "Location Regex"}) {{
+            addTableModelListener(e -> {
+                if (e.getType() == TableModelEvent.DELETE || e.getType() == TableModelEvent.UPDATE) {
+                    Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+                    try {
+                        DeleteBuilder<AllowBlock, Integer> deleteBuilder = allowBlockDao.deleteBuilder();
+                        deleteBuilder.where().eq(AllowBlock.TYPE_FIELD_NAME, AllowBlock.TYPE_BLOCK);
+                        deleteBuilder.delete();
+                        Set<String> blockSet = new HashSet<>();
+                        int rowCount = getRowCount();
+                        for (int i = 0; i < rowCount; i++) {
+                            boolean enable = (boolean) getValueAt(i, 0);
+                            String location = (String) getValueAt(i, 1);
+                            if (null != location && !"".equals(location)) {
+                                AllowBlock allowBlock = new AllowBlock();
+                                allowBlock.setEnable(enable ? AllowBlock.ENABLE : AllowBlock.DISABLE);
+                                allowBlock.setType(AllowBlock.TYPE_BLOCK);
+                                allowBlock.setLocation(location);
+                                allowBlock.setTimeCreated(new Date());
+                                allowBlockDao.create(allowBlock);
+                            }
+                            if (enable) {
+                                blockSet.add(location);
+                            }
+                        }
+                        DefaultConfigIntercept.INSTANCE.getBlockUriList().clear();
+                        DefaultConfigIntercept.INSTANCE.getBlockUriList().addAll(blockSet);
+                    } catch (SQLException t) {
+                        Application.showError(t);
+                    }
+                }
+            });
+        }};
+        JTable blockTable = new JTable(blockTableModel) {
+            private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class};
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                return columnTypes[column];
+            }
+
+            {
+                addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusLost(FocusEvent e) {
+                        clearSelection();
+                    }
+                });
+            }
+        };
+        blockTable.setShowHorizontalLines(true);
+        blockTable.setShowVerticalLines(true);
+        blockTable.setShowGrid(false);
+        blockTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        blockTable.getColumnModel().getColumn(1).setPreferredWidth(600);
+        blockTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
+        blockTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setBorder(BorderFactory.createEmptyBorder());
+                return this;
+            }
+        });
+        JTextField locationTextField = new JTextField();
+        DefaultCellEditor locationCellEditor = new DefaultCellEditor(locationTextField);
+        locationTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                locationCellEditor.stopCellEditing();
+            }
+        });
+        locationCellEditor.setClickCountToStart(2);
+        blockTable.getColumnModel().getColumn(1).setCellEditor(locationCellEditor);
+        JPanel allowTablePanel = new JPanel(new BorderLayout());
+        allowTablePanel.add(new JScrollPane(blockTable));
+        JPanel allowTableButtonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton addButton = new JButton("Add") {{
+            addActionListener(e -> {
+                blockTable.clearSelection();
+                blockTableModel.addRow(new Object[]{true, ""});
+                blockTable.setShowHorizontalLines(true);
+            });
+        }};
+        JButton removeButton = new JButton("Remove") {{
+            addActionListener(e -> {
+                int[] selectedRows = blockTable.getSelectedRows();
+                for (int i = selectedRows.length - 1; i >= 0; i--) {
+                    int row = selectedRows[i];
+                    blockTableModel.removeRow(row);
+                }
+                blockTable.clearSelection();
+                blockTable.setShowHorizontalLines(true);
+            });
+        }};
+        allowTableButtonsPanel.add(addButton);
+        allowTableButtonsPanel.add(removeButton);
+        allowTablePanel.add(allowTableButtonsPanel, BorderLayout.SOUTH);
+        container.add(allowTablePanel);
+        blockSettingPanel.add(container);
+
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_BLOCK_LIST_ENABLE, ApplicationPreferences.VALUE_BLOCK_LIST_ENABLE);
+        enableCheckBox.setSelected(enable);
+        addButton.setEnabled(enable);
+        removeButton.setEnabled(enable);
+        blockTable.setEnabled(enable);
+        enableCheckBox.addActionListener(e -> {
+            blockTable.setEnabled(enableCheckBox.isSelected());
+            addButton.setEnabled(enableCheckBox.isSelected());
+            removeButton.setEnabled(enableCheckBox.isSelected());
+            DefaultConfigIntercept.INSTANCE.setBlockFlag(enableCheckBox.isSelected());
+            ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_BLOCK_LIST_ENABLE, enableCheckBox.isSelected());
+        });
+        Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+        try {
+            List<AllowBlock> allowBlockList = allowBlockDao.queryForAll();
+            for (AllowBlock allowBlock : allowBlockList) {
+                if (allowBlock.getType().equals(AllowBlock.TYPE_BLOCK)) {
+                    blockTableModel.addRow(new Object[]{allowBlock.getEnable().equals(AllowBlock.ENABLE), allowBlock.getLocation()});
+                }
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
+        }
+        return blockSettingPanel;
+    }
+
+    static class BooleanRenderer extends JCheckBox implements TableCellRenderer, UIResource {
+        private static final Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
+
+        public BooleanRenderer() {
+            super();
+            setHorizontalAlignment(JLabel.CENTER);
+            setBorderPainted(true);
+        }
+
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus, int row, int column) {
+            if (isSelected) {
+                setForeground(table.getForeground());
+                if (ThemeManager.isDark()) {
+                    setBackground(Color.decode("#4b6eaf"));
+                } else {
+                    setBackground(Color.decode("#2675bf"));
+                }
+            } else {
+                setForeground(table.getForeground());
+                setBackground(table.getBackground());
+            }
+            setSelected(((value != null) && (Boolean) value));
+            setBorder(noFocusBorder);
+
+            return this;
+        }
     }
 
     private static class CellEditor extends DefaultCellEditor {

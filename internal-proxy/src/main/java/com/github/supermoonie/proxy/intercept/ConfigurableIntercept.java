@@ -33,7 +33,7 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        String uri = request.uri();
+        String uri = ctx.getConnectionInfo().getUrl();
         if (blockFlag) {
             for (String reg : blockUriList) {
                 if (uri.matches(reg)) {
