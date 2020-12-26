@@ -13,7 +13,7 @@ public class PreferencesDialogTest {
     @Test
     public void test_reg() {
         System.out.println("192.168.1.1111".matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"));
-        System.out.println("https://httpbin.org/get".matches(".*httpbin.org/.*"));
+        System.out.println("https://httpbin.org/html?foo=bar".matches("https://httpbin.org/html?foo=bar"));
     }
 
 }

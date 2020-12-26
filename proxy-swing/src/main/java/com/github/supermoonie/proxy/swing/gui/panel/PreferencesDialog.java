@@ -90,6 +90,8 @@ public class PreferencesDialog extends JDialog {
                 case "Block List":
                     rightPanel.add(blockListPanel());
                     break;
+                default:
+                    break;
             }
             rightPanel.updateUI();
         });
@@ -136,18 +138,14 @@ public class PreferencesDialog extends JDialog {
         }};
         JPanel appearanceSettingPanel = new JPanel(new BorderLayout());
         appearanceSettingPanel.getInsets().set(10, 10, 10, 10);
-        JPanel container = new JPanel();
+        JPanel container = new JPanel(new BorderLayout());
         container.setBorder(BorderFactory.createTitledBorder("Appearance"));
-        BoxLayout containerLayout = new BoxLayout(container, BoxLayout.Y_AXIS);
-        container.setLayout(containerLayout);
         JPanel themePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        themePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         themePanel.add(new JLabel("Theme:"));
         themePanel.add(Box.createHorizontalStrut(2));
         themePanel.add(themeComboBox);
-        container.add(themePanel);
+        container.add(themePanel, BorderLayout.NORTH);
         JPanel fontPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        fontPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         fontPanel.add(new JLabel("Font:"));
         fontPanel.add(Box.createHorizontalStrut(2));
         fontPanel.add(fontComboBox);
@@ -169,7 +167,7 @@ public class PreferencesDialog extends JDialog {
             setForeground(Color.WHITE);
             addActionListener(e -> {
                 String family = Objects.requireNonNullElse(fontComboBox.getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY).toString();
-                family = family.equals("Default") ? ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY : family;
+                family = "Default".equals(family) ? ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY : family;
                 int fontSize = Integer.parseInt(Objects.requireNonNullElse(fontSizeComboBox.getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_SIZE).toString());
                 ThemeManager.setFont(family, fontSize);
                 int themeSelectedIndex = themeComboBox.getSelectedIndex();
@@ -210,7 +208,6 @@ public class PreferencesDialog extends JDialog {
             @Override
             public boolean verify(JComponent input) {
                 JTextField ipTextField = (JTextField) input;
-                System.out.println("ip: " + ipTextField.getText());
                 return ipTextField.getText().matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
             }
         }));
@@ -237,8 +234,6 @@ public class PreferencesDialog extends JDialog {
         container.add(portPanel);
 
         JPanel authPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        authPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        authPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         authPanel.add(authCheckBox);
         container.add(authPanel);
 
@@ -436,7 +431,7 @@ public class PreferencesDialog extends JDialog {
         allowTable.setShowHorizontalLines(true);
         allowTable.setShowVerticalLines(true);
         allowTable.setShowGrid(false);
-        allowTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        allowTable.getColumnModel().getColumn(0).setPreferredWidth(100);
         allowTable.getColumnModel().getColumn(1).setPreferredWidth(600);
         allowTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
         allowTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
@@ -576,7 +571,7 @@ public class PreferencesDialog extends JDialog {
         blockTable.setShowHorizontalLines(true);
         blockTable.setShowVerticalLines(true);
         blockTable.setShowGrid(false);
-        blockTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        blockTable.getColumnModel().getColumn(0).setPreferredWidth(100);
         blockTable.getColumnModel().getColumn(1).setPreferredWidth(600);
         blockTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
         blockTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
@@ -659,6 +654,7 @@ public class PreferencesDialog extends JDialog {
             setBorderPainted(true);
         }
 
+        @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             if (isSelected) {

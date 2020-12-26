@@ -36,13 +36,13 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
         String uri = ctx.getConnectionInfo().getUrl();
         if (blockFlag) {
             for (String reg : blockUriList) {
-                if (uri.matches(reg)) {
+                if (uri.equals(reg) || uri.matches(reg)) {
                     return ResponseUtils.htmlResponse("Blocked!", HttpResponseStatus.OK);
                 }
             }
         }
         if (allowFlag) {
-            boolean match = allowUriList.stream().anyMatch(uri::matches);
+            boolean match = allowUriList.stream().anyMatch(allowUri -> uri.equals(allowUri) || uri.matches(allowUri));
             if (!match) {
                 return ResponseUtils.htmlResponse("Not In Allow List!", HttpResponseStatus.OK);
             }

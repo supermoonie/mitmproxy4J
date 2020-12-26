@@ -378,6 +378,50 @@ public class MainFrame extends JFrame {
                 repeat(selectedFlow);
             });
         }};
+        JMenuItem allowListMenuItem = new JMenuItem("Allow List") {{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+                if (null == flow) {
+                    return;
+                }
+                Integer requestId = flow.getRequestId();
+                Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+                Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+                try {
+                    Request request = requestDao.queryForId(requestId);
+                    AllowBlock allowBlock = new AllowBlock();
+                    allowBlock.setEnable(AllowBlock.ENABLE);
+                    allowBlock.setType(AllowBlock.TYPE_ALLOW);
+                    allowBlock.setLocation(request.getUri());
+                    allowBlock.setTimeCreated(new Date());
+                    allowBlockDao.create(allowBlock);
+                } catch (SQLException t) {
+                    Application.showError(t);
+                }
+            });
+        }};
+        JMenuItem blockListMenuItem = new JMenuItem("Block List") {{
+            addActionListener(e -> {
+                Flow flow = getSelectedFlow();
+                if (null == flow) {
+                    return;
+                }
+                Integer requestId = flow.getRequestId();
+                Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+                Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+                try {
+                    Request request = requestDao.queryForId(requestId);
+                    AllowBlock allowBlock = new AllowBlock();
+                    allowBlock.setEnable(AllowBlock.ENABLE);
+                    allowBlock.setType(AllowBlock.TYPE_BLOCK);
+                    allowBlock.setLocation(request.getUri());
+                    allowBlock.setTimeCreated(new Date());
+                    allowBlockDao.create(allowBlock);
+                } catch (SQLException t) {
+                    Application.showError(t);
+                }
+            });
+        }};
         popup.add(copyUrlMenuItem);
         popup.add(copyAllMenuItem);
         popup.add(saveAllMenuItem);
@@ -387,12 +431,8 @@ public class MainFrame extends JFrame {
         popup.add(composeMenuItem);
         popup.add(repeatMenuItem);
         popup.add(new JSeparator());
-        popup.add(new JMenuItem("Block List"){{
-            addActionListener(e -> {
-                Flow flow = getSelectedFlow();
-            });
-        }});
-        popup.add(new JMenuItem("Allow List"));
+        popup.add(allowListMenuItem);
+        popup.add(blockListMenuItem);
         popup.add(new JSeparator());
         popup.add(new JMenuItem("Map Remote"));
         popup.add(new JMenuItem("Map Local"));
@@ -409,6 +449,8 @@ public class MainFrame extends JFrame {
                     saveAllMenuItem.setEnabled(node.isLeaf());
                     composeMenuItem.setEnabled(node.isLeaf());
                     repeatMenuItem.setEnabled(node.isLeaf());
+                    allowListMenuItem.setEnabled(node.isLeaf());
+                    blockListMenuItem.setEnabled(node.isLeaf());
                     popup.show((JComponent) e.getSource(), e.getX(), e.getY());
                 }
             }
@@ -432,6 +474,8 @@ public class MainFrame extends JFrame {
                     saveAllMenuItem.setEnabled(true);
                     composeMenuItem.setEnabled(true);
                     repeatMenuItem.setEnabled(true);
+                    allowListMenuItem.setEnabled(true);
+                    blockListMenuItem.setEnabled(true);
                     popup.show((JComponent) e.getSource(), e.getX(), e.getY());
                 }
             }
