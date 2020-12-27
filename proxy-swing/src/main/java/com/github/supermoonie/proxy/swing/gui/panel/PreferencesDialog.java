@@ -423,14 +423,14 @@ public class PreferencesDialog extends JDialog {
                 return columnTypes[column];
             }
 
-            {
-                addFocusListener(new FocusAdapter() {
-                    @Override
-                    public void focusLost(FocusEvent e) {
-                        clearSelection();
-                    }
-                });
-            }
+//            {
+//                addFocusListener(new FocusAdapter() {
+//                    @Override
+//                    public void focusLost(FocusEvent e) {
+//                        clearSelection();
+//                    }
+//                });
+//            }
         };
         allowTable.setShowHorizontalLines(true);
         allowTable.setShowVerticalLines(true);
@@ -566,14 +566,14 @@ public class PreferencesDialog extends JDialog {
                 return columnTypes[column];
             }
 
-            {
-                addFocusListener(new FocusAdapter() {
-                    @Override
-                    public void focusLost(FocusEvent e) {
-                        clearSelection();
-                    }
-                });
-            }
+//            {
+//                addFocusListener(new FocusAdapter() {
+//                    @Override
+//                    public void focusLost(FocusEvent e) {
+//                        clearSelection();
+//                    }
+//                });
+//            }
         };
         blockTable.setShowHorizontalLines(true);
         blockTable.setShowVerticalLines(true);
@@ -708,14 +708,14 @@ public class PreferencesDialog extends JDialog {
                 return columnTypes[column];
             }
 
-            {
-                addFocusListener(new FocusAdapter() {
-                    @Override
-                    public void focusLost(FocusEvent e) {
-                        clearSelection();
-                    }
-                });
-            }
+//            {
+//                addFocusListener(new FocusAdapter() {
+//                    @Override
+//                    public void focusLost(FocusEvent e) {
+//                        clearSelection();
+//                    }
+//                });
+//            }
         };
         requestMapTable.setShowHorizontalLines(true);
         requestMapTable.setShowVerticalLines(true);
