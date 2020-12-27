@@ -6,6 +6,8 @@ import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AllowBlock;
 import com.github.supermoonie.proxy.swing.entity.RequestMap;
+import com.github.supermoonie.proxy.swing.gui.table.FileChooserCellEditor;
+import com.github.supermoonie.proxy.swing.gui.table.FormDataTable;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.InternalProxyInterceptInitializer;
@@ -21,6 +23,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.plaf.UIResource;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.NumberFormatter;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -30,6 +33,7 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.*;
@@ -94,6 +98,9 @@ public class PreferencesDialog extends JDialog {
                 case "Remote Map":
                     rightPanel.add(remoteMapPanel());
                     break;
+                case "Local Map":
+                    rightPanel.add(localMapPanel());
+                    break;
                 default:
                     break;
             }
@@ -108,6 +115,7 @@ public class PreferencesDialog extends JDialog {
         root.add(new DefaultMutableTreeNode("Allow List"));
         root.add(new DefaultMutableTreeNode("Block List"));
         root.add(new DefaultMutableTreeNode("Remote Map"));
+        root.add(new DefaultMutableTreeNode("Local Map"));
         preferenceTree.setSelectionPath(new TreePath(appearanceNode.getPath()));
         leftPanel.add(new JScrollPane(preferenceTree), BorderLayout.CENTER);
         // default right panel
@@ -814,6 +822,158 @@ public class PreferencesDialog extends JDialog {
         requestMapTable.setShowHorizontalLines(true);
         requestMapTable.setShowVerticalLines(true);
         return remoteMapSettingPanel;
+    }
+
+    private JPanel localMapPanel() {
+        JPanel localMapSettingPanel = new JPanel(new BorderLayout());
+        localMapSettingPanel.getInsets().set(10, 10, 10, 10);
+        JPanel container = new JPanel();
+        container.setBorder(BorderFactory.createTitledBorder("Local Map"));
+        BoxLayout containerLayout = new BoxLayout(container, BoxLayout.Y_AXIS);
+        container.setLayout(containerLayout);
+
+        JPanel enableLocalMapPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JCheckBox enableCheckBox = new JCheckBox("Enable Local Map");
+        enableLocalMapPanel.add(enableCheckBox);
+        container.add(enableLocalMapPanel);
+        DefaultTableModel localMapTableModel = new DefaultTableModel(null, new String[]{"Enable", "From", "File"}) {{
+            addTableModelListener(e -> {
+                if (e.getType() == TableModelEvent.DELETE || e.getType() == TableModelEvent.UPDATE) {
+                    Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
+                    try {
+                        DefaultConfigIntercept.INSTANCE.getLocalMap().clear();
+                        DeleteBuilder<RequestMap, Integer> deleteBuilder = requestMapDao.deleteBuilder();
+                        deleteBuilder.where().eq(RequestMap.MAP_TYPE_FIELD_NAME, RequestMap.TYPE_LOCAL);
+                        deleteBuilder.delete();
+                        int rowCount = getRowCount();
+                        for (int i = 0; i < rowCount; i++) {
+                            boolean enable = (boolean) getValueAt(i, 0);
+                            String from = (String) getValueAt(i, 1);
+                            String to = (String) getValueAt(i, 2);
+                            if (null != from && !"".equals(from) && null != to && !"".equals(to)) {
+                                RequestMap requestMap = new RequestMap();
+                                requestMap.setFromUrl(from);
+                                requestMap.setToUrl(to);
+                                requestMap.setMapType(RequestMap.TYPE_LOCAL);
+                                requestMap.setEnable(enable ? RequestMap.ENABLE : RequestMap.DISABLE);
+                                requestMap.setTimeCreated(new Date());
+                                requestMapDao.create(requestMap);
+                                if (enable) {
+                                    DefaultConfigIntercept.INSTANCE.getLocalMap().put(from, to);
+                                }
+                            }
+                        }
+                    } catch (SQLException t) {
+                        Application.showError(t);
+                    }
+                }
+            });
+        }};
+        JTable requestMapTable = new JTable(localMapTableModel) {
+            private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class};
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                return columnTypes[column];
+            }
+
+//            {
+//                addFocusListener(new FocusAdapter() {
+//                    @Override
+//                    public void focusLost(FocusEvent e) {
+//                        clearSelection();
+//                    }
+//                });
+//            }
+        };
+        requestMapTable.setShowHorizontalLines(true);
+        requestMapTable.setShowVerticalLines(true);
+        requestMapTable.setShowGrid(false);
+        requestMapTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+        requestMapTable.getColumnModel().getColumn(1).setPreferredWidth(600);
+        requestMapTable.getColumnModel().getColumn(2).setPreferredWidth(600);
+        requestMapTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
+        requestMapTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setBorder(BorderFactory.createEmptyBorder());
+                return this;
+            }
+        });
+        requestMapTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setBorder(BorderFactory.createEmptyBorder());
+                return this;
+            }
+        });
+        JTextField fromTextField = new JTextField();
+        DefaultCellEditor fromCellEditor = new DefaultCellEditor(fromTextField);
+        fromTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                fromCellEditor.stopCellEditing();
+            }
+        });
+        fromCellEditor.setClickCountToStart(2);
+        requestMapTable.getColumnModel().getColumn(1).setCellEditor(fromCellEditor);
+        requestMapTable.getColumnModel().getColumn(2).setCellEditor(new FileChooserCellEditor(requestMapTable, 2));
+        JPanel allowTablePanel = new JPanel(new BorderLayout());
+        allowTablePanel.add(new JScrollPane(requestMapTable));
+        JPanel requestMapTableButtonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton addButton = new JButton("Add") {{
+            addActionListener(e -> {
+                requestMapTable.clearSelection();
+                localMapTableModel.addRow(new Object[]{true, "", ""});
+                requestMapTable.setShowHorizontalLines(true);
+                requestMapTable.setShowVerticalLines(true);
+            });
+        }};
+        JButton removeButton = new JButton("Remove") {{
+            addActionListener(e -> {
+                int[] selectedRows = requestMapTable.getSelectedRows();
+                for (int i = selectedRows.length - 1; i >= 0; i--) {
+                    int row = selectedRows[i];
+                    localMapTableModel.removeRow(row);
+                }
+                requestMapTable.setShowHorizontalLines(true);
+                requestMapTable.setShowVerticalLines(true);
+            });
+        }};
+        requestMapTableButtonsPanel.add(addButton);
+        requestMapTableButtonsPanel.add(removeButton);
+        allowTablePanel.add(requestMapTableButtonsPanel, BorderLayout.SOUTH);
+        container.add(allowTablePanel);
+        localMapSettingPanel.add(container);
+
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.VALUE_LOCAL_MAP_ENABLE);
+        enableCheckBox.setSelected(enable);
+        addButton.setEnabled(enable);
+        removeButton.setEnabled(enable);
+        requestMapTable.setEnabled(enable);
+        enableCheckBox.addActionListener(e -> {
+            requestMapTable.setEnabled(enableCheckBox.isSelected());
+            addButton.setEnabled(enableCheckBox.isSelected());
+            removeButton.setEnabled(enableCheckBox.isSelected());
+            DefaultConfigIntercept.INSTANCE.setLocalMapFlag(enableCheckBox.isSelected());
+            ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, enableCheckBox.isSelected());
+        });
+        Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
+        try {
+            List<RequestMap> requestMapList = requestMapDao.queryForAll();
+            for (RequestMap reqMap : requestMapList) {
+                if (reqMap.getMapType().equals(RequestMap.TYPE_LOCAL)) {
+                    localMapTableModel.addRow(new Object[]{reqMap.getEnable().equals(AllowBlock.ENABLE), reqMap.getFromUrl(), reqMap.getToUrl()});
+                }
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
+        }
+        requestMapTable.setShowHorizontalLines(true);
+        requestMapTable.setShowVerticalLines(true);
+        return localMapSettingPanel;
     }
 
     static class BooleanRenderer extends JCheckBox implements TableCellRenderer, UIResource {
