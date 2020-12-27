@@ -28,6 +28,7 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
     private final Set<String> allowUriList = new HashSet<>();
     private final List<String> useSecondProxyHostList = new ArrayList<>();
     private final List<String> notUseSecondProxyHostList = new ArrayList<>();
+    private boolean remoteMapFlag = false;
     private final Map<String, String> remoteUriMap = new HashMap<>();
     private Map<String, String> localMap;
 
@@ -48,15 +49,17 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
             }
         }
         String host = request.headers().get(HttpHeaderNames.HOST);
-        String remoteUri = remoteUriMap.get(uri);
-        ConnectionInfo info = RequestUtils.parseUri(remoteUri);
-        if (null != remoteUri && null != info) {
-            request.setUri(remoteUri);
-            request.headers().set(HttpHeaderNames.HOST, info.getRemoteHost());
-            ConnectionInfo originInfo = ctx.getConnectionInfo();
-            originInfo.setRemoteHost(info.getRemoteHost());
-            originInfo.setRemotePort(info.getRemotePort());
-            originInfo.setHostHeader(info.getRemoteHost() + ":" + info.getRemotePort());
+        if (remoteMapFlag) {
+            String remoteUri = remoteUriMap.get(uri);
+            ConnectionInfo info = RequestUtils.parseUri(remoteUri);
+            if (null != remoteUri && null != info) {
+                request.setUri(remoteUri);
+                request.headers().set(HttpHeaderNames.HOST, info.getRemoteHost());
+                ConnectionInfo originInfo = ctx.getConnectionInfo();
+                originInfo.setRemoteHost(info.getRemoteHost());
+                originInfo.setRemotePort(info.getRemotePort());
+                originInfo.setHostHeader(info.getRemoteHost() + ":" + info.getRemotePort());
+            }
         }
         if (useSecondProxyHostList.size() > 0) {
             ctx.getConnectionInfo().setUseSecondProxy(useSecondProxyHostList.contains(host));
@@ -102,5 +105,13 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
 
     public void setAllowFlag(boolean allowFlag) {
         this.allowFlag = allowFlag;
+    }
+
+    public boolean isRemoteMapFlag() {
+        return remoteMapFlag;
+    }
+
+    public void setRemoteMapFlag(boolean remoteMapFlag) {
+        this.remoteMapFlag = remoteMapFlag;
     }
 }

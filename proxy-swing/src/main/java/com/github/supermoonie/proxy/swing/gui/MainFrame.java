@@ -25,7 +25,6 @@ import com.j256.ormlite.stmt.Where;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -532,7 +531,6 @@ public class MainFrame extends JFrame {
         return localCertificateList;
     }
 
-
     private void initToolBar() {
         JPanel container = new JPanel(new BorderLayout());
         JToolBar toolBar = new JToolBar();
@@ -584,12 +582,13 @@ public class MainFrame extends JFrame {
         recordButton.setToolTipText("Record");
         recordButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/play.svg"));
         toolBar.add(clearButton);
-        toolBar.add(Box.createHorizontalStrut(20));
+//        toolBar.add(Box.createHorizontalStrut(20));
         toolBar.add(recordButton);
         toolBar.add(throttlingButton);
-        toolBar.add(Box.createHorizontalStrut(20));
+//        toolBar.add(Box.createHorizontalStrut(20));
         toolBar.add(composeButton);
         toolBar.add(repeatButton);
+        toolBar.add(Box.createHorizontalStrut(20));
         JPanel toolBarPanel = new JPanel(new FlowLayout(FlowLayout.CENTER) {{
             setHgap(0);
             setVgap(0);
@@ -598,10 +597,12 @@ public class MainFrame extends JFrame {
             getInsets().set(0, 0, 0, 0);
         }};
         toolBarPanel.add(toolBar);
-        container.add(toolBarPanel, BorderLayout.CENTER);
+        container.add(toolBarPanel, BorderLayout.EAST);
+        JToolBar filterToolBar = new JToolBar();
+        filterToolBar.setFloatable(false);
+        filterToolBar.add(new JButton("All"));
+        container.add(filterToolBar, BorderLayout.WEST);
         container.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.SOUTH);
-        container.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
-        container.setPreferredSize(new Dimension(200, 28));
         getContentPane().add(container, BorderLayout.NORTH);
 
     }

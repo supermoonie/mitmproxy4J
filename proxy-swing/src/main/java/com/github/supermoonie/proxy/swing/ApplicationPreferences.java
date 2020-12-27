@@ -31,6 +31,8 @@ public class ApplicationPreferences {
     public static final String KEY_PROXY_AUTH_PWD = "proxyAuthPwd";
     public static final String KEY_ALLOW_LIST_ENABLE = "allowListEnable";
     public static final String KEY_BLOCK_LIST_ENABLE = "blockListEnable";
+    public static final String KEY_REMOTE_MAP_ENABLE = "remoteMapEnable";
+    public static final String KEY_LOCAL_MAP_ENABLE = "localMapEnable";
 
     public static final String VALUE_DEFAULT_FONT_FAMILY = "Helvetica Neue";
     public static final int VALUE_DEFAULT_FONT_SIZE = 14;
@@ -38,6 +40,8 @@ public class ApplicationPreferences {
     public static final boolean VALUE_DEFAULT_PROXY_AUTH = false;
     public static final boolean VALUE_ALLOW_LIST_ENABLE = false;
     public static final boolean VALUE_BLOCK_LIST_ENABLE = false;
+    public static final boolean VALUE_REMOTE_MAP_ENABLE = false;
+    public static final boolean VALUE_LOCAL_MAP_ENABLE = false;
 
     private static Preferences state;
     private static Set<String> accessControl = new HashSet<>();
