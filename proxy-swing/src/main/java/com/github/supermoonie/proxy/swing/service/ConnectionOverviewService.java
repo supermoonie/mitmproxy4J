@@ -41,12 +41,14 @@ public final class ConnectionOverviewService {
         List<ConnectionOverview> connectionOverviews = dao.queryForEq(ConnectionOverview.REQUEST_ID_FIELD_NAME, requestId);
         if (null != connectionOverviews && connectionOverviews.size() > 0) {
             ConnectionOverview connectionOverview = connectionOverviews.get(0);
-            connectionOverview.setConnectStartTime(connectionInfo.getConnectStartTime());
-            connectionOverview.setConnectEndTime(connectionInfo.getConnectEndTime());
+            connectionOverview.setConnectStartTime(0 == connectionInfo.getConnectStartTime() ? null : connectionInfo.getConnectStartTime());
+            connectionOverview.setConnectEndTime(0 == connectionInfo.getConnectEndTime() ? null : connectionInfo.getConnectEndTime());
             connectionOverview.setDnsServer(connectionInfo.getDnsServer());
-            connectionOverview.setDnsStartTime(connectionInfo.getDnsStartTime());
-            connectionOverview.setDnsEndTime(connectionInfo.getDnsEndTime());
-            connectionOverview.setRemoteIp(Jackson.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress).collect(Collectors.toList())));
+            connectionOverview.setDnsStartTime(0 == connectionInfo.getDnsStartTime() ? null : connectionInfo.getDnsStartTime());
+            connectionOverview.setDnsEndTime(0 == connectionInfo.getDnsEndTime() ? null : connectionInfo.getDnsEndTime());
+            if (null != connectionInfo.getRemoteAddressList()) {
+                connectionOverview.setRemoteIp(Jackson.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress).collect(Collectors.toList())));
+            }
             connectionOverview.setServerSessionId(connectionInfo.getServerSessionId());
             connectionOverview.setServerProtocol(connectionInfo.getServerProtocol());
             connectionOverview.setServerCipherSuite(connectionInfo.getServerCipherSuite());

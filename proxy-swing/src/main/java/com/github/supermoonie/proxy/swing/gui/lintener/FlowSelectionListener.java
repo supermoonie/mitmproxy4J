@@ -9,20 +9,31 @@ import com.j256.ormlite.dao.Dao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import java.sql.SQLException;
 
 /**
  * @author supermoonie
  * @since 2020/11/29
  */
-public class FlowMouseListener extends MouseAdapter {
+public class FlowSelectionListener implements TreeSelectionListener, ListSelectionListener {
 
-    private final Logger log = LoggerFactory.getLogger(FlowMouseListener.class);
+    private final Logger log = LoggerFactory.getLogger(FlowSelectionListener.class);
 
     @Override
-    public void mouseClicked(MouseEvent e) {
+    public void valueChanged(TreeSelectionEvent e) {
+        selectChanged();
+    }
+
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        selectChanged();
+    }
+
+    private void selectChanged() {
         Flow flow = MainFrameHelper.getSelectedFlow();
         if (null == flow || MainFrameHelper.currentRequestId == flow.getRequestId()) {
             return;
@@ -40,5 +51,4 @@ public class FlowMouseListener extends MouseAdapter {
             log.error(ex.getMessage(), ex);
         }
     }
-
 }

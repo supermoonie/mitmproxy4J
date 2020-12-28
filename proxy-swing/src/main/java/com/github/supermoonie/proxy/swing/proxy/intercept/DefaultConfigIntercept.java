@@ -23,7 +23,6 @@ public class DefaultConfigIntercept extends ConfigurableIntercept {
         super.setAllowFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, ApplicationPreferences.VALUE_ALLOW_LIST_ENABLE));
         super.setBlockFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_BLOCK_LIST_ENABLE, ApplicationPreferences.VALUE_BLOCK_LIST_ENABLE));
         super.setRemoteMapFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_REMOTE_MAP_ENABLE, ApplicationPreferences.VALUE_REMOTE_MAP_ENABLE));
-        super.setLocalMapFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.VALUE_LOCAL_MAP_ENABLE));
         Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
         Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
         try {
@@ -37,14 +36,12 @@ public class DefaultConfigIntercept extends ConfigurableIntercept {
                     }
                 }
             }
-            List<RequestMap> requestMapList = requestMapDao.queryForAll();
+            List<RequestMap> requestMapList = requestMapDao.queryBuilder().where()
+                    .eq(RequestMap.MAP_TYPE_FIELD_NAME, RequestMap.TYPE_REMOTE)
+                    .and().eq(RequestMap.ENABLE_FIELD_NAME, RequestMap.ENABLE).query();
             for (RequestMap reqMap : requestMapList) {
                 if (reqMap.getEnable().equals(RequestMap.ENABLE)) {
-                    if (reqMap.getMapType().equals(RequestMap.TYPE_REMOTE)) {
-                        super.getRemoteUriMap().put(reqMap.getFromUrl(), reqMap.getToUrl());
-                    } else {
-                        super.getLocalMap().put(reqMap.getFromUrl(), reqMap.getToUrl());
-                    }
+                    super.getRemoteUriMap().put(reqMap.getFromUrl(), reqMap.getToUrl());
                 }
             }
         } catch (SQLException e) {

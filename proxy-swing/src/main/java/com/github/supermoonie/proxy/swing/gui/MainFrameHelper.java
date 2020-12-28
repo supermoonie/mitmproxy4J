@@ -156,6 +156,11 @@ public class MainFrameHelper {
                 String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
                 responseTextArea.setText(body);
                 raw.append("\n").append(body);
+            } else if (contentType.startsWith("text/plain")) {
+                title = "TEXT";
+                String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
+                responseTextArea.setText(body);
+                raw.append("\n").append(body);
             } else if (contentType.startsWith("image/")) {
                 ImageIcon image = new ImageIcon(content.getRawContent());
                 JLabel label = new JLabel();
@@ -413,12 +418,12 @@ public class MainFrameHelper {
             model.insertNodeInto(new ListTreeTableNode("Request End Time", null == request.getEndTime() ? "-" : dateFormat.format(request.getEndTime())), timingNode, 1);
             model.insertNodeInto(new ListTreeTableNode("Connect Start Time", null == connectionOverview.getConnectStartTime() ? "-" : dateFormat.format(connectionOverview.getConnectStartTime())), timingNode, 2);
             model.insertNodeInto(new ListTreeTableNode("Connect End Time", null == connectionOverview.getConnectEndTime() ? "-" : dateFormat.format(connectionOverview.getConnectEndTime())), timingNode, 3);
-            model.insertNodeInto(new ListTreeTableNode("Response Start Time", null == response ? "-" : dateFormat.format(response.getStartTime())), timingNode, 4);
-            model.insertNodeInto(new ListTreeTableNode("Response End Time", null == response ? "-" : dateFormat.format(response.getEndTime())), timingNode, 5);
+            model.insertNodeInto(new ListTreeTableNode("Response Start Time", null == response || null == response.getStartTime() ? "-" : dateFormat.format(response.getStartTime())), timingNode, 4);
+            model.insertNodeInto(new ListTreeTableNode("Response End Time", null == response || null == response.getEndTime() ? "-" : dateFormat.format(response.getEndTime())), timingNode, 5);
             model.insertNodeInto(new ListTreeTableNode("Request", null == request.getEndTime() ? "-" : request.getEndTime() - request.getStartTime() + " ms"), timingNode, 6);
-            model.insertNodeInto(new ListTreeTableNode("Response", null == response ? "-" : response.getEndTime() - response.getStartTime() + " ms"), timingNode, 7);
-            model.insertNodeInto(new ListTreeTableNode("Duration", null == response ? "-" : response.getEndTime() - request.getStartTime() + " ms"), timingNode, 8);
-            model.insertNodeInto(new ListTreeTableNode("DNS", null == response ? "-" : connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime() + " ms"), timingNode, 9);
+            model.insertNodeInto(new ListTreeTableNode("Response", null == response || null == response.getStartTime() ? "-" : response.getEndTime() - response.getStartTime() + " ms"), timingNode, 7);
+            model.insertNodeInto(new ListTreeTableNode("Duration", null == response || null == request.getStartTime() ? "-" : response.getEndTime() - request.getStartTime() + " ms"), timingNode, 8);
+            model.insertNodeInto(new ListTreeTableNode("DNS", null == response || null == connectionOverview.getDnsStartTime() ? "-" : connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime() + " ms"), timingNode, 9);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }

@@ -9,7 +9,7 @@ import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.*;
 import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
-import com.github.supermoonie.proxy.swing.gui.lintener.FlowMouseListener;
+import com.github.supermoonie.proxy.swing.gui.lintener.FlowSelectionListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
 import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
@@ -36,6 +36,8 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -247,7 +249,7 @@ public class MainFrame extends JFrame {
         flowTree.setRootVisible(false);
         flowTree.setShowsRootHandles(true);
         flowTree.setCellRenderer(new FlowTreeCellRender());
-        flowTree.addMouseListener(new FlowMouseListener());
+        flowTree.addTreeSelectionListener(new FlowSelectionListener());
         JPopupMenu popup = new JPopupMenu();
         JMenuItem copyUrlMenuItem = new JMenuItem("Copy URL") {{
             addActionListener(e -> {
@@ -458,7 +460,7 @@ public class MainFrame extends JFrame {
         sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
         flowList.setCellRenderer(new FlowListCellRenderer());
-        flowList.addMouseListener(new FlowMouseListener());
+        flowList.addListSelectionListener(new FlowSelectionListener());
         flowList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {

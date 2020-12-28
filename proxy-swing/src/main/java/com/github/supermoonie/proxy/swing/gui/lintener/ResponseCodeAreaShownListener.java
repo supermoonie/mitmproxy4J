@@ -76,9 +76,11 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
                 prettifyAndShow(SyntaxConstants.SYNTAX_STYLE_CSS, content);
             } else if (contentType.contains("xml")) {
                 prettifyAndShow(SyntaxConstants.SYNTAX_STYLE_XML, content);
+            } else if (contentType.contains("text") || contentType.contains("txt")) {
+                prettifyAndShow(SyntaxConstants.SYNTAX_STYLE_NONE, content);
             }
         } catch (SQLException ex) {
-            log.error(ex.getMessage(), e);
+            Application.showError(ex);
         }
     }
 

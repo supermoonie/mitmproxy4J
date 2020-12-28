@@ -39,8 +39,8 @@ public final class ResponseService {
         ConnectionInfo connectionInfo = ctx.getConnectionInfo();
         ConnectionOverviewService.updateServerInfo(connectionInfo, request.getId());
         Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
-        request.setStartTime(connectionInfo.getRequestStartTime());
-        request.setEndTime(connectionInfo.getRequestEndTime());
+        request.setStartTime(0 == connectionInfo.getRequestStartTime() ? null : connectionInfo.getRequestStartTime());
+        request.setEndTime(0 == connectionInfo.getRequestEndTime() ? null : connectionInfo.getRequestEndTime());
         requestDao.update(request);
         String contentEncoding = response.headers().get(HttpHeaderNames.CONTENT_ENCODING);
         ByteBuf buf;
@@ -72,8 +72,8 @@ public final class ResponseService {
         res.setHttpVersion(response.protocolVersion().text());
         res.setStatus(response.status().code());
         res.setContentId(contentId);
-        res.setStartTime(connectionInfo.getResponseStartTime());
-        res.setEndTime(connectionInfo.getResponseEndTime());
+        res.setStartTime(0 == connectionInfo.getResponseStartTime() ? null : connectionInfo.getResponseStartTime());
+        res.setEndTime(0 == connectionInfo.getResponseEndTime() ? null : connectionInfo.getResponseEndTime());
         res.setTimeCreated(new Date());
         Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
         responseDao.create(res);

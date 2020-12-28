@@ -10,6 +10,7 @@ import com.github.supermoonie.proxy.swing.gui.table.FileChooserCellEditor;
 import com.github.supermoonie.proxy.swing.gui.table.FormDataTable;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
+import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultLocalMapIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.InternalProxyInterceptInitializer;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.DeleteBuilder;
@@ -841,7 +842,7 @@ public class PreferencesDialog extends JDialog {
                 if (e.getType() == TableModelEvent.DELETE || e.getType() == TableModelEvent.UPDATE) {
                     Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
                     try {
-                        DefaultConfigIntercept.INSTANCE.getLocalMap().clear();
+                        DefaultLocalMapIntercept.INSTANCE.getLocalMap().clear();
                         DeleteBuilder<RequestMap, Integer> deleteBuilder = requestMapDao.deleteBuilder();
                         deleteBuilder.where().eq(RequestMap.MAP_TYPE_FIELD_NAME, RequestMap.TYPE_LOCAL);
                         deleteBuilder.delete();
@@ -859,7 +860,7 @@ public class PreferencesDialog extends JDialog {
                                 requestMap.setTimeCreated(new Date());
                                 requestMapDao.create(requestMap);
                                 if (enable) {
-                                    DefaultConfigIntercept.INSTANCE.getLocalMap().put(from, to);
+                                    DefaultLocalMapIntercept.INSTANCE.getLocalMap().put(from, to);
                                 }
                             }
                         }
@@ -957,7 +958,7 @@ public class PreferencesDialog extends JDialog {
             requestMapTable.setEnabled(enableCheckBox.isSelected());
             addButton.setEnabled(enableCheckBox.isSelected());
             removeButton.setEnabled(enableCheckBox.isSelected());
-            DefaultConfigIntercept.INSTANCE.setLocalMapFlag(enableCheckBox.isSelected());
+            DefaultLocalMapIntercept.INSTANCE.setLocalMapFlag(enableCheckBox.isSelected());
             ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, enableCheckBox.isSelected());
         });
         Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
