@@ -12,11 +12,14 @@ import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowSelectionListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
 import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.MapLocalDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
 import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
+import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultLocalMapIntercept;
+import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultRemoteMapIntercept;
 import com.github.supermoonie.proxy.swing.util.ClipboardUtil;
 import com.github.supermoonie.proxy.swing.util.HttpClientUtil;
 import com.github.supermoonie.proxy.swing.util.Jackson;
@@ -36,8 +39,6 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -47,6 +48,8 @@ import java.awt.event.MouseEvent;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -253,35 +256,11 @@ public class MainFrame extends JFrame {
         JPopupMenu popup = new JPopupMenu();
         JMenuItem copyUrlMenuItem = new JMenuItem("Copy URL") {{
             addActionListener(e -> {
-                JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
-                if (selectedComponent.equals(structureTab)) {
-                    FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
-                    if (null == node) {
-                        return;
-                    }
-                    Flow flow = (Flow) node.getUserObject();
-                    if (flow.getFlowType().equals(FlowType.BASE_URL)) {
-                        ClipboardUtil.copyText(flow.getUrl());
-                    } else {
-                        List<String> urlList = new ArrayList<>();
-                        urlList.add(flow.getUrl());
-                        FlowTreeNode parent = (FlowTreeNode) node.getParent();
-                        while (null != parent && !parent.equals(rootNode)) {
-                            flow = (Flow) parent.getUserObject();
-                            urlList.add(flow.getUrl());
-                            parent = (FlowTreeNode) parent.getParent();
-                        }
-                        Collections.reverse(urlList);
-                        String url = String.join("/", urlList);
-                        ClipboardUtil.copyText(url);
-                    }
-                } else {
-                    Flow flow = flowList.getSelectedValue();
-                    if (null == flow) {
-                        return;
-                    }
-                    ClipboardUtil.copyText(flow.getUrl());
+                String url = getSelectUrl();
+                if (null == url) {
+                    return;
                 }
+                ClipboardUtil.copyText(url);
             });
         }};
         JMenuItem copyResponseMenuItem = new JMenuItem("Copy Response") {{
@@ -423,6 +402,84 @@ public class MainFrame extends JFrame {
                 }
             });
         }};
+        JMenuItem mapRemoteMenuItem = new JMenuItem("Map Remote") {{
+            addActionListener(e -> {
+                String url = getSelectUrl();
+                if (null == url) {
+                    return;
+                }
+                Object remote = JOptionPane.showInputDialog(this, new Object[]{
+                        "From:",
+                        new JTextField(url) {{
+                            setEditable(false);
+                        }},
+                        "To:"
+                }, "Map Remote", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                if (null != remote) {
+                    try {
+                        String to = remote.toString();
+                        new URI(to);
+                        Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
+                        RequestMap requestMap = new RequestMap();
+                        requestMap.setEnable(RequestMap.ENABLE);
+                        requestMap.setTimeCreated(new Date());
+                        requestMap.setMapType(RequestMap.TYPE_REMOTE);
+                        requestMap.setToUrl(to);
+                        requestMap.setFromUrl(url);
+                        requestMapDao.create(requestMap);
+                        DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().put(url, to);
+                    } catch (URISyntaxException ex) {
+                        JOptionPane.showMessageDialog(this, "Invalid Url!", "Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (SQLException t) {
+                        Application.showError(t);
+                    }
+                }
+            });
+        }};
+        JMenuItem mapLocalMenuItem = new JMenuItem("Map Local") {{
+            addActionListener(e -> {
+                String url = getSelectUrl();
+                if (null == url) {
+                    return;
+                }
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                fileChooser.setMultiSelectionEnabled(false);
+                JTextField toTextField = new JTextField() {{
+                    addActionListener(event -> {
+                        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                            String file = fileChooser.getSelectedFile().getAbsolutePath();
+                            setText(file);
+                        }
+                    });
+                }};
+                new MapLocalDialog(MainFrame.this, "Map Local", true);
+//                Object local = JOptionPane.showInputDialog(this, new Object[]{
+//                        "From:",
+//                        new JTextField(url) {{
+//                            setEditable(false);
+//                        }},
+//                        "To:",
+//                        toTextField
+//                }, "Map Local", JOptionPane.PLAIN_MESSAGE, null, null, null);
+//                if (null != local && !"".equals(local.toString())) {
+//                    try {
+//                        String to = local.toString();
+//                        Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
+//                        RequestMap requestMap = new RequestMap();
+//                        requestMap.setEnable(RequestMap.ENABLE);
+//                        requestMap.setTimeCreated(new Date());
+//                        requestMap.setMapType(RequestMap.TYPE_LOCAL);
+//                        requestMap.setToUrl(to);
+//                        requestMap.setFromUrl(url);
+//                        requestMapDao.create(requestMap);
+//                        DefaultLocalMapIntercept.INSTANCE.getLocalMap().put(url, to);
+//                    } catch (SQLException t) {
+//                        Application.showError(t);
+//                    }
+//                }
+            });
+        }};
         popup.add(copyUrlMenuItem);
         popup.add(copyAllMenuItem);
         popup.add(saveAllMenuItem);
@@ -435,8 +492,8 @@ public class MainFrame extends JFrame {
         popup.add(allowListMenuItem);
         popup.add(blockListMenuItem);
         popup.add(new JSeparator());
-        popup.add(new JMenuItem("Map Remote"));
-        popup.add(new JMenuItem("Map Local"));
+        popup.add(mapRemoteMenuItem);
+        popup.add(mapLocalMenuItem);
         flowTree.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
@@ -452,10 +509,10 @@ public class MainFrame extends JFrame {
                     repeatMenuItem.setEnabled(node.isLeaf());
                     allowListMenuItem.setEnabled(node.isLeaf());
                     blockListMenuItem.setEnabled(node.isLeaf());
-                    popup.show((JComponent) e.getSource(), e.getX(), e.getY());
                 }
             }
         });
+        flowTree.setComponentPopupMenu(popup);
         // Sequence tab
         sequenceTab = new JPanel(new BorderLayout());
         sequenceTab.setMinimumSize(new Dimension(100, 0));
@@ -477,10 +534,10 @@ public class MainFrame extends JFrame {
                     repeatMenuItem.setEnabled(true);
                     allowListMenuItem.setEnabled(true);
                     blockListMenuItem.setEnabled(true);
-                    popup.show((JComponent) e.getSource(), e.getX(), e.getY());
                 }
             }
         });
+        flowList.setComponentPopupMenu(popup);
         sequenceTab.add(new JScrollPane(flowList), BorderLayout.CENTER);
         flowTabPane.addTab("Structure", SvgIcons.TREE, structureTab);
         flowTabPane.addTab("Sequence", SvgIcons.LIST, sequenceTab);
@@ -735,6 +792,39 @@ public class MainFrame extends JFrame {
                 Application.showError(t);
             }
         });
+    }
+
+    private String getSelectUrl() {
+        JPanel selectedComponent = (JPanel) flowTabPane.getSelectedComponent();
+        String url;
+        if (selectedComponent.equals(structureTab)) {
+            FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
+            if (null == node) {
+                return null;
+            }
+            Flow flow = (Flow) node.getUserObject();
+            if (flow.getFlowType().equals(FlowType.BASE_URL)) {
+                url = flow.getUrl();
+            } else {
+                List<String> urlList = new ArrayList<>();
+                urlList.add(flow.getUrl());
+                FlowTreeNode parent = (FlowTreeNode) node.getParent();
+                while (null != parent && !parent.equals(rootNode)) {
+                    flow = (Flow) parent.getUserObject();
+                    urlList.add(flow.getUrl());
+                    parent = (FlowTreeNode) parent.getParent();
+                }
+                Collections.reverse(urlList);
+                url = String.join("/", urlList);
+            }
+        } else {
+            Flow flow = flowList.getSelectedValue();
+            if (null == flow) {
+                return null;
+            }
+            url = flow.getUrl();
+        }
+        return url;
     }
 
     private String flowToJson(Flow flow) {

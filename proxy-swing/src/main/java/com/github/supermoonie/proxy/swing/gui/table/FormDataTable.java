@@ -6,15 +6,8 @@ import org.jdesktop.swingx.autocomplete.ComboBoxCellEditor;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +56,7 @@ public class FormDataTable extends CurdTable {
         });
         valueCellEditor.setClickCountToStart(1);
         super.getColumnModel().getColumn(1).setCellEditor(valueCellEditor);
-        super.getColumnModel().getColumn(2).setCellEditor(new FileChooserCellEditor());
+        super.getColumnModel().getColumn(2).setCellEditor(new FileChooserCellEditor(this, 2, JFileChooser.FILES_ONLY));
         List<String> contentTypeList = MimeMappings.DEFAULT.getAll().stream().map(MimeMappings.Mapping::getMimeType).sorted().collect(Collectors.toList());
         contentTypeList.add(0, "Auto");
         String[] contentTypes = contentTypeList.toArray(new String[]{});
@@ -119,67 +112,6 @@ public class FormDataTable extends CurdTable {
         return columnTypes[columnIndex];
     }
 
-    private class FileChooserCellEditor extends DefaultCellEditor implements TableCellEditor {
-
-        /**
-         * Number of clicks to start editing
-         */
-        private static final int CLICK_COUNT_TO_START = 2;
-        /**
-         * Editor component
-         */
-        private final JButton button;
-        /**
-         * File chooser
-         */
-        private final JFileChooser fileChooser;
-        /**
-         * Selected file
-         */
-        private String file = "";
-
-        /**
-         * Constructor.
-         */
-        public FileChooserCellEditor() {
-            super(new JTextField());
-            setClickCountToStart(CLICK_COUNT_TO_START);
-            // Using a JButton as the editor component
-            button = new JButton();
-            button.setBackground(Color.white);
-            button.setFont(button.getFont().deriveFont(Font.PLAIN));
-            button.setBorder(null);
-            // Dialog which will do the actual editing
-            fileChooser = new JFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fileChooser.setMultiSelectionEnabled(false);
-        }
-
-        @Override
-        public Object getCellEditorValue() {
-            return file;
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            file = value.toString();
-            SwingUtilities.invokeLater(() -> {
-                fileChooser.setSelectedFile(new File(file));
-                if (fileChooser.showOpenDialog(button) == JFileChooser.APPROVE_OPTION) {
-                    file = fileChooser.getSelectedFile().getAbsolutePath();
-                    int selectedRow = FormDataTable.this.getSelectedRow();
-                    if (-1 == selectedRow) {
-                        return;
-                    }
-                    FormDataTable.this.getModel().setValueAt("", selectedRow, 1);
-                }
-                fireEditingStopped();
-            });
-            button.setText(file);
-            button.setToolTipText(file);
-            return button;
-        }
-    }
 
     public ButtonEditor getButtonEditor() {
         return buttonEditor;

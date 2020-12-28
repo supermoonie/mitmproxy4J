@@ -3,6 +3,7 @@ package com.github.supermoonie.samples;
 import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.intercept.ConfigurableIntercept;
 import com.github.supermoonie.proxy.intercept.LoggingIntercept;
+import com.github.supermoonie.proxy.intercept.RemoteMapIntercept;
 
 import java.util.Map;
 
@@ -17,10 +18,10 @@ public class RemoteUriMapProxyTest {
             LoggingIntercept loggingIntercept = new LoggingIntercept();
             requestIntercepts.put("logging", loggingIntercept);
             responseIntercepts.put("logging", loggingIntercept);
-            ConfigurableIntercept config = new ConfigurableIntercept();
-            Map<String, String> remoteUriMap = config.getRemoteUriMap();
+            RemoteMapIntercept remoteMapIntercept = new RemoteMapIntercept();
+            Map<String, String> remoteUriMap = remoteMapIntercept.getRemoteUriMap();
             remoteUriMap.put("https://www.baidu.com/", "https://httpbin.org/get");
-            requestIntercepts.put("map-intercept", config);
+            requestIntercepts.put("map-intercept", remoteMapIntercept);
         });
         proxy.start();
     }

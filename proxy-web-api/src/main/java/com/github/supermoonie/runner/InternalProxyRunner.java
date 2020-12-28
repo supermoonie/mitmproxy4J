@@ -7,6 +7,7 @@ import com.github.supermoonie.constant.EnumConfigType;
 import com.github.supermoonie.mapper.ConfigMapper;
 import com.github.supermoonie.model.Config;
 import com.github.supermoonie.proxy.DefaultConfigIntercept;
+import com.github.supermoonie.proxy.DefaultRemoteMapIntercept;
 import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.InternalProxyInterceptInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -44,6 +45,9 @@ public class InternalProxyRunner implements CommandLineRunner {
 
     @Resource
     private DefaultConfigIntercept defaultConfigIntercept;
+
+    @Resource
+    private DefaultRemoteMapIntercept defaultRemoteMapIntercept;
     
     private InternalProxy proxy;
 
@@ -57,7 +61,7 @@ public class InternalProxyRunner implements CommandLineRunner {
         QueryWrapper<Config> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("type", EnumConfigType.REMOTE_URI_MAP).orderByDesc("timeCreated");
         List<Config> configs = configMapper.selectList(queryWrapper);
-        Map<String, String> remoteUriMap = defaultConfigIntercept.getRemoteUriMap();
+        Map<String, String> remoteUriMap = defaultRemoteMapIntercept.getRemoteUriMap();
         remoteUriMap.putAll(configs.stream().filter(config -> !StringUtils.isEmpty(config.getKey()) && !StringUtils.isEmpty(config.getValue())).collect(Collectors.toMap(Config::getKey, Config::getValue)));
     }
 

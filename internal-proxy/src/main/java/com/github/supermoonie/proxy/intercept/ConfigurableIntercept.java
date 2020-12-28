@@ -1,9 +1,7 @@
 package com.github.supermoonie.proxy.intercept;
 
 
-import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.InterceptContext;
-import com.github.supermoonie.proxy.util.RequestUtils;
 import com.github.supermoonie.proxy.util.ResponseUtils;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -12,7 +10,10 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author supermoonie
@@ -28,8 +29,6 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
     private final Set<String> allowUriList = new HashSet<>();
     private final List<String> useSecondProxyHostList = new ArrayList<>();
     private final List<String> notUseSecondProxyHostList = new ArrayList<>();
-    private boolean remoteMapFlag = false;
-    private final Map<String, String> remoteUriMap = new HashMap<>();
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
@@ -48,18 +47,6 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
             }
         }
         String host = request.headers().get(HttpHeaderNames.HOST);
-        if (remoteMapFlag) {
-            String remoteUri = remoteUriMap.get(uri);
-            ConnectionInfo info = RequestUtils.parseUri(remoteUri);
-            if (null != remoteUri && null != info) {
-                request.setUri(remoteUri);
-                request.headers().set(HttpHeaderNames.HOST, info.getRemoteHost());
-                ConnectionInfo originInfo = ctx.getConnectionInfo();
-                originInfo.setRemoteHost(info.getRemoteHost());
-                originInfo.setRemotePort(info.getRemotePort());
-                originInfo.setHostHeader(info.getRemoteHost() + ":" + info.getRemotePort());
-            }
-        }
         if (useSecondProxyHostList.size() > 0) {
             ctx.getConnectionInfo().setUseSecondProxy(useSecondProxyHostList.contains(host));
         }
@@ -78,9 +65,6 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
         return allowUriList;
     }
 
-    public Map<String, String> getRemoteUriMap() {
-        return remoteUriMap;
-    }
 
     public List<String> getUseSecondProxyHostList() {
         return useSecondProxyHostList;
@@ -102,15 +86,11 @@ public class ConfigurableIntercept implements RequestIntercept, ResponseIntercep
         this.blockFlag = blockFlag;
     }
 
+    public boolean isAllowFlag() {
+        return allowFlag;
+    }
+
     public void setAllowFlag(boolean allowFlag) {
         this.allowFlag = allowFlag;
-    }
-
-    public boolean isRemoteMapFlag() {
-        return remoteMapFlag;
-    }
-
-    public void setRemoteMapFlag(boolean remoteMapFlag) {
-        this.remoteMapFlag = remoteMapFlag;
     }
 }

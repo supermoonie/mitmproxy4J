@@ -11,6 +11,7 @@ import com.github.supermoonie.proxy.swing.gui.table.FormDataTable;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultLocalMapIntercept;
+import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultRemoteMapIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.InternalProxyInterceptInitializer;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.DeleteBuilder;
@@ -681,7 +682,7 @@ public class PreferencesDialog extends JDialog {
                 if (e.getType() == TableModelEvent.DELETE || e.getType() == TableModelEvent.UPDATE) {
                     Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
                     try {
-                        DefaultConfigIntercept.INSTANCE.getRemoteUriMap().clear();
+                        DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().clear();
                         DeleteBuilder<RequestMap, Integer> deleteBuilder = requestMapDao.deleteBuilder();
                         deleteBuilder.where().eq(RequestMap.MAP_TYPE_FIELD_NAME, RequestMap.TYPE_REMOTE);
                         deleteBuilder.delete();
@@ -699,7 +700,7 @@ public class PreferencesDialog extends JDialog {
                                 requestMap.setTimeCreated(new Date());
                                 requestMapDao.create(requestMap);
                                 if (enable) {
-                                    DefaultConfigIntercept.INSTANCE.getRemoteUriMap().put(from, to);
+                                    DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().put(from, to);
                                 }
                             }
                         }
@@ -806,7 +807,7 @@ public class PreferencesDialog extends JDialog {
             requestMapTable.setEnabled(enableCheckBox.isSelected());
             addButton.setEnabled(enableCheckBox.isSelected());
             removeButton.setEnabled(enableCheckBox.isSelected());
-            DefaultConfigIntercept.INSTANCE.setRemoteMapFlag(enableCheckBox.isSelected());
+            DefaultRemoteMapIntercept.INSTANCE.setRemoteMapFlag(enableCheckBox.isSelected());
             ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_REMOTE_MAP_ENABLE, enableCheckBox.isSelected());
         });
         Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
@@ -920,7 +921,7 @@ public class PreferencesDialog extends JDialog {
         });
         fromCellEditor.setClickCountToStart(2);
         requestMapTable.getColumnModel().getColumn(1).setCellEditor(fromCellEditor);
-        requestMapTable.getColumnModel().getColumn(2).setCellEditor(new FileChooserCellEditor(requestMapTable, 2));
+        requestMapTable.getColumnModel().getColumn(2).setCellEditor(new FileChooserCellEditor(requestMapTable, 2, JFileChooser.FILES_AND_DIRECTORIES));
         JPanel allowTablePanel = new JPanel(new BorderLayout());
         allowTablePanel.add(new JScrollPane(requestMapTable));
         JPanel requestMapTableButtonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));

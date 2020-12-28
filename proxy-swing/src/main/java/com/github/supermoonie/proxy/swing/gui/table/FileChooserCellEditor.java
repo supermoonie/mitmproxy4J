@@ -35,7 +35,7 @@ public class FileChooserCellEditor extends DefaultCellEditor implements TableCel
     /**
      * Constructor.
      */
-    public FileChooserCellEditor(JTable target, int columnIndex) {
+    public FileChooserCellEditor(JTable target, int columnIndex, int mode) {
         super(new JTextField());
         this.target = target;
         this.columnIndex = columnIndex;
@@ -47,7 +47,7 @@ public class FileChooserCellEditor extends DefaultCellEditor implements TableCel
         button.setBorder(null);
         // Dialog which will do the actual editing
         fileChooser = new JFileChooser();
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileSelectionMode(mode);
         fileChooser.setMultiSelectionEnabled(false);
     }
 
