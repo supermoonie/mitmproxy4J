@@ -12,8 +12,8 @@ import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowSelectionListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
 import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
-import com.github.supermoonie.proxy.swing.gui.panel.MapLocalDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.RequestMapDialog;
 import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
@@ -445,39 +445,40 @@ public class MainFrame extends JFrame {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 fileChooser.setMultiSelectionEnabled(false);
-                JTextField toTextField = new JTextField() {{
-                    addActionListener(event -> {
-                        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                RequestMapDialog mapLocalDialog = new RequestMapDialog(MainFrame.this, "Map Local", true);
+                mapLocalDialog.getFromTextField().setText(url);
+                mapLocalDialog.getFromTextField().setEditable(false);
+                mapLocalDialog.getToTextField().addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        if (fileChooser.showOpenDialog(mapLocalDialog) == JFileChooser.APPROVE_OPTION) {
                             String file = fileChooser.getSelectedFile().getAbsolutePath();
-                            setText(file);
+                            mapLocalDialog.getToTextField().setText(file);
                         }
-                    });
-                }};
-                new MapLocalDialog(MainFrame.this, "Map Local", true);
-//                Object local = JOptionPane.showInputDialog(this, new Object[]{
-//                        "From:",
-//                        new JTextField(url) {{
-//                            setEditable(false);
-//                        }},
-//                        "To:",
-//                        toTextField
-//                }, "Map Local", JOptionPane.PLAIN_MESSAGE, null, null, null);
-//                if (null != local && !"".equals(local.toString())) {
-//                    try {
-//                        String to = local.toString();
-//                        Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
-//                        RequestMap requestMap = new RequestMap();
-//                        requestMap.setEnable(RequestMap.ENABLE);
-//                        requestMap.setTimeCreated(new Date());
-//                        requestMap.setMapType(RequestMap.TYPE_LOCAL);
-//                        requestMap.setToUrl(to);
-//                        requestMap.setFromUrl(url);
-//                        requestMapDao.create(requestMap);
-//                        DefaultLocalMapIntercept.INSTANCE.getLocalMap().put(url, to);
-//                    } catch (SQLException t) {
-//                        Application.showError(t);
-//                    }
-//                }
+                        e.consume();
+                    }
+                });
+                mapLocalDialog.getConfirmButton().addActionListener(event -> {
+                    String to = mapLocalDialog.getToTextField().getText();
+                    if (null != to && !"".equals(to) && (new File(to).exists())) {
+                        try {
+                            Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
+                            RequestMap requestMap = new RequestMap();
+                            requestMap.setEnable(RequestMap.ENABLE);
+                            requestMap.setTimeCreated(new Date());
+                            requestMap.setMapType(RequestMap.TYPE_LOCAL);
+                            requestMap.setToUrl(to);
+                            requestMap.setFromUrl(url);
+                            requestMapDao.create(requestMap);
+                            DefaultLocalMapIntercept.INSTANCE.getLocalMap().put(url, to);
+                        } catch (SQLException t) {
+                            Application.showError(t);
+                        } finally {
+                            mapLocalDialog.setVisible(false);
+                        }
+                    }
+                });
+                mapLocalDialog.setVisible(true);
             });
         }};
         popup.add(copyUrlMenuItem);
