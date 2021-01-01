@@ -10,7 +10,6 @@ import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.service.ResponseService;
-import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
@@ -35,21 +34,23 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
 
     @Override
     public void onRead(InterceptContext ctx, HttpRequest request) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                Request req = (Request) ctx.getUserData();
-                FlowList flowList = Application.MAIN_FRAME.getFlowList();
-                flowList.findFirst(req.getId()).ifPresent(flow -> {
-                    flow.setIcon(SvgIcons.DOWNLOAD);
-                    flowList.updateUI();
-                    FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
-                    rootNode.update(req, null);
-                    Application.MAIN_FRAME.getFlowTree().updateUI();
-                });
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-        });
+        if (Application.RECORD_FLAG.get()) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    Request req = (Request) ctx.getUserData();
+                    FlowList flowList = Application.MAIN_FRAME.getFlowList();
+                    flowList.findFirst(req.getId()).ifPresent(flow -> {
+                        flow.setIcon(SvgIcons.DOWNLOAD);
+                        flowList.updateUI();
+                        FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
+                        rootNode.update(req, null);
+                        Application.MAIN_FRAME.getFlowTree().updateUI();
+                    });
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
+            });
+        }
     }
 
     @Override
@@ -57,7 +58,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
         if (null == ctx.getUserData()) {
             return null;
         }
-        if (GlobalSetting.getInstance().getRecord()) {
+        if (Application.RECORD_FLAG.get()) {
             Request req = (Request) ctx.getUserData();
             try {
                 Response res = ResponseService.saveResponse(ctx, req, response);

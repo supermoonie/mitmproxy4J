@@ -59,8 +59,6 @@ import java.util.*;
 public class MainFrame extends JFrame {
 
     // 菜单栏
-    private JCheckBoxMenuItem recordMenuItem;
-    private JCheckBoxMenuItem throttlingMenuItem;
     private JCheckBoxMenuItem remoteMapMenuItem;
     private JCheckBoxMenuItem blockListMenuItem;
     private JCheckBoxMenuItem allowListMenuItem;
@@ -277,10 +275,39 @@ public class MainFrame extends JFrame {
         requestHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
         requestHeaderTable.setShowHorizontalLines(true);
         requestHeaderTable.setShowVerticalLines(true);
+        JPopupMenu reqHeaderPopupMenu = new JPopupMenu();
+        requestHeaderTable.setComponentPopupMenu(reqHeaderPopupMenu);
+        requestHeaderTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
+                if (flag) {
+                    ClipboardUtil.copySelected(requestHeaderTable);
+                }
+            }
+        });
         requestHeaderScrollPane = new JScrollPane(requestHeaderTable);
         requestQueryTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        requestQueryTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
+                if (flag) {
+                    ClipboardUtil.copySelected(requestQueryTable);
+                }
+            }
+        });
         requestQueryScrollPane = new JScrollPane(requestQueryTable);
         requestFormTable = new JTable(new NoneEditTableModel(null, new String[]{"name", "Value"}));
+        requestFormTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
+                if (flag) {
+                    ClipboardUtil.copySelected(requestFormTable);
+                }
+            }
+        });
         requestFormScrollPane = new JScrollPane(requestFormTable);
         requestContentTextArea = new JTextArea();
         requestContentTextArea.setEditable(false);
@@ -296,6 +323,15 @@ public class MainFrame extends JFrame {
 
         responseTablePane = new JTabbedPane();
         responseHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        responseHeaderTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
+                if (flag) {
+                    ClipboardUtil.copySelected(responseHeaderTable);
+                }
+            }
+        });
         responseHeaderScrollPane = new JScrollPane(responseHeaderTable);
         responseTextArea = new JTextArea();
         responseTextArea.setEditable(false);
@@ -591,6 +627,7 @@ public class MainFrame extends JFrame {
         popup.add(mapRemoteMenuItem);
         popup.add(mapLocalMenuItem);
         flowTree.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseReleased(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     FlowTreeNode node = (FlowTreeNode) flowTree.getLastSelectedPathComponent();
@@ -729,13 +766,13 @@ public class MainFrame extends JFrame {
         recordButton.setAction(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) rootNode.getFirstChild().getChildAt(0);
-                node.setUserObject("js");
-                flowTree.updateUI();
+                Application.RECORD_FLAG.set(!Application.RECORD_FLAG.get());
+                recordButton.setIcon(Application.RECORD_FLAG.get() ? SvgIcons.STOP : SvgIcons.PLAY);
+                recordButton.setToolTipText(Application.RECORD_FLAG.get() ? "Stop" : "Start");
             }
         });
-        recordButton.setToolTipText("Record");
-        recordButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/play.svg"));
+        recordButton.setToolTipText("Stop");
+        recordButton.setIcon(SvgIcons.STOP);
         toolBar.add(clearButton);
 //        toolBar.add(Box.createHorizontalStrut(20));
         toolBar.add(recordButton);
@@ -767,56 +804,23 @@ public class MainFrame extends JFrame {
         chooser.showOpenDialog(this);
     }
 
-    private void saveAsActionPerformed() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.showSaveDialog(this);
-    }
-
     private void initMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        // File menu
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem openMenuItem = new JMenuItem("Open");
-        openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        openMenuItem.setMnemonic('O');
-        openMenuItem.addActionListener(e -> openActionPerformed());
-        fileMenu.add(openMenuItem);
-        JMenuItem saveMenuItem = new JMenuItem("Save");
-        saveMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        saveMenuItem.setMnemonic('S');
-        saveMenuItem.addActionListener(e -> saveAsActionPerformed());
-        fileMenu.add(saveMenuItem);
-        fileMenu.add(new JSeparator());
+        // Proxy menu
+        JMenu proxyMenu = new JMenu("Proxy");
+        JCheckBoxMenuItem systemProxyMenuItem = new JCheckBoxMenuItem("System Proxy");
+        systemProxyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        systemProxyMenuItem.setMnemonic('P');
+        systemProxyMenuItem.addActionListener(e -> {
+
+        });
+        proxyMenu.add(systemProxyMenuItem);
+        proxyMenu.add(new JSeparator());
         JMenuItem preferencesMenuItem = new JMenuItem("Preferences...");
         preferencesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         preferencesMenuItem.setMnemonic(',');
         preferencesMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", true));
-        fileMenu.add(preferencesMenuItem);
-
-        // Proxy menu
-        JMenu proxyMenu = new JMenu("Proxy");
-        recordMenuItem = new JCheckBoxMenuItem("Record");
-        recordMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        recordMenuItem.setMnemonic('R');
-        recordMenuItem.addActionListener(e -> openActionPerformed());
-        proxyMenu.add(recordMenuItem);
-        throttlingMenuItem = new JCheckBoxMenuItem("Throttling");
-        throttlingMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        throttlingMenuItem.setMnemonic('T');
-        throttlingMenuItem.addActionListener(e -> saveAsActionPerformed());
-        proxyMenu.add(throttlingMenuItem);
-        JCheckBoxMenuItem systemProxyMenuItem = new JCheckBoxMenuItem("System Proxy");
-        systemProxyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        systemProxyMenuItem.setMnemonic('P');
-        systemProxyMenuItem.addActionListener(e -> saveAsActionPerformed());
-        proxyMenu.add(systemProxyMenuItem);
-        proxyMenu.add(new JSeparator());
-        JMenuItem throttlingSettingMenuItem = new JMenuItem("Throttling Setting");
-        throttlingSettingMenuItem.addActionListener(e -> saveAsActionPerformed());
-        proxyMenu.add(throttlingSettingMenuItem);
-        JMenuItem proxySettingMenuItem = new JMenuItem("Proxy Setting");
-        proxySettingMenuItem.addActionListener(e -> saveAsActionPerformed());
-        proxyMenu.add(proxySettingMenuItem);
+        proxyMenu.add(preferencesMenuItem);
 
         // Tools menu
         JMenu toolsMenu = new JMenu("Tools");
@@ -826,30 +830,37 @@ public class MainFrame extends JFrame {
         toolsMenu.add(remoteMapMenuItem);
         blockListMenuItem = new JCheckBoxMenuItem("Block List");
         blockListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        blockListMenuItem.addActionListener(e -> saveAsActionPerformed());
+        blockListMenuItem.addActionListener(e -> {
+
+        });
         toolsMenu.add(blockListMenuItem);
         allowListMenuItem = new JCheckBoxMenuItem("Allow List");
         allowListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        allowListMenuItem.addActionListener(e -> saveAsActionPerformed());
+        allowListMenuItem.addActionListener(e -> {
+
+        });
         toolsMenu.add(allowListMenuItem);
         toolsMenu.add(new JSeparator());
         JMenuItem composeMenuItem = new JMenuItem("Compose");
         composeMenuItem.addActionListener(e -> new ComposeDialog(this, "Compose", null, true));
         toolsMenu.add(composeMenuItem);
         JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
-        jsonViewerMenuItem.addActionListener(e -> saveAsActionPerformed());
+        jsonViewerMenuItem.addActionListener(e -> {
+
+        });
         toolsMenu.add(jsonViewerMenuItem);
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");
         JMenuItem downloadRootCertificateMenuItem = new JMenuItem("Download Root Certificate");
-        downloadRootCertificateMenuItem.addActionListener(e -> saveAsActionPerformed());
+        downloadRootCertificateMenuItem.addActionListener(e -> {
+
+        });
         helpMenu.add(downloadRootCertificateMenuItem);
         helpMenu.add(new JSeparator());
         JMenuItem aboutMenuItem = new JMenuItem("About");
         helpMenu.add(aboutMenuItem);
 
-        menuBar.add(fileMenu);
         menuBar.add(proxyMenu);
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);

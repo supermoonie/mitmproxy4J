@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +37,8 @@ public class Application {
     private static final String PREFS_ROOT_PATH = "/proxy-swing";
 
     public static MainFrame MAIN_FRAME;
+
+    public static AtomicBoolean RECORD_FLAG = new AtomicBoolean(true);
 
     public static void main(String[] args) {
         // on macOS enable screen menu bar

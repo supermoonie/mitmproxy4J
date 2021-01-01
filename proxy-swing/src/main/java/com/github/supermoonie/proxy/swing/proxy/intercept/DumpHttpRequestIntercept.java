@@ -12,7 +12,6 @@ import com.github.supermoonie.proxy.swing.gui.flow.FlowType;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.swing.service.RequestService;
-import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        if (GlobalSetting.getInstance().getRecord()) {
+        if (Application.RECORD_FLAG.get()) {
             try {
                 final Request req = RequestService.saveRequest(ctx, request);
                 log.info("request saved, uri: {}", ctx.getConnectionInfo().getUrl());
@@ -58,7 +57,7 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                         rootNode.add(flow);
                         Application.MAIN_FRAME.getFlowTree().updateUI();
                         if (MainFrameHelper.currentRequestId == -1
-                            || MainFrameHelper.currentRequestId == req.getId()) {
+                                || MainFrameHelper.currentRequestId == req.getId()) {
                             MainFrameHelper.fillOverviewTab(req, null);
                             MainFrameHelper.showRequestContent(req);
                             MainFrameHelper.showResponseContent(req, null);

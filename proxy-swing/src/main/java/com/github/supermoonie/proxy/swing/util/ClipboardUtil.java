@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.swing.util;
 
 import javax.annotation.Nonnull;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.io.File;
@@ -29,6 +30,22 @@ public class ClipboardUtil {
     public static void copyText(String text) {
         Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         systemClipboard.setContents(new StringSelection(text), null);
+    }
+
+    public static void copySelected(JTable table) {
+        int[] selectedRows = table.getSelectedRows();
+        if (null == selectedRows || 0 == selectedRows.length) {
+            return;
+        }
+        StringBuilder selected = new StringBuilder();
+        for (int row : selectedRows) {
+            Object name = table.getValueAt(row, 0);
+            Object value = table.getValueAt(row, 1);
+            if (null != name && null != value) {
+                selected.append(name.toString()).append(" ").append(value.toString()).append("\n");
+            }
+        }
+        copyText(selected.toString());
     }
 
     private static class ImageTransferable implements Transferable {
