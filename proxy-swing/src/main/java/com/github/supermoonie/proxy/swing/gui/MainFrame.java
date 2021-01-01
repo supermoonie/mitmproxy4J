@@ -162,22 +162,22 @@ public class MainFrame extends JFrame {
         overviewTreeTableModel = new DefaultTreeTableModel(overviewTreeTableRoot, List.of("Name", "Value"));
         JXTreeTable overviewTreeTable = new JXTreeTable(overviewTreeTableModel);
         JScrollPane overviewScrollPane = new JScrollPane(overviewTreeTable);
-        overviewScrollPane.setOpaque(false);
-        overviewScrollPane.getViewport().setOpaque(false);
+//        overviewScrollPane.setOpaque(false);
+//        overviewScrollPane.getViewport().setOpaque(false);
         overviewTreeTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 overviewTreeTable.updateUI();
             }
         });
-        overviewTreeTable.setDragEnabled(false);
         overviewTreeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         overviewTreeTable.setRowHeight(25);
         overviewTreeTable.setLeafIcon(SvgIcons.LEAF);
         overviewTreeTable.setEditable(false);
-        overviewTreeTable.setShowGrid(false);
-        overviewTreeTable.setFocusable(false);
+//        overviewTreeTable.setShowGrid(false);
+//        overviewTreeTable.setFocusable(false);
         overviewTreeTable.setRootVisible(false);
+        overviewTreeTable.setShowHorizontalLines(true);
         overviewTab.add(overviewScrollPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Overview", overviewTab);
         // Content tab
@@ -408,32 +408,35 @@ public class MainFrame extends JFrame {
                 if (null == url) {
                     return;
                 }
-                Object remote = JOptionPane.showInputDialog(this, new Object[]{
-                        "From:",
-                        new JTextField(url) {{
-                            setEditable(false);
-                        }},
-                        "To:"
-                }, "Map Remote", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                if (null != remote) {
-                    try {
-                        String to = remote.toString();
-                        new URI(to);
-                        Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
-                        RequestMap requestMap = new RequestMap();
-                        requestMap.setEnable(RequestMap.ENABLE);
-                        requestMap.setTimeCreated(new Date());
-                        requestMap.setMapType(RequestMap.TYPE_REMOTE);
-                        requestMap.setToUrl(to);
-                        requestMap.setFromUrl(url);
-                        requestMapDao.create(requestMap);
-                        DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().put(url, to);
-                    } catch (URISyntaxException ex) {
-                        JOptionPane.showMessageDialog(this, "Invalid Url!", "Error", JOptionPane.ERROR_MESSAGE);
-                    } catch (SQLException t) {
-                        Application.showError(t);
+                RequestMapDialog mapRemoteDialog = new RequestMapDialog(MainFrame.this, "Map Remote", true);
+                mapRemoteDialog.getFromTextField().setText(url);
+                mapRemoteDialog.getFromTextField().setEditable(false);
+                mapRemoteDialog.getToTextField().requestFocus();
+                mapRemoteDialog.getConfirmButton().addActionListener(event -> {
+                    String to = mapRemoteDialog.getToTextField().getText();
+                    if (null != to && !"".equals(to)) {
+                        if (!to.matches("^(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*/?$")) {
+                            JOptionPane.showMessageDialog(this, "Invalid Url!", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                        try {
+                            Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
+                            RequestMap requestMap = new RequestMap();
+                            requestMap.setEnable(RequestMap.ENABLE);
+                            requestMap.setTimeCreated(new Date());
+                            requestMap.setMapType(RequestMap.TYPE_REMOTE);
+                            requestMap.setToUrl(to);
+                            requestMap.setFromUrl(url);
+                            requestMapDao.create(requestMap);
+                            DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().put(url, to);
+                        }catch (SQLException t) {
+                            Application.showError(t);
+                        } finally {
+                            mapRemoteDialog.setVisible(false);
+                        }
                     }
-                }
+                });
+                mapRemoteDialog.setVisible(true);
             });
         }};
         JMenuItem mapLocalMenuItem = new JMenuItem("Map Local") {{
@@ -476,6 +479,8 @@ public class MainFrame extends JFrame {
                         } finally {
                             mapLocalDialog.setVisible(false);
                         }
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Invalid Path!", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 });
                 mapLocalDialog.setVisible(true);
