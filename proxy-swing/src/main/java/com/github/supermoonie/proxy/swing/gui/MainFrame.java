@@ -14,6 +14,7 @@ import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownList
 import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.RequestMapDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.TextAreaDialog;
 import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
@@ -41,15 +42,10 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -162,8 +158,6 @@ public class MainFrame extends JFrame {
         overviewTreeTableModel = new DefaultTreeTableModel(overviewTreeTableRoot, List.of("Name", "Value"));
         JXTreeTable overviewTreeTable = new JXTreeTable(overviewTreeTableModel);
         JScrollPane overviewScrollPane = new JScrollPane(overviewTreeTable);
-//        overviewScrollPane.setOpaque(false);
-//        overviewScrollPane.getViewport().setOpaque(false);
         overviewTreeTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -174,10 +168,106 @@ public class MainFrame extends JFrame {
         overviewTreeTable.setRowHeight(25);
         overviewTreeTable.setLeafIcon(SvgIcons.LEAF);
         overviewTreeTable.setEditable(false);
-//        overviewTreeTable.setShowGrid(false);
-//        overviewTreeTable.setFocusable(false);
+        overviewTreeTable.setShowGrid(false);
+        overviewTreeTable.setFocusable(false);
         overviewTreeTable.setRootVisible(false);
         overviewTreeTable.setShowHorizontalLines(true);
+        overviewTreeTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int selectedRow = overviewTreeTable.getSelectedRow();
+                    if (-1 == selectedRow) {
+                        return;
+                    }
+                    Object name = overviewTreeTable.getValueAt(selectedRow, 0);
+                    Object value = overviewTreeTable.getValueAt(selectedRow, 1);
+                    if (null != value) {
+                        TextAreaDialog textAreaDialog = new TextAreaDialog(null, name.toString(), true);
+                        textAreaDialog.setLocation(e.getX() + 160, e.getY() + 160);
+                        textAreaDialog.getTextArea().setText(value.toString());
+                        textAreaDialog.getTextArea().setEditable(true);
+                        textAreaDialog.getTextArea().setCaretPosition(0);
+                        textAreaDialog.setVisible(true);
+                    }
+                }
+            }
+        });
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem copyUrlMenuItem = new JMenuItem("Copy Url") {{
+            addActionListener(e -> {
+                String url = getSelectUrl();
+                if (null == url) {
+                    return;
+                }
+                ClipboardUtil.copyText(url);
+            });
+        }};
+        JMenuItem copyMenuItem = new JMenuItem("Copy Selection"){{
+            addActionListener(e -> {
+                int selectedRow = overviewTreeTable.getSelectedRow();
+                if (-1 == selectedRow) {
+                    return;
+                }
+                Object name = overviewTreeTable.getValueAt(selectedRow, 0);
+                Object value = overviewTreeTable.getValueAt(selectedRow, 1);
+                if (null != value) {
+                    ClipboardUtil.copyText(name.toString() + " : " + value.toString());
+                }
+            });
+        }};
+        JMenuItem copyValueMenuItem = new JMenuItem("Copy Value"){{
+            addActionListener(e -> {
+                int selectedRow = overviewTreeTable.getSelectedRow();
+                if (-1 == selectedRow) {
+                    return;
+                }
+                Object value = overviewTreeTable.getValueAt(selectedRow, 1);
+                if (null != value) {
+                    ClipboardUtil.copyText(value.toString());
+                }
+            });
+        }};
+        JMenuItem repeatMenuItem = new JMenuItem("Repeat"){{
+            addActionListener(e -> {
+                Flow selectedFlow = getSelectedFlow();
+                repeat(selectedFlow);
+            });
+        }};
+        JMenuItem composeMenuItem = new JMenuItem("Compose"){{
+            addActionListener(e -> {
+                Flow selectedFlow = getSelectedFlow();
+                if (null == selectedFlow) {
+                    return;
+                }
+                new ComposeDialog(MainFrame.this, "Compose", selectedFlow, true);
+            });
+        }};
+        popupMenu.add(copyUrlMenuItem);
+        popupMenu.add(copyMenuItem);
+        popupMenu.add(copyValueMenuItem);
+        popupMenu.add(new JSeparator());
+        popupMenu.add(repeatMenuItem);
+        popupMenu.add(composeMenuItem);
+        overviewTreeTable.setComponentPopupMenu(popupMenu);
+        overviewTreeTable.setFocusable(true);
+        overviewTreeTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
+                if (flag) {
+                    int selectedRow = overviewTreeTable.getSelectedRow();
+                    if (-1 == selectedRow) {
+                        return;
+                    }
+                    Object name = overviewTreeTable.getValueAt(selectedRow, 0);
+                    Object value = overviewTreeTable.getValueAt(selectedRow, 1);
+                    if (null != value) {
+                        ClipboardUtil.copyText(name.toString() + " " + value.toString());
+                    }
+                }
+            }
+        });
         overviewTab.add(overviewScrollPane, BorderLayout.CENTER);
         flowDetailTablePane.addTab("Overview", overviewTab);
         // Content tab
@@ -429,7 +519,7 @@ public class MainFrame extends JFrame {
                             requestMap.setFromUrl(url);
                             requestMapDao.create(requestMap);
                             DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().put(url, to);
-                        }catch (SQLException t) {
+                        } catch (SQLException t) {
                             Application.showError(t);
                         } finally {
                             mapRemoteDialog.setVisible(false);

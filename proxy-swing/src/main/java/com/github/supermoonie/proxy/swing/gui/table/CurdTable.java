@@ -95,7 +95,7 @@ public class CurdTable extends JTable {
         }
     }
 
-    public class ButtonEditor extends DefaultCellEditor {
+    public static class ButtonEditor extends DefaultCellEditor {
         protected JButton button;
 
         private String label;
