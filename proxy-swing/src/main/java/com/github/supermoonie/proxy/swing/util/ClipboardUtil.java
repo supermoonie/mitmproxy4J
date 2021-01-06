@@ -42,7 +42,7 @@ public class ClipboardUtil {
             Object name = table.getValueAt(row, 0);
             Object value = table.getValueAt(row, 1);
             if (null != name && null != value) {
-                selected.append(name.toString()).append(" ").append(value.toString()).append("\n");
+                selected.append(name.toString()).append(": ").append(value.toString()).append("\n");
             }
         }
         copyText(selected.toString());

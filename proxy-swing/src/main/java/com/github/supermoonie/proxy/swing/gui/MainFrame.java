@@ -275,8 +275,7 @@ public class MainFrame extends JFrame {
         requestHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
         requestHeaderTable.setShowHorizontalLines(true);
         requestHeaderTable.setShowVerticalLines(true);
-        JPopupMenu reqHeaderPopupMenu = new JPopupMenu();
-        requestHeaderTable.setComponentPopupMenu(reqHeaderPopupMenu);
+        addTablePopupMenu(requestHeaderTable);
         requestHeaderTable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -288,6 +287,7 @@ public class MainFrame extends JFrame {
         });
         requestHeaderScrollPane = new JScrollPane(requestHeaderTable);
         requestQueryTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        addTablePopupMenu(requestQueryTable);
         requestQueryTable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -299,6 +299,7 @@ public class MainFrame extends JFrame {
         });
         requestQueryScrollPane = new JScrollPane(requestQueryTable);
         requestFormTable = new JTable(new NoneEditTableModel(null, new String[]{"name", "Value"}));
+        addTablePopupMenu(requestFormTable);
         requestFormTable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -323,6 +324,7 @@ public class MainFrame extends JFrame {
 
         responseTablePane = new JTabbedPane();
         responseHeaderTable = new JTable(new NoneEditTableModel(null, new String[]{"Name", "Value"}));
+        addTablePopupMenu(responseHeaderTable);
         responseHeaderTable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -355,6 +357,20 @@ public class MainFrame extends JFrame {
         flowDetailTablePane.addTab("Content", contentTab);
         detailPanel.add(flowDetailTablePane, BorderLayout.CENTER);
         return detailPanel;
+    }
+
+    private JPopupMenu addTablePopupMenu(JTable table) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem copySelectMenuItem = new JMenuItem("Copy Selection"){{
+            addActionListener(e -> ClipboardUtil.copySelected(table));
+        }};
+        JMenuItem selectAllMenuItem = new JMenuItem("Select All"){{
+            addActionListener(e -> table.selectAll());
+        }};
+        popupMenu.add(copySelectMenuItem);
+        popupMenu.add(selectAllMenuItem);
+        table.setComponentPopupMenu(popupMenu);
+        return popupMenu;
     }
 
     /**
