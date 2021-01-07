@@ -15,6 +15,9 @@ import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.RequestMapDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.TextAreaDialog;
+import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaCopyMenuItem;
+import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaSelectAllMenuItem;
+import com.github.supermoonie.proxy.swing.gui.popup.TextAreaPopupMenu;
 import com.github.supermoonie.proxy.swing.gui.table.NoneEditTableModel;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
@@ -312,14 +315,20 @@ public class MainFrame extends JFrame {
         requestFormScrollPane = new JScrollPane(requestFormTable);
         requestContentTextArea = new JTextArea();
         requestContentTextArea.setEditable(false);
+        requestContentTextArea.setComponentPopupMenu(new TextAreaPopupMenu(requestContentTextArea));
         requestContentTextScrollPane = new JScrollPane(requestContentTextArea);
         requestJsonArea = new RSyntaxTextArea();
         requestJsonArea.setCodeFoldingEnabled(true);
         requestJsonArea.setPaintTabLines(false);
         requestJsonArea.setEditable(false);
+        requestJsonArea.setPopupMenu(new JPopupMenu(){{
+            add(new CodeAreaCopyMenuItem("Copy", requestJsonArea));
+            add(new CodeAreaSelectAllMenuItem("Select All", requestJsonArea));
+        }});
         requestJsonScrollPane = new RTextScrollPane(requestJsonArea);
         requestRawArea = new JTextArea();
         requestRawArea.setEditable(false);
+        requestRawArea.setComponentPopupMenu(new TextAreaPopupMenu(requestRawArea));
         requestRawScrollPane = new JScrollPane(requestRawArea);
 
         responseTablePane = new JTabbedPane();
@@ -337,11 +346,16 @@ public class MainFrame extends JFrame {
         responseHeaderScrollPane = new JScrollPane(responseHeaderTable);
         responseTextArea = new JTextArea();
         responseTextArea.setEditable(false);
+        responseTextArea.setComponentPopupMenu(new TextAreaPopupMenu(responseTextArea));
         responseTextAreaScrollPane = new JScrollPane(responseTextArea);
         responseCodeArea = new RSyntaxTextArea();
         responseCodeArea.setCodeFoldingEnabled(true);
         responseCodeArea.setPaintTabLines(false);
         responseCodeArea.setEditable(false);
+        responseCodeArea.setPopupMenu(new JPopupMenu(){{
+            add(new CodeAreaCopyMenuItem("Copy", responseCodeArea));
+            add(new CodeAreaSelectAllMenuItem("Select All", responseCodeArea));
+        }});
         responseCodePane = new JPanel(new BorderLayout());
         responseCodePane.add(new RTextScrollPane(responseCodeArea));
         responseCodePane.addComponentListener(new ResponseCodeAreaShownListener());
@@ -349,6 +363,7 @@ public class MainFrame extends JFrame {
         responseImageScrollPane = new JScrollPane(responseImagePane);
         responseRawArea = new JTextArea();
         responseRawArea.setEditable(false);
+        responseRawArea.setComponentPopupMenu(new TextAreaPopupMenu(responseRawArea));
         responseRawScrollPane = new JScrollPane(responseRawArea);
         contentSplitPane.setTopComponent(requestTablePane);
         contentSplitPane.setBottomComponent(responseTablePane);
@@ -361,7 +376,7 @@ public class MainFrame extends JFrame {
 
     private JPopupMenu addTablePopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
-        JMenuItem copySelectMenuItem = new JMenuItem("Copy Selection"){{
+        JMenuItem copySelectMenuItem = new JMenuItem("Copy"){{
             addActionListener(e -> ClipboardUtil.copySelected(table));
         }};
         JMenuItem selectAllMenuItem = new JMenuItem("Select All"){{
