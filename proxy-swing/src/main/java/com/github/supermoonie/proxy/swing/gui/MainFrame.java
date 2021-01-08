@@ -43,7 +43,6 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.ByteArrayInputStream;
@@ -63,6 +62,7 @@ public class MainFrame extends JFrame {
 
     // 菜单栏
     private JCheckBoxMenuItem remoteMapMenuItem;
+    private JCheckBoxMenuItem localMapMenuItem;
     private JCheckBoxMenuItem blockListMenuItem;
     private JCheckBoxMenuItem allowListMenuItem;
 
@@ -204,7 +204,7 @@ public class MainFrame extends JFrame {
                 ClipboardUtil.copyText(url);
             });
         }};
-        JMenuItem copyMenuItem = new JMenuItem("Copy Selection"){{
+        JMenuItem copyMenuItem = new JMenuItem("Copy Selection") {{
             addActionListener(e -> {
                 int selectedRow = overviewTreeTable.getSelectedRow();
                 if (-1 == selectedRow) {
@@ -217,7 +217,7 @@ public class MainFrame extends JFrame {
                 }
             });
         }};
-        JMenuItem copyValueMenuItem = new JMenuItem("Copy Value"){{
+        JMenuItem copyValueMenuItem = new JMenuItem("Copy Value") {{
             addActionListener(e -> {
                 int selectedRow = overviewTreeTable.getSelectedRow();
                 if (-1 == selectedRow) {
@@ -229,13 +229,13 @@ public class MainFrame extends JFrame {
                 }
             });
         }};
-        JMenuItem repeatMenuItem = new JMenuItem("Repeat"){{
+        JMenuItem repeatMenuItem = new JMenuItem("Repeat") {{
             addActionListener(e -> {
                 Flow selectedFlow = getSelectedFlow();
                 repeat(selectedFlow);
             });
         }};
-        JMenuItem composeMenuItem = new JMenuItem("Compose"){{
+        JMenuItem composeMenuItem = new JMenuItem("Compose") {{
             addActionListener(e -> {
                 Flow selectedFlow = getSelectedFlow();
                 if (null == selectedFlow) {
@@ -321,7 +321,7 @@ public class MainFrame extends JFrame {
         requestJsonArea.setCodeFoldingEnabled(true);
         requestJsonArea.setPaintTabLines(false);
         requestJsonArea.setEditable(false);
-        requestJsonArea.setPopupMenu(new JPopupMenu(){{
+        requestJsonArea.setPopupMenu(new JPopupMenu() {{
             add(new CodeAreaCopyMenuItem("Copy", requestJsonArea));
             add(new CodeAreaSelectAllMenuItem("Select All", requestJsonArea));
         }});
@@ -352,7 +352,7 @@ public class MainFrame extends JFrame {
         responseCodeArea.setCodeFoldingEnabled(true);
         responseCodeArea.setPaintTabLines(false);
         responseCodeArea.setEditable(false);
-        responseCodeArea.setPopupMenu(new JPopupMenu(){{
+        responseCodeArea.setPopupMenu(new JPopupMenu() {{
             add(new CodeAreaCopyMenuItem("Copy", responseCodeArea));
             add(new CodeAreaSelectAllMenuItem("Select All", responseCodeArea));
         }});
@@ -376,10 +376,10 @@ public class MainFrame extends JFrame {
 
     private JPopupMenu addTablePopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
-        JMenuItem copySelectMenuItem = new JMenuItem("Copy"){{
+        JMenuItem copySelectMenuItem = new JMenuItem("Copy") {{
             addActionListener(e -> ClipboardUtil.copySelected(table));
         }};
-        JMenuItem selectAllMenuItem = new JMenuItem("Select All"){{
+        JMenuItem selectAllMenuItem = new JMenuItem("Select All") {{
             addActionListener(e -> table.selectAll());
         }};
         popupMenu.add(copySelectMenuItem);
@@ -850,26 +850,26 @@ public class MainFrame extends JFrame {
         JMenuItem preferencesMenuItem = new JMenuItem("Preferences...");
         preferencesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         preferencesMenuItem.setMnemonic(',');
-        preferencesMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", true));
+        preferencesMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Appearance", true));
         proxyMenu.add(preferencesMenuItem);
 
         // Tools menu
         JMenu toolsMenu = new JMenu("Tools");
         remoteMapMenuItem = new JCheckBoxMenuItem("Remote Map");
         remoteMapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        remoteMapMenuItem.addActionListener(e -> openActionPerformed());
+        remoteMapMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Remote Map", true));
         toolsMenu.add(remoteMapMenuItem);
+        localMapMenuItem = new JCheckBoxMenuItem("Local Map");
+        localMapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        localMapMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Local Map", true));
+        toolsMenu.add(localMapMenuItem);
         blockListMenuItem = new JCheckBoxMenuItem("Block List");
         blockListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        blockListMenuItem.addActionListener(e -> {
-
-        });
+        blockListMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Block List", true));
         toolsMenu.add(blockListMenuItem);
         allowListMenuItem = new JCheckBoxMenuItem("Allow List");
         allowListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        allowListMenuItem.addActionListener(e -> {
-
-        });
+        allowListMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Allow List", true));
         toolsMenu.add(allowListMenuItem);
         toolsMenu.add(new JSeparator());
         JMenuItem composeMenuItem = new JMenuItem("Compose");

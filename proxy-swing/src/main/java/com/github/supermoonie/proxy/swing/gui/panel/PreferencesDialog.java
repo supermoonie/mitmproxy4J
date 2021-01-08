@@ -52,20 +52,28 @@ public class PreferencesDialog extends JDialog {
             "Dialog", "Liberation Sans", "Monospaced", "Noto Sans", "Roboto",
             "SansSerif", "Segoe UI", "Serif", "Tahoma", "Ubuntu", "Verdana");
 
+    private final JSplitPane splitPane = new JSplitPane();
+    private final JPanel leftPanel = new JPanel(new BorderLayout());
+    private final JPanel rightPanel = new JPanel(new BorderLayout());
+
+    private final JTree preferenceTree = new JTree();
+    private final DefaultMutableTreeNode appearanceNode = new DefaultMutableTreeNode("Appearance");
+    private final DefaultMutableTreeNode proxyNode = new DefaultMutableTreeNode("Proxy & Access Control");
+    private final DefaultMutableTreeNode allowListNode = new DefaultMutableTreeNode("Allow List");
+    private final DefaultMutableTreeNode blockListNode = new DefaultMutableTreeNode("Block List");
+    private final DefaultMutableTreeNode remoteMapNode = new DefaultMutableTreeNode("Remote Map");
+    private final DefaultMutableTreeNode localMapNode = new DefaultMutableTreeNode("Local Map");
+
     private String current;
 
-    public PreferencesDialog(Frame owner, String title, boolean modal) {
+    public PreferencesDialog(Frame owner, String title, String select, boolean modal) {
         super(owner, title, modal);
         // Split
-        JSplitPane splitPane = new JSplitPane();
-        JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.getInsets().set(10, 10, 10, 10);
-        JPanel rightPanel = new JPanel(new BorderLayout());
         splitPane.setLeftComponent(leftPanel);
         splitPane.setRightComponent(rightPanel);
         splitPane.setDividerLocation(200);
         // left
-        JTree preferenceTree = new JTree();
         preferenceTree.setShowsRootHandles(false);
         preferenceTree.setRootVisible(false);
         preferenceTree.setCellRenderer(new DefaultTreeCellRenderer() {{
@@ -79,56 +87,77 @@ public class PreferencesDialog extends JDialog {
             if (selected.equals(current)) {
                 return;
             }
-            current = selected;
-            rightPanel.removeAll();
-            switch (selected) {
-                case "Appearance":
-                    rightPanel.add(appearancePanel());
-                    break;
-                case "Proxy & Access Control":
-                    rightPanel.add(proxyPanel());
-                    break;
-                case "Throttling":
-                    rightPanel.add(throttlingPanel());
-                    break;
-                case "Allow List":
-                    rightPanel.add(allowListPanel());
-                    break;
-                case "Block List":
-                    rightPanel.add(blockListPanel());
-                    break;
-                case "Remote Map":
-                    rightPanel.add(remoteMapPanel());
-                    break;
-                case "Local Map":
-                    rightPanel.add(localMapPanel());
-                    break;
-                default:
-                    break;
-            }
-            rightPanel.updateUI();
+            switchPanel(selected, false);
         });
         DefaultTreeModel treeModel = (DefaultTreeModel) preferenceTree.getModel();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode();
         treeModel.setRoot(root);
-        DefaultMutableTreeNode appearanceNode = new DefaultMutableTreeNode("Appearance");
         root.add(appearanceNode);
-        root.add(new DefaultMutableTreeNode("Proxy & Access Control"));
-        root.add(new DefaultMutableTreeNode("Allow List"));
-        root.add(new DefaultMutableTreeNode("Block List"));
-        root.add(new DefaultMutableTreeNode("Remote Map"));
-        root.add(new DefaultMutableTreeNode("Local Map"));
-        preferenceTree.setSelectionPath(new TreePath(appearanceNode.getPath()));
+        root.add(proxyNode);
+        root.add(allowListNode);
+        root.add(blockListNode);
+        root.add(remoteMapNode);
+        root.add(localMapNode);
         leftPanel.add(new JScrollPane(preferenceTree), BorderLayout.CENTER);
-        // default right panel
-        rightPanel.add(appearancePanel());
-        current = "Appearance";
+        switchPanel(select, true);
 
         getContentPane().add(splitPane);
         super.setPreferredSize(new Dimension(800, 600));
         super.pack();
         super.setLocationRelativeTo(owner);
         super.setVisible(true);
+    }
+
+    private void switchPanel(String name, boolean first) {
+        rightPanel.removeAll();
+        current = name;
+        switch (name) {
+            case "Appearance":
+                rightPanel.add(appearancePanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(appearanceNode.getPath()));
+                }
+                break;
+            case "Proxy & Access Control":
+                rightPanel.add(proxyPanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(proxyNode.getPath()));
+                }
+                break;
+            case "Throttling":
+                rightPanel.add(throttlingPanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(proxyNode.getPath()));
+                }
+                break;
+            case "Allow List":
+                rightPanel.add(allowListPanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(allowListNode.getPath()));
+                }
+                break;
+            case "Block List":
+                rightPanel.add(blockListPanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(blockListNode.getPath()));
+                }
+                break;
+            case "Remote Map":
+                rightPanel.add(remoteMapPanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(remoteMapNode.getPath()));
+                }
+                break;
+            case "Local Map":
+                rightPanel.add(localMapPanel());
+                if (first) {
+                    preferenceTree.setSelectionPath(new TreePath(localMapNode.getPath()));
+                }
+                break;
+            default:
+                break;
+        }
+        rightPanel.updateUI();
     }
 
     private JPanel appearancePanel() {
