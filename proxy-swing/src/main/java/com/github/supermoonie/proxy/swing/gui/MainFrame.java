@@ -61,10 +61,10 @@ import java.util.*;
 public class MainFrame extends JFrame {
 
     // 菜单栏
-    private JCheckBoxMenuItem remoteMapMenuItem;
-    private JCheckBoxMenuItem localMapMenuItem;
-    private JCheckBoxMenuItem blockListMenuItem;
-    private JCheckBoxMenuItem allowListMenuItem;
+    private JMenuItem remoteMapMenuItem;
+    private JMenuItem localMapMenuItem;
+    private JMenuItem blockListMenuItem;
+    private JMenuItem allowListMenuItem;
 
     // Flow 显示的两种形式
     private JPanel structureTab;
@@ -823,16 +823,21 @@ public class MainFrame extends JFrame {
         container.add(toolBarPanel, BorderLayout.EAST);
         JToolBar filterToolBar = new JToolBar();
         filterToolBar.setFloatable(false);
-        filterToolBar.add(new JButton("All"));
+        filterToolBar.add(filterButton("All"));
+        filterToolBar.add(new JSeparator());
+        filterToolBar.add(filterButton("JSON"));
+        filterToolBar.add(filterButton("HTML"));
+        filterToolBar.add(filterButton("Image"));
+        filterToolBar.add(filterButton("XML"));
         container.add(filterToolBar, BorderLayout.WEST);
         container.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.SOUTH);
         getContentPane().add(container, BorderLayout.NORTH);
-
     }
 
-    private void openActionPerformed() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.showOpenDialog(this);
+    private JButton filterButton(String name) {
+        JButton button = new JButton(name);
+        button.setMargin(new Insets(2, 10, 2, 10));
+        return button;
     }
 
     private void initMenuBar() {
@@ -855,19 +860,19 @@ public class MainFrame extends JFrame {
 
         // Tools menu
         JMenu toolsMenu = new JMenu("Tools");
-        remoteMapMenuItem = new JCheckBoxMenuItem("Remote Map");
+        remoteMapMenuItem = new JMenuItem("Remote Map");
         remoteMapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         remoteMapMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Remote Map", true));
         toolsMenu.add(remoteMapMenuItem);
-        localMapMenuItem = new JCheckBoxMenuItem("Local Map");
+        localMapMenuItem = new JMenuItem("Local Map");
         localMapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         localMapMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Local Map", true));
         toolsMenu.add(localMapMenuItem);
-        blockListMenuItem = new JCheckBoxMenuItem("Block List");
+        blockListMenuItem = new JMenuItem("Block List");
         blockListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         blockListMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Block List", true));
         toolsMenu.add(blockListMenuItem);
-        allowListMenuItem = new JCheckBoxMenuItem("Allow List");
+        allowListMenuItem = new JMenuItem("Allow List");
         allowListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         allowListMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Allow List", true));
         toolsMenu.add(allowListMenuItem);

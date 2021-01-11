@@ -7,7 +7,6 @@ import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AllowBlock;
 import com.github.supermoonie.proxy.swing.entity.RequestMap;
 import com.github.supermoonie.proxy.swing.gui.table.FileChooserCellEditor;
-import com.github.supermoonie.proxy.swing.gui.table.FormDataTable;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultLocalMapIntercept;
@@ -25,7 +24,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.plaf.UIResource;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.NumberFormatter;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -35,7 +33,7 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.io.File;
+import java.awt.event.ItemListener;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.*;
@@ -161,6 +159,22 @@ public class PreferencesDialog extends JDialog {
     }
 
     private JPanel appearancePanel() {
+        JComboBox<String> themeComboBox = new JComboBox<>() {{
+            addItem("Dark");
+            addItem("Light");
+            addItemListener(e -> {
+                int themeSelectedIndex = this.getSelectedIndex();
+                if (0 == themeSelectedIndex) {
+                    if (!ThemeManager.isDark()) {
+                        ThemeManager.setDarkLookFeel();
+                    }
+                } else {
+                    if (ThemeManager.isDark()) {
+                        ThemeManager.setLightLookFeel();
+                    }
+                }
+            });
+        }};
         JComboBox<String> fontComboBox = new JComboBox<>() {{
             for (String font : FAMILIES) {
                 addItem(font);
@@ -168,6 +182,7 @@ public class PreferencesDialog extends JDialog {
             setMaximumSize(new Dimension(50, 25));
         }};
         JComboBox<Integer> fontSizeComboBox = new JComboBox<>() {{
+            addItem(8);
             addItem(12);
             addItem(13);
             addItem(14);
@@ -176,10 +191,24 @@ public class PreferencesDialog extends JDialog {
             addItem(20);
             addItem(22);
         }};
-        JComboBox<String> themeComboBox = new JComboBox<>() {{
-            addItem("Dark");
-            addItem("Light");
-        }};
+        ItemListener fontListener = e -> {
+            String family = Objects.requireNonNullElse(fontComboBox.getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY).toString();
+            family = "Default".equals(family) ? ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY : family;
+            int fontSize = Integer.parseInt(Objects.requireNonNullElse(fontSizeComboBox.getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_SIZE).toString());
+            ThemeManager.setFont(family, fontSize);
+            ApplicationPreferences.getState().put(ApplicationPreferences.KEY_FONT_FAMILY, family);
+            ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_FONT_SIZE, fontSize);
+        };
+        fontComboBox.addItemListener(fontListener);
+        fontSizeComboBox.addItemListener(fontListener);
+        Font font = ApplicationPreferences.getFont();
+        fontComboBox.setSelectedItem(font.getFamily().equals(ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY) ? "Default" : font.getFamily());
+        fontSizeComboBox.setSelectedItem(font.getSize());
+        if (ThemeManager.isDark()) {
+            themeComboBox.setSelectedItem("Dark");
+        } else {
+            themeComboBox.setSelectedItem("Light");
+        }
         JPanel appearanceSettingPanel = new JPanel(new BorderLayout());
         appearanceSettingPanel.getInsets().set(10, 10, 10, 10);
         JPanel container = new JPanel(new BorderLayout());
@@ -199,44 +228,6 @@ public class PreferencesDialog extends JDialog {
         fontPanel.add(fontSizeComboBox);
         container.add(fontPanel);
         appearanceSettingPanel.add(container, BorderLayout.CENTER);
-        // buttons
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT) {{
-            setHgap(10);
-        }});
-        buttonsPanel.add(new JButton("Cancel") {{
-            addActionListener(e -> PreferencesDialog.this.setVisible(false));
-        }});
-        buttonsPanel.add(new JButton("Apply") {{
-            setBackground(Color.decode("#4f8bc9"));
-            setForeground(Color.WHITE);
-            addActionListener(e -> {
-                String family = Objects.requireNonNullElse(fontComboBox.getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY).toString();
-                family = "Default".equals(family) ? ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY : family;
-                int fontSize = Integer.parseInt(Objects.requireNonNullElse(fontSizeComboBox.getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_SIZE).toString());
-                ThemeManager.setFont(family, fontSize);
-                int themeSelectedIndex = themeComboBox.getSelectedIndex();
-                if (0 == themeSelectedIndex) {
-                    if (!ThemeManager.isDark()) {
-                        ThemeManager.setDarkLookFeel();
-                    }
-                } else {
-                    if (ThemeManager.isDark()) {
-                        ThemeManager.setLightLookFeel();
-                    }
-                }
-                ApplicationPreferences.getState().put(ApplicationPreferences.KEY_FONT_FAMILY, family);
-                ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_FONT_SIZE, fontSize);
-            });
-        }});
-        appearanceSettingPanel.add(buttonsPanel, BorderLayout.SOUTH);
-        Font font = ApplicationPreferences.getFont();
-        fontComboBox.setSelectedItem(font.getFamily().equals(ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY) ? "Default" : font.getFamily());
-        fontSizeComboBox.setSelectedItem(font.getSize());
-        if (ThemeManager.isDark()) {
-            themeComboBox.setSelectedItem("Dark");
-        } else {
-            themeComboBox.setSelectedItem("Light");
-        }
         return appearanceSettingPanel;
     }
 
