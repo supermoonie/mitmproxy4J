@@ -4,6 +4,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
 import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.*;
@@ -11,10 +12,8 @@ import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowSelectionListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
-import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
-import com.github.supermoonie.proxy.swing.gui.panel.PreferencesDialog;
-import com.github.supermoonie.proxy.swing.gui.panel.RequestMapDialog;
-import com.github.supermoonie.proxy.swing.gui.panel.TextAreaDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.*;
+import com.github.supermoonie.proxy.swing.gui.panel.controller.ProxySettingDialogController;
 import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaCopyMenuItem;
 import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaSelectAllMenuItem;
 import com.github.supermoonie.proxy.swing.gui.popup.TextAreaPopupMenu;
@@ -823,7 +822,9 @@ public class MainFrame extends JFrame {
         container.add(toolBarPanel, BorderLayout.EAST);
         JToolBar filterToolBar = new JToolBar();
         filterToolBar.setFloatable(false);
-        filterToolBar.add(filterButton("All"));
+        JButton allButton = filterButton("All");
+        allButton.setSelected(true);
+        filterToolBar.add(allButton);
         filterToolBar.add(new JSeparator());
         filterToolBar.add(filterButton("JSON"));
         filterToolBar.add(filterButton("HTML"));
@@ -846,12 +847,20 @@ public class MainFrame extends JFrame {
         JMenu proxyMenu = new JMenu("Proxy");
         JCheckBoxMenuItem systemProxyMenuItem = new JCheckBoxMenuItem("System Proxy");
         systemProxyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        systemProxyMenuItem.setMnemonic('P');
         systemProxyMenuItem.addActionListener(e -> {
 
         });
         proxyMenu.add(systemProxyMenuItem);
         proxyMenu.add(new JSeparator());
+        JMenuItem proxySettingMenuItem = new JMenuItem("Proxy Setting...");
+        proxySettingMenuItem.addActionListener(e -> {
+            int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.VALUE_DEFAULT_PROXY_PORT);
+            boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.VALUE_DEFAULT_PROXY_AUTH);
+            String user = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_USER, null);
+            String pwd = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_PWD, null);
+            new ProxySettingDialogController(this, "Proxy Setting", true, port, auth, user, pwd).setVisible(true);
+        });
+        proxyMenu.add(proxySettingMenuItem);
         JMenuItem preferencesMenuItem = new JMenuItem("Preferences...");
         preferencesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         preferencesMenuItem.setMnemonic(',');
@@ -880,11 +889,11 @@ public class MainFrame extends JFrame {
         JMenuItem composeMenuItem = new JMenuItem("Compose");
         composeMenuItem.addActionListener(e -> new ComposeDialog(this, "Compose", null, true));
         toolsMenu.add(composeMenuItem);
-        JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
-        jsonViewerMenuItem.addActionListener(e -> {
-
-        });
-        toolsMenu.add(jsonViewerMenuItem);
+//        JMenuItem jsonViewerMenuItem = new JMenuItem("JSON Viewer");
+//        jsonViewerMenuItem.addActionListener(e -> {
+//
+//        });
+//        toolsMenu.add(jsonViewerMenuItem);
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");

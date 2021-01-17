@@ -38,6 +38,9 @@ public interface SvgIcons {
     FlatSVGIcon STOP = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/stop.svg");
 
     static Icon loadIcon(int status, String contentType) {
+        if (null == contentType) {
+            return SvgIcons.ANY_TYPE;
+        }
         if (status >= HttpResponseStatus.OK.code() && status < HttpResponseStatus.MULTIPLE_CHOICES.code()) {
             contentType = contentType.toLowerCase();
             if (contentType.contains("css")) {
