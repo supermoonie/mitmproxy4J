@@ -12,7 +12,9 @@ import com.github.supermoonie.proxy.swing.gui.flow.*;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowSelectionListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
-import com.github.supermoonie.proxy.swing.gui.panel.*;
+import com.github.supermoonie.proxy.swing.gui.panel.ComposeDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.RequestMapDialog;
+import com.github.supermoonie.proxy.swing.gui.panel.TextAreaDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.controller.*;
 import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaCopyMenuItem;
 import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaSelectAllMenuItem;
@@ -845,13 +847,13 @@ public class MainFrame extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         // Proxy menu
         JMenu proxyMenu = new JMenu("Proxy");
-        JCheckBoxMenuItem systemProxyMenuItem = new JCheckBoxMenuItem("System Proxy");
-        systemProxyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        systemProxyMenuItem.addActionListener(e -> {
-
-        });
-        proxyMenu.add(systemProxyMenuItem);
-        proxyMenu.add(new JSeparator());
+//        JCheckBoxMenuItem systemProxyMenuItem = new JCheckBoxMenuItem("System Proxy");
+//        systemProxyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+//        systemProxyMenuItem.addActionListener(e -> {
+//
+//        });
+//        proxyMenu.add(systemProxyMenuItem);
+//        proxyMenu.add(new JSeparator());
         JMenuItem proxySettingMenuItem = new JMenuItem("Proxy Setting...");
         proxySettingMenuItem.addActionListener(e -> {
             int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.VALUE_DEFAULT_PROXY_PORT);
@@ -861,11 +863,6 @@ public class MainFrame extends JFrame {
             new ProxySettingDialogController(this, "Proxy Setting", true, port, auth, user, pwd).setVisible(true);
         });
         proxyMenu.add(proxySettingMenuItem);
-        JMenuItem preferencesMenuItem = new JMenuItem("Preferences...");
-        preferencesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        preferencesMenuItem.setMnemonic(',');
-        preferencesMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Appearance", true));
-        proxyMenu.add(preferencesMenuItem);
         JMenuItem appearanceMenuItem = new JMenuItem("Appearance...");
         appearanceMenuItem.addActionListener(e -> new AppearanceDialogController(this, "Appearance", true).setVisible(true));
         proxyMenu.add(appearanceMenuItem);
@@ -877,11 +874,11 @@ public class MainFrame extends JFrame {
         JMenu toolsMenu = new JMenu("Tools");
         remoteMapMenuItem = new JMenuItem("Remote Map");
         remoteMapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        remoteMapMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Remote Map", true));
+        remoteMapMenuItem.addActionListener(e -> new RemoteMapDialogController(this, "Remote Map", true).setVisible(true));
         toolsMenu.add(remoteMapMenuItem);
         localMapMenuItem = new JMenuItem("Local Map");
         localMapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        localMapMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Local Map", true));
+        localMapMenuItem.addActionListener(e -> new LocalMapDialogController(this, "Local Map", true).setVisible(true));
         toolsMenu.add(localMapMenuItem);
         blockListMenuItem = new JMenuItem("Block List");
         blockListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
@@ -889,10 +886,7 @@ public class MainFrame extends JFrame {
         toolsMenu.add(blockListMenuItem);
         allowListMenuItem = new JMenuItem("Allow List");
         allowListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        allowListMenuItem.addActionListener(e -> {
-            new AllowListDialogController(this, "Allow List", true).setVisible(true);
-//            new PreferencesDialog(this, "Preference", "Allow List", true);
-        });
+        allowListMenuItem.addActionListener(e -> new AllowListDialogController(this, "Allow List", true).setVisible(true));
         toolsMenu.add(allowListMenuItem);
         toolsMenu.add(new JSeparator());
         JMenuItem composeMenuItem = new JMenuItem("Compose");

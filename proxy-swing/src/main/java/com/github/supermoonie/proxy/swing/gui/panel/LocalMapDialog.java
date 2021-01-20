@@ -4,7 +4,10 @@ import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AllowBlock;
+import com.github.supermoonie.proxy.swing.entity.RequestMap;
 import com.github.supermoonie.proxy.swing.gui.table.BooleanRenderer;
+import com.github.supermoonie.proxy.swing.gui.table.FileChooserCellEditor;
+import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultLocalMapIntercept;
 import com.j256.ormlite.dao.Dao;
 
 import javax.swing.*;
@@ -18,14 +21,14 @@ import java.util.List;
 
 /**
  * @author supermoonie
- * @since 2021/1/18
+ * @since 2021/1/20
  */
-public class AllowListDialog extends JDialog {
+public class LocalMapDialog extends JDialog {
 
-    private final JCheckBox enableCheckBox = new JCheckBox("Enable Allow List");
-    private final DefaultTableModel allowTableModel = new DefaultTableModel(null, new String[]{"Enable", "Location Regex"});
-    private final JTable allowTable = new JTable(allowTableModel) {
-        private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class};
+    private final JCheckBox enableCheckBox = new JCheckBox("Enable Local Map");
+    private final DefaultTableModel localMapTableModel = new DefaultTableModel(null, new String[]{"Enable", "From", "Location"});
+    private final JTable requestMapTable = new JTable(localMapTableModel) {
+        private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class};
 
         @Override
         public Class<?> getColumnClass(int column) {
@@ -37,7 +40,7 @@ public class AllowListDialog extends JDialog {
     private final JButton cancelButton = new JButton("Cancel");
     private final JButton okButton = new JButton("OK");
 
-    public AllowListDialog(Frame owner, String title, boolean modal) {
+    public LocalMapDialog(Frame owner, String title, boolean modal) {
         super(owner, title, modal);
         // container
         JPanel container = new JPanel();
@@ -48,12 +51,12 @@ public class AllowListDialog extends JDialog {
         JPanel enablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         enablePanel.add(enableCheckBox);
         container.add(enablePanel);
-        // allow list table panel
+        // local map table panel
         initTable();
         JPanel allowPanel = new JPanel(new BorderLayout() {{
             setVgap(10);
         }});
-        allowPanel.add(new JScrollPane(allowTable), BorderLayout.CENTER);
+        allowPanel.add(new JScrollPane(requestMapTable), BorderLayout.CENTER);
         JPanel operatePanel = new JPanel(new FlowLayout(FlowLayout.CENTER) {{
             setHgap(10);
         }});
@@ -70,24 +73,24 @@ public class AllowListDialog extends JDialog {
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
 
-        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, ApplicationPreferences.VALUE_ALLOW_LIST_ENABLE);
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.VALUE_LOCAL_MAP_ENABLE);
         enableCheckBox.setSelected(enable);
         addButton.setEnabled(enable);
         removeButton.setEnabled(enable);
-        allowTable.setEnabled(enable);
-        Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
+        requestMapTable.setEnabled(enable);
+        Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
         try {
-            List<AllowBlock> allowBlockList = allowBlockDao.queryForAll();
-            for (AllowBlock allowBlock : allowBlockList) {
-                if (allowBlock.getType().equals(AllowBlock.TYPE_ALLOW)) {
-                    allowTableModel.addRow(new Object[]{allowBlock.getEnable().equals(AllowBlock.ENABLE), allowBlock.getLocation()});
+            List<RequestMap> requestMapList = requestMapDao.queryForAll();
+            for (RequestMap reqMap : requestMapList) {
+                if (reqMap.getMapType().equals(RequestMap.TYPE_LOCAL)) {
+                    localMapTableModel.addRow(new Object[]{reqMap.getEnable().equals(AllowBlock.ENABLE), reqMap.getFromUrl(), reqMap.getToUrl()});
                 }
             }
         } catch (SQLException e) {
             Application.showError(e);
         }
-        allowTable.setShowHorizontalLines(true);
-        allowTable.setShowVerticalLines(true);
+        requestMapTable.setShowHorizontalLines(true);
+        requestMapTable.setShowVerticalLines(true);
 
         super.getContentPane().add(container);
         super.getRootPane().setDefaultButton(okButton);
@@ -97,13 +100,14 @@ public class AllowListDialog extends JDialog {
     }
 
     private void initTable() {
-        allowTable.setShowHorizontalLines(true);
-        allowTable.setShowVerticalLines(true);
-        allowTable.setShowGrid(false);
-        allowTable.getColumnModel().getColumn(0).setPreferredWidth(100);
-        allowTable.getColumnModel().getColumn(1).setPreferredWidth(600);
-        allowTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
-        allowTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+        requestMapTable.setShowHorizontalLines(true);
+        requestMapTable.setShowVerticalLines(true);
+        requestMapTable.setShowGrid(false);
+        requestMapTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+        requestMapTable.getColumnModel().getColumn(1).setPreferredWidth(600);
+        requestMapTable.getColumnModel().getColumn(2).setPreferredWidth(600);
+        requestMapTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
+        requestMapTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
@@ -111,28 +115,37 @@ public class AllowListDialog extends JDialog {
                 return this;
             }
         });
-        JTextField locationTextField = new JTextField();
-        DefaultCellEditor locationCellEditor = new DefaultCellEditor(locationTextField);
-        locationTextField.addFocusListener(new FocusAdapter() {
+        requestMapTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
-            public void focusLost(FocusEvent e) {
-                locationCellEditor.stopCellEditing();
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setBorder(BorderFactory.createEmptyBorder());
+                return this;
             }
         });
-        locationCellEditor.setClickCountToStart(2);
-        allowTable.getColumnModel().getColumn(1).setCellEditor(locationCellEditor);
+        JTextField fromTextField = new JTextField();
+        DefaultCellEditor fromCellEditor = new DefaultCellEditor(fromTextField);
+        fromTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                fromCellEditor.stopCellEditing();
+            }
+        });
+        fromCellEditor.setClickCountToStart(2);
+        requestMapTable.getColumnModel().getColumn(1).setCellEditor(fromCellEditor);
+        requestMapTable.getColumnModel().getColumn(2).setCellEditor(new FileChooserCellEditor(requestMapTable, 2, JFileChooser.FILES_AND_DIRECTORIES));
     }
 
     public JCheckBox getEnableCheckBox() {
         return enableCheckBox;
     }
 
-    public DefaultTableModel getAllowTableModel() {
-        return allowTableModel;
+    public DefaultTableModel getLocalMapTableModel() {
+        return localMapTableModel;
     }
 
-    public JTable getAllowTable() {
-        return allowTable;
+    public JTable getRequestMapTable() {
+        return requestMapTable;
     }
 
     public JButton getAddButton() {

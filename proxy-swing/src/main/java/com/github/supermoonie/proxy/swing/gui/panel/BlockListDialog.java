@@ -4,6 +4,7 @@ import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AllowBlock;
+import com.github.supermoonie.proxy.swing.gui.table.BooleanRenderer;
 import com.j256.ormlite.dao.Dao;
 
 import javax.swing.*;
@@ -101,7 +102,7 @@ public class BlockListDialog extends JDialog {
         blockTable.setShowGrid(false);
         blockTable.getColumnModel().getColumn(0).setPreferredWidth(100);
         blockTable.getColumnModel().getColumn(1).setPreferredWidth(600);
-        blockTable.getColumnModel().getColumn(0).setCellRenderer(new PreferencesDialog.BooleanRenderer());
+        blockTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
         blockTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
