@@ -13,7 +13,7 @@ import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.FlowSelectionListener;
 import com.github.supermoonie.proxy.swing.gui.lintener.ResponseCodeAreaShownListener;
 import com.github.supermoonie.proxy.swing.gui.panel.*;
-import com.github.supermoonie.proxy.swing.gui.panel.controller.ProxySettingDialogController;
+import com.github.supermoonie.proxy.swing.gui.panel.controller.*;
 import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaCopyMenuItem;
 import com.github.supermoonie.proxy.swing.gui.popup.CodeAreaSelectAllMenuItem;
 import com.github.supermoonie.proxy.swing.gui.popup.TextAreaPopupMenu;
@@ -866,6 +866,12 @@ public class MainFrame extends JFrame {
         preferencesMenuItem.setMnemonic(',');
         preferencesMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Appearance", true));
         proxyMenu.add(preferencesMenuItem);
+        JMenuItem appearanceMenuItem = new JMenuItem("Appearance...");
+        appearanceMenuItem.addActionListener(e -> new AppearanceDialogController(this, "Appearance", true).setVisible(true));
+        proxyMenu.add(appearanceMenuItem);
+        JMenuItem accessControlMenuItem = new JMenuItem("Access Control...");
+        accessControlMenuItem.addActionListener(e -> new AccessControlController(this, "Access Control", true).setVisible(true));
+        proxyMenu.add(accessControlMenuItem);
 
         // Tools menu
         JMenu toolsMenu = new JMenu("Tools");
@@ -879,11 +885,14 @@ public class MainFrame extends JFrame {
         toolsMenu.add(localMapMenuItem);
         blockListMenuItem = new JMenuItem("Block List");
         blockListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        blockListMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Block List", true));
+        blockListMenuItem.addActionListener(e -> new BlockListDialogController(this, "Block List", true).setVisible(true));
         toolsMenu.add(blockListMenuItem);
         allowListMenuItem = new JMenuItem("Allow List");
         allowListMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        allowListMenuItem.addActionListener(e -> new PreferencesDialog(this, "Preference", "Allow List", true));
+        allowListMenuItem.addActionListener(e -> {
+            new AllowListDialogController(this, "Allow List", true).setVisible(true);
+//            new PreferencesDialog(this, "Preference", "Allow List", true);
+        });
         toolsMenu.add(allowListMenuItem);
         toolsMenu.add(new JSeparator());
         JMenuItem composeMenuItem = new JMenuItem("Compose");

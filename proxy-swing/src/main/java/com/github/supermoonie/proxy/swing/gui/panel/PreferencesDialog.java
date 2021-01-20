@@ -1012,18 +1012,14 @@ public class PreferencesDialog extends JDialog {
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             if (isSelected) {
                 setForeground(table.getForeground());
-                if (ThemeManager.isDark()) {
-                    setBackground(Color.decode("#4b6eaf"));
-                } else {
-                    setBackground(Color.decode("#2675bf"));
-                }
+                Color color = UIManager.getColor(table.hasFocus() ? "Table.focusCellBackgroundColor" : "Table.noFocusCellBackgroundColor");
+                setBackground(new Color(color.getRGB()));
             } else {
                 setForeground(table.getForeground());
                 setBackground(table.getBackground());
             }
             setSelected(((value != null) && (Boolean) value));
             setBorder(noFocusBorder);
-
             return this;
         }
     }

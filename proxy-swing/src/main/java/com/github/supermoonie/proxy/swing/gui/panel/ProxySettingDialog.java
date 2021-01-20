@@ -52,7 +52,7 @@ public class ProxySettingDialog extends JDialog {
         pwdPanel.add(passwordTextField);
         container.add(pwdPanel);
         // button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.add(cancelButton);
         buttonPanel.add(Box.createHorizontalStrut(2));
         buttonPanel.add(okButton);
