@@ -95,7 +95,7 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
         Application.EXECUTOR.execute(() -> {
             String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
             final AtomicReference<String> codeText = new AtomicReference<>();
-            if (style.equals(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT)) {
+            if (style.equals(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT) || style.equals(SyntaxConstants.SYNTAX_STYLE_JSON)) {
                 try {
                     codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyJavascriptCode(body));
                 } catch (ScriptException | NoSuchMethodException ex) {
@@ -108,8 +108,8 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
                     log.error(ex.getLocalizedMessage(), ex);
                 }
             } else {
-                String prettify = prettify(style.replace("text/", ""), body);
-                codeText.set(prettify);
+//                String prettify = prettify(style.replace("text/", ""), body);
+                codeText.set(body);
             }
             SwingUtilities.invokeLater(() -> {
                 responseCodePane.add(new RTextScrollPane(responseCodeArea), BorderLayout.CENTER);
@@ -133,9 +133,6 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
         List<ParseResult> results = parser.parse(extension, content);
         StringBuilder sb = new StringBuilder();
         for (ParseResult result : results) {
-//            String substring = content.substring(result.getOffset(), result.getOffset() + result.getLength());
-//            System.out.println(substring);
-//            sb.append(substring.replace("\n  ", "\n    "));
             sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
         }
         return sb.toString();

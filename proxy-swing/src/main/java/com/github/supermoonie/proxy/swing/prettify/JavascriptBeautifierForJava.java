@@ -87,5 +87,7 @@ public class JavascriptBeautifierForJava {
 //            sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
 //        }
 //        System.out.println(sb.toString());
+
+
     }
 }
