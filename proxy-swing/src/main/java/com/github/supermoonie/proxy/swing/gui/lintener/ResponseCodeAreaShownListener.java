@@ -107,6 +107,12 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
                 } catch (ScriptException | NoSuchMethodException ex) {
                     log.error(ex.getLocalizedMessage(), ex);
                 }
+            } else if (style.equals(SyntaxConstants.SYNTAX_STYLE_HTML) || style.equals(SyntaxConstants.SYNTAX_STYLE_XML)) {
+                try {
+                    codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyHtmlCode(body));
+                } catch (ScriptException | NoSuchMethodException ex) {
+                    log.error(ex.getLocalizedMessage(), ex);
+                }
             } else {
 //                String prettify = prettify(style.replace("text/", ""), body);
                 codeText.set(body);

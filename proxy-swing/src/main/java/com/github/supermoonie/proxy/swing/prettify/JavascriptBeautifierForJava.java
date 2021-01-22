@@ -25,8 +25,9 @@ public class JavascriptBeautifierForJava {
     public static final JavascriptBeautifierForJava INSTANCE = new JavascriptBeautifierForJava();
 
     // my javascript beautifier of choice
-    private static final String BEAUTIFY_JS_RESOURCE = "beautify.js";
-    private static final String BEAUTIFY_CSS_RESOURCE = "beautify-css.js";
+    private static final String BEAUTIFY_JS_RESOURCE = "beautify/beautify.min.js";
+    private static final String BEAUTIFY_CSS_RESOURCE = "beautify/beautify-css.min.js";
+    private static final String BEAUTIFY_HTML_RESOURCE = "beautify/beautify-html.min.js";
 
     // name of beautifier function
     private static final String BEAUTIFY_METHOD_NAME = "js_beautify";
@@ -34,16 +35,21 @@ public class JavascriptBeautifierForJava {
 
     private final ScriptEngine jsBeautifyEngine;
     private final ScriptEngine cssBeautifyEngine;
+    private final ScriptEngine htmlBeautifyEngine;
 
     private JavascriptBeautifierForJava() {
         jsBeautifyEngine = new ScriptEngineManager().getEngineByName("nashorn");
         cssBeautifyEngine = new ScriptEngineManager().getEngineByName("nashorn");
+        htmlBeautifyEngine = new ScriptEngineManager().getEngineByName("nashorn");
         // this is needed to make self invoking function modules work
         // otherwise you won't be able to invoke your function
         try {
-            jsBeautifyEngine.eval("var global = this;");
+//            jsBeautifyEngine.eval("");
+//            htmlBeautifyEngine.eval("var global = this;");
+//            cssBeautifyEngine.eval("var global = this;");
             jsBeautifyEngine.eval(new InputStreamReader(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(BEAUTIFY_JS_RESOURCE))));
             cssBeautifyEngine.eval(new InputStreamReader(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(BEAUTIFY_CSS_RESOURCE))));
+            htmlBeautifyEngine.eval(new InputStreamReader(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(BEAUTIFY_HTML_RESOURCE))));
         } catch (ScriptException e) {
             e.printStackTrace();
         }
@@ -57,12 +63,16 @@ public class JavascriptBeautifierForJava {
         return (String) ((Invocable) cssBeautifyEngine).invokeFunction(CSS_BEAUTIFY_METHOD_NAME, cssCode);
     }
 
+    public String beautifyHtmlCode(String htmlCode) throws ScriptException, NoSuchMethodException {
+        return (String) ((Invocable) htmlBeautifyEngine).invokeFunction("html_beautify", htmlCode);
+    }
+
     public static void main(String[] args) throws ScriptException, NoSuchMethodException, IOException {
-//        String unformattedJs = "var a = 1; b = 2; var user = { name :\"Andrew\"}";
-//
-//        String formattedJs = JavascriptBeautifierForJava.INSTANCE.beautify(unformattedJs);
-//
-//        System.out.println(formattedJs);
+        String unformattedJs = "var a = 1; b = 2; var user = { name :\"Andrew\"}";
+
+        String formattedJs = JavascriptBeautifierForJava.INSTANCE.beautifyJavascriptCode(unformattedJs);
+
+        System.out.println(formattedJs);
 
         // will print out:
         //        var a = 1;
@@ -87,7 +97,9 @@ public class JavascriptBeautifierForJava {
 //            sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
 //        }
 //        System.out.println(sb.toString());
-
+        var html = "<html><head>title</head><body><h1>Hello World!</h1></body></html>";
+        String s = JavascriptBeautifierForJava.INSTANCE.beautifyHtmlCode(html);
+        System.out.println(s);
 
     }
 }
