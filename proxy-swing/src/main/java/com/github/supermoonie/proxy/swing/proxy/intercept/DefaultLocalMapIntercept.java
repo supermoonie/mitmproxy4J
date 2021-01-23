@@ -18,7 +18,7 @@ public class DefaultLocalMapIntercept extends LocalMapIntercept {
     public static final DefaultLocalMapIntercept INSTANCE = new DefaultLocalMapIntercept();
 
     private DefaultLocalMapIntercept() {
-        super.setLocalMapFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.VALUE_LOCAL_MAP_ENABLE));
+        super.setLocalMapFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.DEFAULT_LOCAL_MAP_ENABLE));
         Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
         try {
             List<RequestMap> requestMapList = requestMapDao.queryBuilder().where()

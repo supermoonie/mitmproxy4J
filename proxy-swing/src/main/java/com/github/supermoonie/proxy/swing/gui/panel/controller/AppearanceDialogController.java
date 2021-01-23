@@ -29,12 +29,13 @@ public class AppearanceDialogController extends AppearanceDialog {
             }
         });
         ItemListener fontListener = e -> {
-            String family = Objects.requireNonNullElse(getFontComboBox().getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY).toString();
-            family = "Default".equals(family) ? ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY : family;
-            int fontSize = Integer.parseInt(Objects.requireNonNullElse(getFontSizeComboBox().getSelectedItem(), ApplicationPreferences.VALUE_DEFAULT_FONT_SIZE).toString());
+            String family = Objects.requireNonNullElse(getFontComboBox().getSelectedItem(), ApplicationPreferences.DEFAULT_FONT_FAMILY).toString();
+            family = "Default".equals(family) ? ApplicationPreferences.DEFAULT_FONT_FAMILY : family;
+            int fontSize = Integer.parseInt(Objects.requireNonNullElse(getFontSizeComboBox().getSelectedItem(), ApplicationPreferences.DEFAULT_FONT_SIZE).toString());
             ThemeManager.setFont(family, fontSize);
             ApplicationPreferences.getState().put(ApplicationPreferences.KEY_FONT_FAMILY, family);
             ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_FONT_SIZE, fontSize);
+            super.pack();
         };
         getFontComboBox().addItemListener(fontListener);
         getFontSizeComboBox().addItemListener(fontListener);

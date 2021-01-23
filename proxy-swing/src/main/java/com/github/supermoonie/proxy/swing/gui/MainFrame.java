@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.swing.gui;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
+import com.formdev.flatlaf.util.SystemInfo;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.ThemeManager;
@@ -854,18 +855,23 @@ public class MainFrame extends JFrame {
 //        });
 //        proxyMenu.add(systemProxyMenuItem);
 //        proxyMenu.add(new JSeparator());
+        if (!SystemInfo.isMacOS) {
+            JMenuItem appearanceMenuItem = new JMenuItem("Appearance...");
+            appearanceMenuItem.addActionListener(e -> new AppearanceDialogController(this, "Appearance", true).setVisible(true));
+            proxyMenu.add(appearanceMenuItem);
+        }
         JMenuItem proxySettingMenuItem = new JMenuItem("Proxy Setting...");
         proxySettingMenuItem.addActionListener(e -> {
-            int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.VALUE_DEFAULT_PROXY_PORT);
-            boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.VALUE_DEFAULT_PROXY_AUTH);
+            int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.DEFAULT_PROXY_PORT);
+            boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.DEFAULT_PROXY_AUTH);
             String user = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_USER, null);
             String pwd = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_PWD, null);
             new ProxySettingDialogController(this, "Proxy Setting", true, port, auth, user, pwd).setVisible(true);
         });
         proxyMenu.add(proxySettingMenuItem);
-        JMenuItem appearanceMenuItem = new JMenuItem("Appearance...");
-        appearanceMenuItem.addActionListener(e -> new AppearanceDialogController(this, "Appearance", true).setVisible(true));
-        proxyMenu.add(appearanceMenuItem);
+        JMenuItem throttlingMenuItem = new JMenuItem("Throttling Setting...");
+        throttlingMenuItem.addActionListener(e -> new ThrottlingDialogController(this, "Throttling", true).setVisible(true));
+        proxyMenu.add(throttlingMenuItem);
         JMenuItem accessControlMenuItem = new JMenuItem("Access Control...");
         accessControlMenuItem.addActionListener(e -> new AccessControlController(this, "Access Control", true).setVisible(true));
         proxyMenu.add(accessControlMenuItem);

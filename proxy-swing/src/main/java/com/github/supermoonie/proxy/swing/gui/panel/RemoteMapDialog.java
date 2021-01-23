@@ -71,7 +71,7 @@ public class RemoteMapDialog extends JDialog {
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
 
-        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_REMOTE_MAP_ENABLE, ApplicationPreferences.VALUE_REMOTE_MAP_ENABLE);
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_REMOTE_MAP_ENABLE, ApplicationPreferences.DEFAULT_REMOTE_MAP_ENABLE);
         enableCheckBox.setSelected(enable);
         addButton.setEnabled(enable);
         removeButton.setEnabled(enable);

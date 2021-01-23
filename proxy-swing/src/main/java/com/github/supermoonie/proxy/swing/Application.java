@@ -6,6 +6,7 @@ import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.gui.MainFrame;
+import com.github.supermoonie.proxy.swing.gui.panel.controller.AppearanceDialogController;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.InternalProxyInterceptInitializer;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -42,8 +44,23 @@ public class Application {
 
     public static void main(String[] args) {
         // on macOS enable screen menu bar
-        if (SystemInfo.isMacOS && System.getProperty("apple.laf.useScreenMenuBar") == null) {
+        if (SystemInfo.isMacOS) {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
+            try {
+                com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
+                app.setQuitHandler((e, response) -> response.performQuit());
+                app.setAboutHandler(e -> {
+                    // TODO
+                    System.out.println("about");
+                });
+                app.setPreferencesHandler(e -> new AppearanceDialogController(MAIN_FRAME, "Preferences", true).setVisible(true));
+                URL url = Application.class.getClassLoader().getResource("M.png");
+                Image image = Toolkit.getDefaultToolkit().getImage(url);
+                app.setDockIconImage(image);
+            } catch (Throwable e) {
+                //This means that the application is not being run on MAC OS.
+                //Just do nothing and go on...
+            }
         }
         SwingUtilities.invokeLater(() -> {
             Thread.setDefaultUncaughtExceptionHandler(Application::showError);
@@ -65,13 +82,15 @@ public class Application {
             FlatInspector.install("ctrl shift alt X");
             FlatUIDefaultsInspector.install("ctrl shift alt Y");
             Application.EXECUTOR.execute(() -> {
-                int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.VALUE_DEFAULT_PROXY_PORT);
-                boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.VALUE_DEFAULT_PROXY_AUTH);
+                int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.DEFAULT_PROXY_PORT);
+                boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.DEFAULT_PROXY_AUTH);
                 String username = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_USER, "");
                 String password = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_PROXY_AUTH_PWD, "");
                 ProxyManager.start(port, auth, username, password, new InternalProxyInterceptInitializer());
-                ProxyManager.getInternalProxy().getTrafficShapingHandler().setWriteChannelLimit(80);
-                ProxyManager.getInternalProxy().getTrafficShapingHandler().setReadChannelLimit(80);
+                long writeLimit = ApplicationPreferences.getState().getLong(ApplicationPreferences.KEY_PROXY_LIMIT_WRITE, ApplicationPreferences.DEFAULT_PROXY_LIMIT_WRITE);
+                long readLimit = ApplicationPreferences.getState().getLong(ApplicationPreferences.KEY_PROXY_LIMIT_READ, ApplicationPreferences.DEFAULT_PROXY_LIMIT_READ);
+                ProxyManager.setWriteLimit(writeLimit);
+                ProxyManager.setReadLimit(readLimit);
             });
             MAIN_FRAME = new MainFrame();
             MAIN_FRAME.setPreferredSize(new Dimension(1280, 800));

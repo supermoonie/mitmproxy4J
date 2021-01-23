@@ -95,27 +95,34 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
         Application.EXECUTOR.execute(() -> {
             String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
             final AtomicReference<String> codeText = new AtomicReference<>();
-            if (style.equals(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT) || style.equals(SyntaxConstants.SYNTAX_STYLE_JSON)) {
-                try {
-                    codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyJavascriptCode(body));
-                } catch (ScriptException | NoSuchMethodException ex) {
-                    log.error(ex.getLocalizedMessage(), ex);
-                }
-            } else if (style.equals(SyntaxConstants.SYNTAX_STYLE_CSS)) {
-                try {
-                    codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyCssCode(body));
-                } catch (ScriptException | NoSuchMethodException ex) {
-                    log.error(ex.getLocalizedMessage(), ex);
-                }
-            } else if (style.equals(SyntaxConstants.SYNTAX_STYLE_HTML) || style.equals(SyntaxConstants.SYNTAX_STYLE_XML)) {
-                try {
-                    codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyHtmlCode(body));
-                } catch (ScriptException | NoSuchMethodException ex) {
-                    log.error(ex.getLocalizedMessage(), ex);
-                }
-            } else {
+            switch (style) {
+                case SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT:
+                case SyntaxConstants.SYNTAX_STYLE_JSON:
+                    try {
+                        codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyJavascriptCode(body));
+                    } catch (ScriptException | NoSuchMethodException ex) {
+                        log.error(ex.getLocalizedMessage(), ex);
+                    }
+                    break;
+                case SyntaxConstants.SYNTAX_STYLE_CSS:
+                    try {
+                        codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyCssCode(body));
+                    } catch (ScriptException | NoSuchMethodException ex) {
+                        log.error(ex.getLocalizedMessage(), ex);
+                    }
+                    break;
+                case SyntaxConstants.SYNTAX_STYLE_HTML:
+                case SyntaxConstants.SYNTAX_STYLE_XML:
+                    try {
+                        codeText.set(JavascriptBeautifierForJava.INSTANCE.beautifyHtmlCode(body));
+                    } catch (ScriptException | NoSuchMethodException ex) {
+                        log.error(ex.getLocalizedMessage(), ex);
+                    }
+                    break;
+                default:
 //                String prettify = prettify(style.replace("text/", ""), body);
-                codeText.set(body);
+                    codeText.set(body);
+                    break;
             }
             SwingUtilities.invokeLater(() -> {
                 responseCodePane.add(new RTextScrollPane(responseCodeArea), BorderLayout.CENTER);

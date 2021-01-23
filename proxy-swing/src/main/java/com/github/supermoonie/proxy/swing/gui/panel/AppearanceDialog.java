@@ -68,7 +68,7 @@ public class AppearanceDialog extends JDialog {
             themeComboBox.setSelectedItem("Light");
         }
         Font font = ApplicationPreferences.getFont();
-        fontComboBox.setSelectedItem(font.getFamily().equals(ApplicationPreferences.VALUE_DEFAULT_FONT_FAMILY) ? "Default" : font.getFamily());
+        fontComboBox.setSelectedItem(font.getFamily().equals(ApplicationPreferences.DEFAULT_FONT_FAMILY) ? "Default" : font.getFamily());
         fontSizeComboBox.setSelectedItem(font.getSize());
 
         super.getContentPane().add(container);

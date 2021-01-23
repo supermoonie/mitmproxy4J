@@ -70,7 +70,7 @@ public class BlockListDialog extends JDialog {
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
 
-        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_BLOCK_LIST_ENABLE, ApplicationPreferences.VALUE_BLOCK_LIST_ENABLE);
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_BLOCK_LIST_ENABLE, ApplicationPreferences.DEFAULT_BLOCK_LIST_ENABLE);
         enableCheckBox.setSelected(enable);
         addButton.setEnabled(enable);
         removeButton.setEnabled(enable);

@@ -11,6 +11,7 @@ import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
 import com.github.supermoonie.proxy.swing.gui.table.TableHelper;
 import com.github.supermoonie.proxy.swing.gui.treetable.ListTreeTableNode;
+import com.github.supermoonie.proxy.swing.prettify.JavascriptBeautifierForJava;
 import com.j256.ormlite.dao.Dao;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -19,9 +20,6 @@ import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prettify.PrettifyParser;
-import syntaxhighlight.ParseResult;
-import syntaxhighlight.Parser;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -321,13 +319,8 @@ public class MainFrameHelper {
             requestContentTextArea.setText(body);
             requestContentTextArea.setCaretPosition(0);
             try {
-                Parser parser = new PrettifyParser();
-                List<ParseResult> results = parser.parse("json", body);
-                StringBuilder sb = new StringBuilder();
-                for (ParseResult result : results) {
-                    sb.append(body, result.getOffset(), result.getOffset() + result.getLength());
-                }
-                requestJsonArea.setText(sb.toString());
+                String s = JavascriptBeautifierForJava.INSTANCE.beautifyJavascriptCode(body);
+                requestJsonArea.setText(s);
             } catch (Exception ignore) {
                 requestJsonArea.setText(body);
             }

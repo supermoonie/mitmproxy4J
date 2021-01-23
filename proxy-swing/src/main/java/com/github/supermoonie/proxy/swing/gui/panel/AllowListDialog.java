@@ -70,7 +70,7 @@ public class AllowListDialog extends JDialog {
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
 
-        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, ApplicationPreferences.VALUE_ALLOW_LIST_ENABLE);
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, ApplicationPreferences.DEFAULT_ALLOW_LIST_ENABLE);
         enableCheckBox.setSelected(enable);
         addButton.setEnabled(enable);
         removeButton.setEnabled(enable);

@@ -7,7 +7,6 @@ import com.github.supermoonie.proxy.swing.entity.AllowBlock;
 import com.github.supermoonie.proxy.swing.entity.RequestMap;
 import com.github.supermoonie.proxy.swing.gui.table.BooleanRenderer;
 import com.github.supermoonie.proxy.swing.gui.table.FileChooserCellEditor;
-import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultLocalMapIntercept;
 import com.j256.ormlite.dao.Dao;
 
 import javax.swing.*;
@@ -73,7 +72,7 @@ public class LocalMapDialog extends JDialog {
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
 
-        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.VALUE_LOCAL_MAP_ENABLE);
+        boolean enable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.DEFAULT_LOCAL_MAP_ENABLE);
         enableCheckBox.setSelected(enable);
         addButton.setEnabled(enable);
         removeButton.setEnabled(enable);

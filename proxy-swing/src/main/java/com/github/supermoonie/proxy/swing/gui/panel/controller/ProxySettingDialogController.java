@@ -20,7 +20,6 @@ public class ProxySettingDialogController extends ProxySettingDialog {
         super(owner, title, modal, port, auth, user, pwd);
         getCancelButton().addActionListener(e -> setVisible(false));
         getOkButton().addActionListener(e -> {
-            System.out.println("...");
             Object portValue = getPortSpinner().getValue();
             if (null == portValue) {
                 JOptionPane.showMessageDialog(this, "Invalid Port!", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -37,7 +36,13 @@ public class ProxySettingDialogController extends ProxySettingDialog {
             String username = Objects.requireNonNullElse(getUsernameTextField().getText(), "");
             String password = Objects.requireNonNullElse(getPasswordTextField().getText(), "");
             if (ProxyManager.getInternalProxy().getPort() != proxyPort) {
+                boolean enableLimit = ProxyManager.getInternalProxy().isTrafficShaping();
+                long writeLimit = ApplicationPreferences.getState().getLong(ApplicationPreferences.KEY_PROXY_LIMIT_WRITE, ApplicationPreferences.DEFAULT_PROXY_LIMIT_WRITE);
+                long readLimit = ApplicationPreferences.getState().getLong(ApplicationPreferences.KEY_PROXY_LIMIT_READ, ApplicationPreferences.DEFAULT_PROXY_LIMIT_READ);
                 ProxyManager.restart(proxyPort, proxyAuth, username, password, new InternalProxyInterceptInitializer());
+                ProxyManager.enableLimit(enableLimit);
+                ProxyManager.setWriteLimit(writeLimit);
+                ProxyManager.setReadLimit(readLimit);
             } else {
                 ProxyManager.getInternalProxy().setAuth(proxyAuth);
                 ProxyManager.getInternalProxy().setUsername(username);
