@@ -36,6 +36,7 @@ public interface SvgIcons {
     FlatSVGIcon CLEAR = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/clear.svg");
     FlatSVGIcon PLAY = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/play.svg");
     FlatSVGIcon STOP = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/stop.svg");
+    FlatSVGIcon THROTTLING = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/throttling_stop.svg");
 
     static Icon loadIcon(int status, String contentType) {
         if (null == contentType) {

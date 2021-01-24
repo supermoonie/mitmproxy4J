@@ -67,6 +67,8 @@ public class MainFrame extends JFrame {
     private JMenuItem localMapMenuItem;
     private JMenuItem blockListMenuItem;
     private JMenuItem allowListMenuItem;
+    // 工具栏
+    private JButton throttlingButton = new JButton();
 
     // Flow 显示的两种形式
     private JPanel structureTab;
@@ -792,25 +794,24 @@ public class MainFrame extends JFrame {
             Flow flow = getSelectedFlow();
             repeat(flow);
         });
-        JButton throttlingButton = new JButton();
         throttlingButton.setToolTipText("Throttling");
-        throttlingButton.setIcon(new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/throttling_stop.svg"));
+        throttlingButton.setIcon(SvgIcons.THROTTLING);
+        throttlingButton.addActionListener(e -> {
+            boolean enableThrottling = ProxyManager.getInternalProxy().isTrafficShaping();
+            ProxyManager.enableLimit(!enableThrottling);
+            throttlingButton.setSelected(!enableThrottling);
+        });
         JButton recordButton = new JButton();
-        recordButton.setAction(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Application.RECORD_FLAG.set(!Application.RECORD_FLAG.get());
-                recordButton.setIcon(Application.RECORD_FLAG.get() ? SvgIcons.STOP : SvgIcons.PLAY);
-                recordButton.setToolTipText(Application.RECORD_FLAG.get() ? "Stop" : "Start");
-            }
+        recordButton.addActionListener(e -> {
+            Application.RECORD_FLAG.set(!Application.RECORD_FLAG.get());
+            recordButton.setIcon(Application.RECORD_FLAG.get() ? SvgIcons.STOP : SvgIcons.PLAY);
+            recordButton.setToolTipText(Application.RECORD_FLAG.get() ? "Stop" : "Start");
         });
         recordButton.setToolTipText("Stop");
         recordButton.setIcon(SvgIcons.STOP);
         toolBar.add(clearButton);
-//        toolBar.add(Box.createHorizontalStrut(20));
         toolBar.add(recordButton);
         toolBar.add(throttlingButton);
-//        toolBar.add(Box.createHorizontalStrut(20));
         toolBar.add(composeButton);
         toolBar.add(repeatButton);
         toolBar.add(Box.createHorizontalStrut(20));
@@ -1066,6 +1067,10 @@ public class MainFrame extends JFrame {
             flow = flowList.getSelectedValue();
         }
         return flow;
+    }
+
+    public JButton getThrottlingButton() {
+        return throttlingButton;
     }
 
     public JScrollPane getResponseImageScrollPane() {
