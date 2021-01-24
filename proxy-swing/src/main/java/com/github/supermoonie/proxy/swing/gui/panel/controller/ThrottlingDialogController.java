@@ -29,7 +29,7 @@ public class ThrottlingDialogController extends ThrottlingDialog {
             }
             long writeLimit;
             try {
-                writeLimit = Long.parseLong(writeValue.toString());
+                writeLimit = (long) (Double.parseDouble(writeValue.toString()) * 1_000);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Invalid Upload Value!", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
@@ -41,7 +41,7 @@ public class ThrottlingDialogController extends ThrottlingDialog {
             }
             long readLimit;
             try {
-                readLimit = Long.parseLong(readValue.toString());
+                readLimit = (long) (Double.parseDouble(readValue.toString()) * 1_000);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Invalid Download Value!", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;

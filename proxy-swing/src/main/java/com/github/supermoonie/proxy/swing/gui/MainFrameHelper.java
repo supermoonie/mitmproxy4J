@@ -87,6 +87,7 @@ public class MainFrameHelper {
         }
         currentRequestId = request.getId();
         try {
+            int selectedIndex = Math.max(mainFrame.getResponseTablePane().getSelectedIndex(), 0);
             mainFrame.getResponseTablePane().removeAll();
             Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
             Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
@@ -104,6 +105,8 @@ public class MainFrameHelper {
             responseRawScrollPane.setName("Raw");
             responseTabs.add(responseRawScrollPane);
             responseTabs.forEach(component -> mainFrame.getResponseTablePane().add(component.getName(), component));
+            selectedIndex = Math.min(selectedIndex, responseTabs.size() - 1);
+            mainFrame.getResponseTablePane().setSelectedIndex(selectedIndex);
             if (firstFlow) {
                 FlatLaf.updateUI();
             }

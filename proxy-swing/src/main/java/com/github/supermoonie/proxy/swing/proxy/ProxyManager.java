@@ -4,7 +4,6 @@ import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.platform.mac.NetworkSetup;
 import com.github.supermoonie.proxy.swing.Application;
-import com.github.supermoonie.proxy.swing.setting.GlobalSetting;
 import io.netty.util.internal.PlatformDependent;
 
 import java.io.IOException;

@@ -22,8 +22,8 @@ public class ThrottlingDialog extends JDialog {
         super(owner, title, modal);
         writeLimitSpinner.setSize(new Dimension(200, 25));
         readLimitSpinner.setSize(new Dimension(200, 25));
-        writeLimitSpinner.setEditor(new JSpinner.NumberEditor(writeLimitSpinner, "#"));
-        readLimitSpinner.setEditor(new JSpinner.NumberEditor(readLimitSpinner, "#"));
+        writeLimitSpinner.setEditor(new JSpinner.NumberEditor(writeLimitSpinner, "#.00"));
+        readLimitSpinner.setEditor(new JSpinner.NumberEditor(readLimitSpinner, "#.00"));
         // container
         JPanel container = new JPanel();
         container.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
@@ -60,8 +60,8 @@ public class ThrottlingDialog extends JDialog {
         GlobalChannelTrafficShapingHandler trafficShapingHandler = ProxyManager.getInternalProxy().getTrafficShapingHandler();
         boolean enable = ProxyManager.getInternalProxy().isTrafficShaping();
         enableCheckBox.setSelected(enable);
-        writeLimitSpinner.setValue(trafficShapingHandler.getWriteLimit());
-        readLimitSpinner.setValue(trafficShapingHandler.getReadLimit());
+        writeLimitSpinner.setValue(trafficShapingHandler.getWriteLimit() / 1000);
+        readLimitSpinner.setValue(trafficShapingHandler.getReadLimit() / 1000);
         if (!enable) {
             writeLimitSpinner.setEnabled(false);
             readLimitSpinner.setEnabled(false);
