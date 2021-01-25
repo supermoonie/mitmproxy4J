@@ -54,8 +54,8 @@ public final class ConnectionOverviewService {
             connectionOverview.setServerCipherSuite(connectionInfo.getServerCipherSuite());
             if (connectionInfo.isUseSecondProxy()) {
                 connectionOverview.setUseSecondProxy(1);
-                connectionOverview.setSecondProxyHost(connectionInfo.getSecondProxyHost());
-                connectionOverview.setSecondProxyPort(connectionInfo.getSecondProxyPort());
+//                connectionOverview.setSecondProxyHost(connectionInfo.getSecondProxyHost());
+//                connectionOverview.setSecondProxyPort(connectionInfo.getSecondProxyPort());
             } else {
                 connectionOverview.setUseSecondProxy(0);
             }
