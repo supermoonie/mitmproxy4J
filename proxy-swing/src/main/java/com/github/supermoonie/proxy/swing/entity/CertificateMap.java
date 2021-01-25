@@ -71,6 +71,12 @@ public class CertificateMap {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "CertificateMap{" +
+                "id=" + id +
+                ", certificateSerialNumber='" + certificateSerialNumber + '\'' +
+                ", requestId=" + requestId +
+                ", responseId=" + responseId +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }

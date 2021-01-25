@@ -148,6 +148,19 @@ public class Request {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "Request{" +
+                "id=" + id +
+                ", method='" + method + '\'' +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", uri='" + uri + '\'' +
+                ", httpVersion='" + httpVersion + '\'' +
+                ", contentType='" + contentType + '\'' +
+                ", contentId=" + contentId +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", size=" + size +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }

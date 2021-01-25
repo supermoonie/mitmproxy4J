@@ -269,6 +269,30 @@ public class CertificateInfo {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "CertificateInfo{" +
+                "id=" + id +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", issuerCommonName='" + issuerCommonName + '\'' +
+                ", issuerOrganizationDepartment='" + issuerOrganizationDepartment + '\'' +
+                ", issuerOrganizationName='" + issuerOrganizationName + '\'' +
+                ", issuerLocalityName='" + issuerLocalityName + '\'' +
+                ", issuerStateName='" + issuerStateName + '\'' +
+                ", issuerCountry='" + issuerCountry + '\'' +
+                ", subjectCommonName='" + subjectCommonName + '\'' +
+                ", subjectOrganizationDepartment='" + subjectOrganizationDepartment + '\'' +
+                ", subjectOrganizationName='" + subjectOrganizationName + '\'' +
+                ", subjectLocalityName='" + subjectLocalityName + '\'' +
+                ", subjectStateName='" + subjectStateName + '\'' +
+                ", subjectCountry='" + subjectCountry + '\'' +
+                ", type='" + type + '\'' +
+                ", version=" + version +
+                ", sigAlgName='" + sigAlgName + '\'' +
+                ", notValidBefore=" + notValidBefore +
+                ", notValidAfter=" + notValidAfter +
+                ", shaOne='" + shaOne + '\'' +
+                ", shaTwoFiveSix='" + shaTwoFiveSix + '\'' +
+                ", fullDetail='" + fullDetail + '\'' +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }

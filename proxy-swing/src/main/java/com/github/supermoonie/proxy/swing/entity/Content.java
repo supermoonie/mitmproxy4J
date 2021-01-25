@@ -5,6 +5,7 @@ import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -50,6 +51,10 @@ public class Content {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "Content{" +
+                "id=" + id +
+                ", rawContent=" + Arrays.toString(rawContent) +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }

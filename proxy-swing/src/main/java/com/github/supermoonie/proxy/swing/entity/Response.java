@@ -126,6 +126,17 @@ public class Response {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "Response{" +
+                "id=" + id +
+                ", requestId=" + requestId +
+                ", httpVersion='" + httpVersion + '\'' +
+                ", status=" + status +
+                ", contentType='" + contentType + '\'' +
+                ", contentId=" + contentId +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", size=" + size +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }

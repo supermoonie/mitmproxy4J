@@ -236,6 +236,27 @@ public class ConnectionOverview {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "ConnectionOverview{" +
+                "id=" + id +
+                ", requestId=" + requestId +
+                ", clientHost='" + clientHost + '\'' +
+                ", clientPort=" + clientPort +
+                ", clientSessionId='" + clientSessionId + '\'' +
+                ", clientProtocol='" + clientProtocol + '\'' +
+                ", clientCipherSuite='" + clientCipherSuite + '\'' +
+                ", dnsServer='" + dnsServer + '\'' +
+                ", remoteIp='" + remoteIp + '\'' +
+                ", serverSessionId='" + serverSessionId + '\'' +
+                ", serverProtocol='" + serverProtocol + '\'' +
+                ", serverCipherSuite='" + serverCipherSuite + '\'' +
+                ", useSecondProxy=" + useSecondProxy +
+                ", secondProxyHost='" + secondProxyHost + '\'' +
+                ", secondProxyPort=" + secondProxyPort +
+                ", connectStartTime=" + connectStartTime +
+                ", connectEndTime=" + connectEndTime +
+                ", dnsStartTime=" + dnsStartTime +
+                ", dnsEndTime=" + dnsEndTime +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }

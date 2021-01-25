@@ -82,6 +82,13 @@ public class Header {
 
     @Override
     public String toString() {
-        return Jackson.toJsonString(this);
+        return "Header{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                ", requestId=" + requestId +
+                ", responseId=" + responseId +
+                ", timeCreated=" + timeCreated +
+                '}';
     }
 }
