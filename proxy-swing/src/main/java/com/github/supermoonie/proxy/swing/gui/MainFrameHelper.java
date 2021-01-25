@@ -360,7 +360,6 @@ public class MainFrameHelper {
     // -- overview tab
 
     public static void fillOverviewTab(Request request, Response response) {
-        log.info("currentRequestId: " + currentRequestId);
         if (currentRequestId == -1) {
             FilterKeyListener.setTreeExpandedState(Application.MAIN_FRAME.getFlowTree(), true);
             FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();

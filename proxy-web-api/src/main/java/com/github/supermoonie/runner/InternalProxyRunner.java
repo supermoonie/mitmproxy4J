@@ -84,7 +84,6 @@ public class InternalProxyRunner implements CommandLineRunner {
         proxy.setPassword(internalProxyConfig.getPassword());
         proxy.setCaPath(internalProxyConfig.getCaPath());
         proxy.setPrivateKeyPath(internalProxyConfig.getPrivateKeyPath());
-        proxy.setSecondProxyConfig(internalProxyConfig.getSecondProxyConfig());
         proxy.setTrafficShaping(false);
         proxy.start();
         GlobalChannelTrafficShapingHandler trafficShapingHandler = proxy.getTrafficShapingHandler();

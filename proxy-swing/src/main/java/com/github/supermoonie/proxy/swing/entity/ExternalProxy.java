@@ -12,9 +12,13 @@ import java.util.Date;
 @DatabaseTable(tableName = "request")
 public class ExternalProxy {
 
+    public static final int DISABLE = 0;
+    public static final int ENABLE = 1;
+
     public static final String HOST_FIELD_NAME = "host";
     public static final String PROXY_HOST_FIELD_NAME = "proxy_host";
     public static final String PROXY_PORT_FIELD_NAME = "proxy_port";
+    public static final String PROXY_TYPE_FIELD_NAME = "proxy_type";
     public static final String PROXY_AUTH_FIELD_NAME = "proxy_auth";
     public static final String PROXY_USER_FIELD_NAME = "proxy_user";
     public static final String PROXY_PWD_FIELD_NAME = "proxy_pwd";
@@ -29,6 +33,8 @@ public class ExternalProxy {
     private String proxyHost;
     @DatabaseField(columnName = PROXY_PORT_FIELD_NAME)
     private Integer proxyPort;
+    @DatabaseField(columnName = PROXY_TYPE_FIELD_NAME)
+    private Integer proxyType;
     @DatabaseField(columnName = PROXY_AUTH_FIELD_NAME)
     private Integer proxyAuth;
     @DatabaseField(columnName = PROXY_USER_FIELD_NAME)
@@ -70,6 +76,14 @@ public class ExternalProxy {
 
     public void setProxyPort(Integer proxyPort) {
         this.proxyPort = proxyPort;
+    }
+
+    public Integer getProxyType() {
+        return proxyType;
+    }
+
+    public void setProxyType(Integer proxyType) {
+        this.proxyType = proxyType;
     }
 
     public Integer getProxyAuth() {
@@ -119,6 +133,7 @@ public class ExternalProxy {
                 ", host='" + host + '\'' +
                 ", proxyHost='" + proxyHost + '\'' +
                 ", proxyPort=" + proxyPort +
+                ", proxyType=" + proxyType +
                 ", proxyAuth=" + proxyAuth +
                 ", proxyUser='" + proxyUser + '\'' +
                 ", proxyPwd='" + proxyPwd + '\'' +

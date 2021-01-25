@@ -17,6 +17,7 @@ public class InternalProxyInterceptInitializer implements InterceptInitializer {
         requestIntercepts.put("accessControlRequestIntercept", AccessControlRequestIntercept.INSTANCE);
         requestIntercepts.put("configurableIntercept", DefaultConfigIntercept.INSTANCE);
         requestIntercepts.put("defaultRemoteMapIntercept", DefaultRemoteMapIntercept.INSTANCE);
+        requestIntercepts.put("externalProxyIntercept", ExternalProxyIntercept.INSTANCE);
         requestIntercepts.put("dumpHttpRequestIntercept", DumpHttpRequestIntercept.INSTANCE);
         requestIntercepts.put("defaultLocalMapIntercept", DefaultLocalMapIntercept.INSTANCE);
         responseIntercepts.put("dumpHttpResponseIntercept", DumpHttpResponseIntercept.INSTANCE);

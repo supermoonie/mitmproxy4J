@@ -48,9 +48,7 @@ public class ConnectionInfo {
 
     private boolean useSecondProxy = false;
 
-    private String secondProxyHost;
-
-    private int secondProxyPort;
+    private SecondProxyConfig secondProxyConfig;
 
     private long requestStartTime;
 
@@ -228,20 +226,12 @@ public class ConnectionInfo {
         this.useSecondProxy = useSecondProxy;
     }
 
-    public String getSecondProxyHost() {
-        return secondProxyHost;
+    public SecondProxyConfig getSecondProxyConfig() {
+        return secondProxyConfig;
     }
 
-    public void setSecondProxyHost(String secondProxyHost) {
-        this.secondProxyHost = secondProxyHost;
-    }
-
-    public int getSecondProxyPort() {
-        return secondProxyPort;
-    }
-
-    public void setSecondProxyPort(int secondProxyPort) {
-        this.secondProxyPort = secondProxyPort;
+    public void setSecondProxyConfig(SecondProxyConfig secondProxyConfig) {
+        this.secondProxyConfig = secondProxyConfig;
     }
 
     public long getRequestStartTime() {
@@ -362,8 +352,6 @@ public class ConnectionInfo {
                 ", serverCipherSuite='" + serverCipherSuite + '\'' +
                 ", serverCertificates=" + serverCertificates +
                 ", useSecondProxy=" + useSecondProxy +
-                ", secondProxyHost='" + secondProxyHost + '\'' +
-                ", secondProxyPort=" + secondProxyPort +
                 ", requestStartTime=" + requestStartTime +
                 ", requestEndTime=" + requestEndTime +
                 ", connectStartTime=" + connectStartTime +

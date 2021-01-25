@@ -1,6 +1,7 @@
 package com.github.supermoonie.config;
 
 import com.github.supermoonie.proxy.InternalProxy;
+import com.github.supermoonie.proxy.SecondProxyConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -40,9 +41,6 @@ public class InternalProxyConfig {
 
     private SecondProxyConfig secondProxyConfig;
 
-    public static class SecondProxyConfig extends InternalProxy.SecondProxyConfig {
-
-    }
 
     public Integer getPort() {
         return port;

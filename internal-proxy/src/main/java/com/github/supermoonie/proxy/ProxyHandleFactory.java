@@ -12,7 +12,7 @@ import java.net.InetSocketAddress;
  */
 public class ProxyHandleFactory {
 
-    public static ProxyHandler build(InternalProxy.SecondProxyConfig config) {
+    public static ProxyHandler build(SecondProxyConfig config) {
         ProxyHandler proxyHandler = null;
         if (config != null) {
             boolean isAuth = config.getUsername() != null && config.getPassword() != null;

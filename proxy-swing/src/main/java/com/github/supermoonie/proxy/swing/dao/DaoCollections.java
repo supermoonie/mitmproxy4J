@@ -54,6 +54,7 @@ public class DaoCollections {
         TableUtils.createTableIfNotExists(connectionSource, AccessControl.class);
         TableUtils.createTableIfNotExists(connectionSource, AllowBlock.class);
         TableUtils.createTableIfNotExists(connectionSource, RequestMap.class);
+        TableUtils.createTableIfNotExists(connectionSource, ExternalProxy.class);
     }
 
     private static String dbPath() {

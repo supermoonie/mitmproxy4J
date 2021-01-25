@@ -205,7 +205,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                 ch.pipeline().addLast("trafficShapingHandler", internalProxy.getTrafficShapingHandler());
                             }
                             if (connectionInfo.isUseSecondProxy()) {
-                                ProxyHandler proxyHandler = ProxyHandleFactory.build(internalProxy.getSecondProxyConfig());
+                                ProxyHandler proxyHandler = ProxyHandleFactory.build(connectionInfo.getSecondProxyConfig());
                                 if (null != proxyHandler) {
                                     logger.debug(request.uri() + " through second proxy");
                                     ch.pipeline().addLast("proxyHandler", proxyHandler);
