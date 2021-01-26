@@ -13,6 +13,9 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashSet;
@@ -27,6 +30,13 @@ public class ExternalProxyDialogController extends ExternalProxyDialog {
 
     public ExternalProxyDialogController(Frame owner, String title, boolean modal) {
         super(owner, title, modal);
+
+        getProxyTable().addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                getProxyTable().clearSelection();
+            }
+        });
         getEnableCheckBox().addActionListener(e -> {
             getProxyTable().setEnabled(getEnableCheckBox().isSelected());
             getAddButton().setEnabled(getEnableCheckBox().isSelected());
@@ -51,6 +61,8 @@ public class ExternalProxyDialogController extends ExternalProxyDialog {
         });
         getOkButton().addActionListener(e -> {
             ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_ENABLE, getEnableCheckBox().isSelected());
+            ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LOCALHOST, getBypassLocalHostCheckBox().isSelected());
+            ApplicationPreferences.getState().put(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LIST, getBypassHostTextArea().getText());
             Dao<ExternalProxy, Integer> dao = DaoCollections.getDao(ExternalProxy.class);
             try {
                 dao.deleteBuilder().delete();

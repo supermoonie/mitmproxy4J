@@ -27,11 +27,12 @@ public class ExternalProxyIntercept implements RequestIntercept {
     private final Logger log = LoggerFactory.getLogger(ExternalProxyIntercept.class);
 
     public static final ExternalProxyIntercept INSTANCE = new ExternalProxyIntercept();
+    private static final String LOCAL_HOST = "localhost";
+    private static final String LOCAL_IP = "127.0.0.1";
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-//        boolean proxyEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_ENABLE, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_ENABLE);
-        boolean proxyEnable = true;
+        boolean proxyEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_ENABLE, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_ENABLE);
         if (proxyEnable) {
             Dao<ExternalProxy, Integer> externalProxyDao = DaoCollections.getDao(ExternalProxy.class);
             try {
@@ -39,18 +40,31 @@ public class ExternalProxyIntercept implements RequestIntercept {
                 if (null == externalProxyList || 0 == externalProxyList.size()) {
                     return null;
                 }
+                boolean bypassLocalhost = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LOCALHOST, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_BYPASS_LOCALHOST);
+                StringBuilder bypassHostListBuilder = new StringBuilder(ApplicationPreferences.getState().get(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LIST, ""));
+                if (bypassLocalhost) {
+                    bypassHostListBuilder.append(",").append(LOCAL_HOST).append(",").append(LOCAL_IP);
+                }
+                String bypassHostList = bypassHostListBuilder.toString();
                 String remoteHost = ctx.getConnectionInfo().getRemoteHost();
                 Optional<ExternalProxy> proxy = Optional.empty();
                 if (null != remoteHost) {
+                    if (bypassHostList.contains(remoteHost)) {
+                        return null;
+                    }
                     proxy = externalProxyList.stream().filter(item ->
-                            (item.getHost().equals("*") || remoteHost.matches(item.getHost()))
+                            ("*".equals(item.getHost()) || remoteHost.matches(item.getHost()))
                                     && item.getEnable().equals(ExternalProxy.ENABLE)
                     ).findFirst();
                 } else {
                     List<InetAddress> remoteAddressList = ctx.getConnectionInfo().getRemoteAddressList();
                     if (null != remoteAddressList && remoteAddressList.size() > 0) {
+                        boolean bypassFlag = remoteAddressList.stream().anyMatch(item -> bypassHostList.contains(item.getHostAddress()));
+                        if (bypassFlag) {
+                            return null;
+                        }
                         proxy = externalProxyList.stream().filter(item ->
-                                (item.getHost().equals("*") || remoteAddressList.stream().anyMatch(remote -> remote.getHostAddress().matches(item.getHost())))
+                                ("*".equals(item.getHost()) || remoteAddressList.stream().anyMatch(remote -> remote.getHostAddress().matches(item.getHost())))
                                         && item.getEnable().equals(ExternalProxy.ENABLE)
                         ).findFirst();
                     }

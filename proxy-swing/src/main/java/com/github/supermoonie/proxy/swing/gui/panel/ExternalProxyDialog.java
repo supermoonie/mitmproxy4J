@@ -4,7 +4,6 @@ import com.github.supermoonie.proxy.ProxyType;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.entity.AllowBlock;
 import com.github.supermoonie.proxy.swing.entity.ExternalProxy;
 import com.github.supermoonie.proxy.swing.gui.table.BooleanRenderer;
 import com.j256.ormlite.dao.Dao;
@@ -37,11 +36,14 @@ public class ExternalProxyDialog extends JDialog {
     };
     private final JButton addButton = new JButton("Add");
     private final JButton removeButton = new JButton("Remove");
+    private final JTextArea bypassHostTextArea = new JTextArea();
+    private final JCheckBox bypassLocalHostCheckBox = new JCheckBox("Bypass localhost/127.0.0.1");
     private final JButton cancelButton = new JButton("Cancel");
     private final JButton okButton = new JButton("OK");
 
     public ExternalProxyDialog(Frame owner, String title, boolean modal) {
         super(owner, title, modal);
+        bypassHostTextArea.setRows(5);
         // container
         JPanel container = new JPanel();
         container.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
@@ -51,7 +53,7 @@ public class ExternalProxyDialog extends JDialog {
         JPanel enablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         enablePanel.add(enableCheckBox);
         container.add(enablePanel);
-        // allow list table panel
+        // proxy list table panel
         initTable();
         JPanel proxyTablePanel = new JPanel(new BorderLayout() {{
             setVgap(10);
@@ -64,6 +66,15 @@ public class ExternalProxyDialog extends JDialog {
         operatePanel.add(removeButton);
         proxyTablePanel.add(operatePanel, BorderLayout.SOUTH);
         container.add(proxyTablePanel);
+        // bypass host panel
+        JPanel bypassHostPanel = new JPanel(new BorderLayout());
+        bypassHostPanel.add(new JLabel("Bypass for the following hosts:"), BorderLayout.NORTH);
+        bypassHostPanel.add(new JScrollPane(bypassHostTextArea));
+        container.add(bypassHostPanel);
+        // bypass localhost panel
+        JPanel bypassLocalHostPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bypassLocalHostPanel.add(bypassLocalHostCheckBox);
+        container.add(bypassLocalHostPanel);
         // button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("Separator.borderColor")));
@@ -89,6 +100,10 @@ public class ExternalProxyDialog extends JDialog {
         }
         proxyTable.setShowHorizontalLines(true);
         proxyTable.setShowVerticalLines(true);
+        boolean bypassLocalhost = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LOCALHOST, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_BYPASS_LOCALHOST);
+        String bypassHostList = ApplicationPreferences.getState().get(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LIST, "");
+        bypassLocalHostCheckBox.setSelected(bypassLocalhost);
+        bypassHostTextArea.setText(bypassHostList);
 
         super.getContentPane().add(container);
         super.getRootPane().setDefaultButton(okButton);
@@ -177,6 +192,14 @@ public class ExternalProxyDialog extends JDialog {
 
     public JButton getRemoveButton() {
         return removeButton;
+    }
+
+    public JTextArea getBypassHostTextArea() {
+        return bypassHostTextArea;
+    }
+
+    public JCheckBox getBypassLocalHostCheckBox() {
+        return bypassLocalHostCheckBox;
     }
 
     public JButton getCancelButton() {
