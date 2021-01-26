@@ -9,7 +9,7 @@ import java.util.Date;
  * @author supermoonie
  * @since 2021/1/25
  */
-@DatabaseTable(tableName = "request")
+@DatabaseTable(tableName = "external_proxy")
 public class ExternalProxy {
 
     public static final int DISABLE = 0;

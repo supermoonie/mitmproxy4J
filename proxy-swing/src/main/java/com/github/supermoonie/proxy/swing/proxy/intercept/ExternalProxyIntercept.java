@@ -30,7 +30,8 @@ public class ExternalProxyIntercept implements RequestIntercept {
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        boolean proxyEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_ENABLE, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_ENABLE);
+//        boolean proxyEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_ENABLE, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_ENABLE);
+        boolean proxyEnable = true;
         if (proxyEnable) {
             Dao<ExternalProxy, Integer> externalProxyDao = DaoCollections.getDao(ExternalProxy.class);
             try {

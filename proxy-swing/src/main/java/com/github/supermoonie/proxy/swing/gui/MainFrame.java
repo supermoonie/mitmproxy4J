@@ -876,6 +876,9 @@ public class MainFrame extends JFrame {
         JMenuItem accessControlMenuItem = new JMenuItem("Access Control...");
         accessControlMenuItem.addActionListener(e -> new AccessControlController(this, "Access Control", true).setVisible(true));
         proxyMenu.add(accessControlMenuItem);
+        JMenuItem externalProxyMenuItem = new JMenuItem("External Proxy...");
+        externalProxyMenuItem.addActionListener(e -> new ExternalProxyDialogController(this, "External Proxy", true).setVisible(true));
+        proxyMenu.add(externalProxyMenuItem);
 
         // Tools menu
         JMenu toolsMenu = new JMenu("Tools");

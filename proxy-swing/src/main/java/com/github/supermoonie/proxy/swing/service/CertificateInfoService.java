@@ -96,7 +96,7 @@ public final class CertificateInfoService {
                 list.add(name);
             }
         }
-        for (int i = 0; i < list.size(); i++) {
+        for (int i = 0; i < list.size() - 1; i++) {
             result.put(list.get(i), list.get(i + 1));
             i = i + 1;
         }
