@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
+import com.github.supermoonie.proxy.ProxyType;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
@@ -11,8 +12,12 @@ import com.j256.ormlite.dao.Dao;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author supermoonie
@@ -21,9 +26,9 @@ import java.util.List;
 public class ExternalProxyDialog extends JDialog {
 
     private final JCheckBox enableCheckBox = new JCheckBox("Enable External Proxy");
-    private final DefaultTableModel proxyTableModel = new DefaultTableModel(null, new String[]{"Enable", "Host Or Ip", "ProxyHost", "ProxyPort", "Auth", "User", "Password"});
+    private final DefaultTableModel proxyTableModel = new DefaultTableModel(null, new String[]{"Enable", "Host Or Ip", "ProxyHost", "ProxyPort", "Auth", "User", "Password", "Type"});
     private final JTable proxyTable = new JTable(proxyTableModel) {
-        private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class, Integer.class, Boolean.class, String.class, String.class};
+        private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class, Integer.class, Boolean.class, String.class, String.class, String.class};
 
         @Override
         public Class<?> getColumnClass(int column) {
@@ -77,14 +82,13 @@ public class ExternalProxyDialog extends JDialog {
         try {
             List<ExternalProxy> proxyList = proxyDao.queryForAll();
             for (ExternalProxy proxy : proxyList) {
-                proxyTableModel.addRow(new Object[]{proxy.getEnable() == ExternalProxy.ENABLE, proxy.getHost(), proxy.getProxyHost(), proxy.getProxyPort(), proxy.getProxyAuth() == ExternalProxy.ENABLE, proxy.getProxyUser(), proxy.getProxyPwd()});
+                proxyTableModel.addRow(new Object[]{proxy.getEnable() == ExternalProxy.ENABLE, proxy.getHost(), proxy.getProxyHost(), proxy.getProxyPort(), proxy.getProxyAuth() == ExternalProxy.ENABLE, proxy.getProxyUser(), proxy.getProxyPwd(), ProxyType.valueOf(proxy.getProxyType()).orElseThrow().name()});
             }
         } catch (SQLException e) {
             Application.showError(e);
         }
         proxyTable.setShowHorizontalLines(true);
         proxyTable.setShowVerticalLines(true);
-
 
         super.getContentPane().add(container);
         super.getRootPane().setDefaultButton(okButton);
@@ -99,6 +103,60 @@ public class ExternalProxyDialog extends JDialog {
         proxyTable.setShowGrid(false);
         proxyTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
         proxyTable.getColumnModel().getColumn(4).setCellRenderer(new BooleanRenderer());
+        JTextField hostTextField = new JTextField();
+        DefaultCellEditor hostCellEditor = new DefaultCellEditor(hostTextField);
+        hostTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                hostCellEditor.stopCellEditing();
+            }
+        });
+        hostCellEditor.setClickCountToStart(2);
+        proxyTable.getColumnModel().getColumn(1).setCellEditor(hostCellEditor);
+        JTextField proxyHostTextField = new JTextField();
+        DefaultCellEditor proxyHostCellEditor = new DefaultCellEditor(proxyHostTextField);
+        proxyHostTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                proxyHostCellEditor.stopCellEditing();
+            }
+        });
+        proxyHostCellEditor.setClickCountToStart(2);
+        proxyTable.getColumnModel().getColumn(2).setCellEditor(proxyHostCellEditor);
+        JTextField proxyPortTextField = new JTextField();
+        DefaultCellEditor proxyPortCellEditor = new DefaultCellEditor(proxyPortTextField);
+        proxyPortTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                proxyPortCellEditor.stopCellEditing();
+            }
+        });
+        proxyPortCellEditor.setClickCountToStart(2);
+        proxyTable.getColumnModel().getColumn(3).setCellEditor(proxyPortCellEditor);
+        JTextField proxyUserTextField = new JTextField();
+        DefaultCellEditor proxyUserCellEditor = new DefaultCellEditor(proxyUserTextField);
+        proxyUserTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                proxyUserCellEditor.stopCellEditing();
+            }
+        });
+        proxyUserCellEditor.setClickCountToStart(2);
+        proxyTable.getColumnModel().getColumn(5).setCellEditor(proxyUserCellEditor);
+        JTextField proxyPwdTextField = new JTextField();
+        DefaultCellEditor proxyPwdCellEditor = new DefaultCellEditor(proxyPwdTextField);
+        proxyPwdTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                proxyPwdCellEditor.stopCellEditing();
+            }
+        });
+        proxyPwdCellEditor.setClickCountToStart(2);
+        proxyTable.getColumnModel().getColumn(6).setCellEditor(proxyPwdCellEditor);
+        JComboBox<String> typeComboBox = new JComboBox<>(Stream.of(ProxyType.values()).map(Enum::name).collect(Collectors.toList()).toArray(new String[]{}));
+        DefaultCellEditor typeCellEditor = new DefaultCellEditor(typeComboBox);
+        typeCellEditor.setClickCountToStart(2);
+        proxyTable.getColumnModel().getColumn(7).setCellEditor(typeCellEditor);
     }
 
     public JCheckBox getEnableCheckBox() {
