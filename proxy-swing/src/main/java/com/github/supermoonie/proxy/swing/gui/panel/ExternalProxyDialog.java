@@ -68,7 +68,7 @@ public class ExternalProxyDialog extends JDialog {
         container.add(proxyTablePanel);
         // bypass host panel
         JPanel bypassHostPanel = new JPanel(new BorderLayout());
-        bypassHostPanel.add(new JLabel("Bypass for the following hosts:"), BorderLayout.NORTH);
+        bypassHostPanel.add(new JLabel("Bypass for the following hosts (split by \",\") :"), BorderLayout.NORTH);
         bypassHostPanel.add(new JScrollPane(bypassHostTextArea));
         container.add(bypassHostPanel);
         // bypass localhost panel

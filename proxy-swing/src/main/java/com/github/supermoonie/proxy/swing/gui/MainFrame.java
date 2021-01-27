@@ -830,7 +830,11 @@ public class MainFrame extends JFrame {
         allButton.setSelected(true);
         filterToolBar.add(allButton);
         filterToolBar.add(new JSeparator());
-        filterToolBar.add(filterButton("JSON"));
+        JButton jsonFilterButton = filterButton("JSON");
+        filterToolBar.add(jsonFilterButton);
+        jsonFilterButton.addActionListener(e -> {
+
+        });
         filterToolBar.add(filterButton("HTML"));
         filterToolBar.add(filterButton("Image"));
         filterToolBar.add(filterButton("XML"));

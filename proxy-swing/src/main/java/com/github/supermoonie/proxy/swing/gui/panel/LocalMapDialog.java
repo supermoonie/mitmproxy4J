@@ -102,7 +102,7 @@ public class LocalMapDialog extends JDialog {
         requestMapTable.setShowHorizontalLines(true);
         requestMapTable.setShowVerticalLines(true);
         requestMapTable.setShowGrid(false);
-        requestMapTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+        requestMapTable.getColumnModel().getColumn(0).setPreferredWidth(200);
         requestMapTable.getColumnModel().getColumn(1).setPreferredWidth(600);
         requestMapTable.getColumnModel().getColumn(2).setPreferredWidth(600);
         requestMapTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
