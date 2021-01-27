@@ -50,7 +50,6 @@ import java.awt.event.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -68,8 +67,13 @@ public class MainFrame extends JFrame {
     private JMenuItem localMapMenuItem;
     private JMenuItem blockListMenuItem;
     private JMenuItem allowListMenuItem;
+    private final JMenuItem exportRootCertificateMenuItem = new JMenuItem("Export Root Certificate");
     // 工具栏
+    private final JButton allButton = filterButton("All");
     private final JButton jsonFilterButton = filterButton("JSON");
+    private final JButton htmlFilterButton = filterButton("HTML");
+    private final JButton imageFilterButton = filterButton("Image");
+    private final JButton xmlFilterButton = filterButton("XML");
     private final JButton throttlingButton = new JButton();
 
 
@@ -829,14 +833,13 @@ public class MainFrame extends JFrame {
         container.add(toolBarPanel, BorderLayout.EAST);
         JToolBar filterToolBar = new JToolBar();
         filterToolBar.setFloatable(false);
-        JButton allButton = filterButton("All");
         allButton.setSelected(true);
         filterToolBar.add(allButton);
         filterToolBar.add(new JSeparator());
         filterToolBar.add(jsonFilterButton);
-        filterToolBar.add(filterButton("HTML"));
-        filterToolBar.add(filterButton("Image"));
-        filterToolBar.add(filterButton("XML"));
+        filterToolBar.add(htmlFilterButton);
+        filterToolBar.add(imageFilterButton);
+        filterToolBar.add(xmlFilterButton);
         container.add(filterToolBar, BorderLayout.WEST);
         container.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.SOUTH);
         getContentPane().add(container, BorderLayout.NORTH);
@@ -913,11 +916,7 @@ public class MainFrame extends JFrame {
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");
-        JMenuItem downloadRootCertificateMenuItem = new JMenuItem("Download Root Certificate");
-        downloadRootCertificateMenuItem.addActionListener(e -> {
-
-        });
-        helpMenu.add(downloadRootCertificateMenuItem);
+        helpMenu.add(exportRootCertificateMenuItem);
         helpMenu.add(new JSeparator());
         JMenuItem aboutMenuItem = new JMenuItem("About");
         helpMenu.add(aboutMenuItem);
@@ -1207,7 +1206,27 @@ public class MainFrame extends JFrame {
         return rootNode;
     }
 
+    public JMenuItem getExportRootCertificateMenuItem() {
+        return exportRootCertificateMenuItem;
+    }
+
+    public JButton getAllButton() {
+        return allButton;
+    }
+
     public JButton getJsonFilterButton() {
         return jsonFilterButton;
+    }
+
+    public JButton getHtmlFilterButton() {
+        return htmlFilterButton;
+    }
+
+    public JButton getImageFilterButton() {
+        return imageFilterButton;
+    }
+
+    public JButton getXmlFilterButton() {
+        return xmlFilterButton;
     }
 }
