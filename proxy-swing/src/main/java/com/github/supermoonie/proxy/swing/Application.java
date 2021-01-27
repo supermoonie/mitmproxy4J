@@ -6,6 +6,7 @@ import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.gui.MainFrame;
+import com.github.supermoonie.proxy.swing.gui.MainFrameController;
 import com.github.supermoonie.proxy.swing.gui.panel.controller.AppearanceDialogController;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
 import com.github.supermoonie.proxy.swing.proxy.intercept.InternalProxyInterceptInitializer;
@@ -92,7 +93,7 @@ public class Application {
                 ProxyManager.setWriteLimit(writeLimit);
                 ProxyManager.setReadLimit(readLimit);
             });
-            MAIN_FRAME = new MainFrame();
+            MAIN_FRAME = new MainFrameController();
             MAIN_FRAME.setPreferredSize(new Dimension(1280, 800));
             // show frame
             MAIN_FRAME.pack();

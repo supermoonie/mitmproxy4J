@@ -4,22 +4,14 @@ import com.github.supermoonie.proxy.ProxyType;
 import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.entity.AllowBlock;
 import com.github.supermoonie.proxy.swing.entity.ExternalProxy;
 import com.github.supermoonie.proxy.swing.gui.panel.ExternalProxyDialog;
-import com.github.supermoonie.proxy.swing.proxy.intercept.DefaultConfigIntercept;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.stmt.DeleteBuilder;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author supermoonie
@@ -30,13 +22,6 @@ public class ExternalProxyDialogController extends ExternalProxyDialog {
 
     public ExternalProxyDialogController(Frame owner, String title, boolean modal) {
         super(owner, title, modal);
-
-        getProxyTable().addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                getProxyTable().clearSelection();
-            }
-        });
         getEnableCheckBox().addActionListener(e -> {
             getProxyTable().setEnabled(getEnableCheckBox().isSelected());
             getAddButton().setEnabled(getEnableCheckBox().isSelected());

@@ -50,6 +50,7 @@ import java.awt.event.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -68,7 +69,9 @@ public class MainFrame extends JFrame {
     private JMenuItem blockListMenuItem;
     private JMenuItem allowListMenuItem;
     // 工具栏
-    private JButton throttlingButton = new JButton();
+    private final JButton jsonFilterButton = filterButton("JSON");
+    private final JButton throttlingButton = new JButton();
+
 
     // Flow 显示的两种形式
     private JPanel structureTab;
@@ -830,11 +833,7 @@ public class MainFrame extends JFrame {
         allButton.setSelected(true);
         filterToolBar.add(allButton);
         filterToolBar.add(new JSeparator());
-        JButton jsonFilterButton = filterButton("JSON");
         filterToolBar.add(jsonFilterButton);
-        jsonFilterButton.addActionListener(e -> {
-
-        });
         filterToolBar.add(filterButton("HTML"));
         filterToolBar.add(filterButton("Image"));
         filterToolBar.add(filterButton("XML"));
@@ -1206,5 +1205,9 @@ public class MainFrame extends JFrame {
 
     public FlowTreeNode getRootNode() {
         return rootNode;
+    }
+
+    public JButton getJsonFilterButton() {
+        return jsonFilterButton;
     }
 }
