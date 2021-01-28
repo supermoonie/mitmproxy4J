@@ -67,6 +67,7 @@ public class MainFrame extends JFrame {
     private JMenuItem localMapMenuItem;
     private JMenuItem blockListMenuItem;
     private JMenuItem allowListMenuItem;
+    private final JMenuItem dnsMenuItem = new JMenuItem("DNS");
     private final JMenuItem exportRootCertificateMenuItem = new JMenuItem("Export Root Certificate");
     // 工具栏
     private final JButton allButton = filterButton("All");
@@ -887,6 +888,7 @@ public class MainFrame extends JFrame {
         JMenuItem externalProxyMenuItem = new JMenuItem("External Proxy");
         externalProxyMenuItem.addActionListener(e -> new ExternalProxyDialogController(this, "External Proxy", true).setVisible(true));
         proxyMenu.add(externalProxyMenuItem);
+        proxyMenu.add(dnsMenuItem);
 
         // Tools menu
         JMenu toolsMenu = new JMenu("Tools");
@@ -1206,6 +1208,10 @@ public class MainFrame extends JFrame {
 
     public FlowTreeNode getRootNode() {
         return rootNode;
+    }
+
+    public JMenuItem getDnsMenuItem() {
+        return dnsMenuItem;
     }
 
     public JMenuItem getExportRootCertificateMenuItem() {

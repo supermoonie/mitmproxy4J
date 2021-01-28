@@ -8,6 +8,7 @@ import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
+import com.github.supermoonie.proxy.swing.gui.panel.controller.DnsDialogController;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.Where;
@@ -31,6 +32,7 @@ public class MainFrameController extends MainFrame {
 
     public MainFrameController() {
         super();
+        getDnsMenuItem().addActionListener(e -> new DnsDialogController(this, "DNS", true).setVisible(true));
         getExportRootCertificateMenuItem().addActionListener(e -> {
             InputStream in = Application.class.getClassLoader().getResourceAsStream("ca.crt");
             JFileChooser fileChooser = new JFileChooser();
