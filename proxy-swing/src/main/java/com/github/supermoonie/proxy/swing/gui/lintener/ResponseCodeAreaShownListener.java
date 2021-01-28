@@ -15,9 +15,6 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prettify.PrettifyParser;
-import syntaxhighlight.ParseResult;
-import syntaxhighlight.Parser;
 
 import javax.script.ScriptException;
 import javax.swing.*;
@@ -26,7 +23,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -141,13 +137,13 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
         super.componentHidden(e);
     }
 
-    private String prettify(String extension, String content) {
-        Parser parser = new PrettifyParser();
-        List<ParseResult> results = parser.parse(extension, content);
-        StringBuilder sb = new StringBuilder();
-        for (ParseResult result : results) {
-            sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
-        }
-        return sb.toString();
-    }
+//    private String prettify(String extension, String content) {
+//        Parser parser = new PrettifyParser();
+//        List<ParseResult> results = parser.parse(extension, content);
+//        StringBuilder sb = new StringBuilder();
+//        for (ParseResult result : results) {
+//            sb.append(content, result.getOffset(), result.getOffset() + result.getLength());
+//        }
+//        return sb.toString();
+//    }
 }

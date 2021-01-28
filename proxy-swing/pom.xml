@@ -35,11 +35,11 @@
             <scope>test</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.eclipsesource.j2v8/j2v8_macosx_x86_64 -->
-        <dependency>
-            <groupId>com.eclipsesource.j2v8</groupId>
-            <artifactId>j2v8_macosx_x86_64</artifactId>
-            <version>4.6.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.eclipsesource.j2v8</groupId>-->
+<!--            <artifactId>j2v8_macosx_x86_64</artifactId>-->
+<!--            <version>4.6.0</version>-->
+<!--        </dependency>-->
 <!--        &lt;!&ndash; https://mvnrepository.com/artifact/com.google.javascript/closure-compiler &ndash;&gt;-->
 <!--        <dependency>-->
 <!--            <groupId>com.google.javascript</groupId>-->
@@ -47,11 +47,11 @@
 <!--            <version>v20201102</version>-->
 <!--        </dependency>-->
         <!-- https://github.com/twalcari/syntaxhighlighterfx -->
-        <dependency>
-            <groupId>com.github.twalcari</groupId>
-            <artifactId>syntaxhighlighterfx</artifactId>
-            <version>3.0.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.github.twalcari</groupId>-->
+<!--            <artifactId>syntaxhighlighterfx</artifactId>-->
+<!--            <version>3.0.0</version>-->
+<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/com.fifesoft/rsyntaxtextarea -->
         <dependency>
             <groupId>com.fifesoft</groupId>
@@ -77,10 +77,10 @@
             <version>5.2</version>
         </dependency>
         <!-- https://github.com/rtyley/animated-gif-lib-for-java -->
-        <dependency>
-            <groupId>com.madgag</groupId>
-            <artifactId>animated-gif-lib</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.madgag</groupId>-->
+<!--            <artifactId>animated-gif-lib</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.brotli</groupId>
             <artifactId>dec</artifactId>
@@ -164,4 +164,52 @@
             <version>1.0.4</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.4</version>
+                <configuration>
+                    <mainClass>com.github.supermoonie.proxy.swing.Application</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.github.fvarrui</groupId>
+                <artifactId>javapackager</artifactId>
+                <version>1.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <displayName>MProxy</displayName>
+                            <!-- mandatory -->
+                            <mainClass>com.github.supermoonie.proxy.swing.Application</mainClass>
+                            <!-- optional -->
+                            <assetsDir>${basedir}/assets</assetsDir>
+                            <copyDependencies>true</copyDependencies>
+                            <bundleJre>true</bundleJre>
+                            <generateInstaller>true</generateInstaller>
+                            <administratorRequired>false</administratorRequired>
+                            <platform>auto</platform>
+                            <winConfig>
+                                <generateMsi>false</generateMsi>
+                            </winConfig>
+                            <macConfig>
+                                <generateDmg>true</generateDmg>
+                                <generatePkg>true</generatePkg>
+                                <iconSize>128</iconSize>
+                                <volumeIcon>${basedir}/assets/mac/proxy-fx.icns</volumeIcon>
+                                <volumeName>${project.name}</volumeName>
+                            </macConfig>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

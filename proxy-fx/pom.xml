@@ -162,15 +162,15 @@
                             <assetsDir>${basedir}/assets</assetsDir>
                             <copyDependencies>true</copyDependencies>
                             <bundleJre>true</bundleJre>
-                            <generateInstaller>true</generateInstaller>
+                            <generateInstaller>false</generateInstaller>
                             <administratorRequired>false</administratorRequired>
                             <platform>auto</platform>
                             <winConfig>
                                 <generateMsi>false</generateMsi>
                             </winConfig>
                             <macConfig>
-                                <generateDmg>true</generateDmg>
-                                <generatePkg>true</generatePkg>
+                                <generateDmg>false</generateDmg>
+                                <generatePkg>false</generatePkg>
                                 <iconSize>128</iconSize>
                                 <volumeIcon>${basedir}/assets/mac/proxy-fx.icns</volumeIcon>
                                 <volumeName>${project.name}</volumeName>

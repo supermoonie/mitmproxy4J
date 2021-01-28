@@ -76,7 +76,7 @@ public class MainFrameController extends MainFrame {
             getAllButton().setSelected(false);
             getJsonFilterButton().setSelected(false);
             getHtmlFilterButton().setSelected(false);
-            getImageFilterButton().setSelected(false);
+            getImageFilterButton().setSelected(true);
             getXmlFilterButton().setSelected(false);
         });
         getXmlFilterButton().addActionListener(e -> {

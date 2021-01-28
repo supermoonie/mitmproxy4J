@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy.swing.util;
 
-import javax.annotation.Nonnull;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -57,7 +56,6 @@ public class ClipboardUtil {
         }
 
         @Override
-        @Nonnull
         public Object getTransferData(DataFlavor flavor)
                 throws UnsupportedFlavorException {
             if (flavor.equals(DataFlavor.imageFlavor) && i != null) {
@@ -105,7 +103,6 @@ public class ClipboardUtil {
         }
 
         @Override
-        @Nonnull
         public Object getTransferData(DataFlavor flavor) {
             return listOfFiles;
         }
