@@ -863,11 +863,12 @@ public class MainFrame extends JFrame {
 //        proxyMenu.add(systemProxyMenuItem);
 //        proxyMenu.add(new JSeparator());
         if (!SystemInfo.isMacOS) {
-            JMenuItem appearanceMenuItem = new JMenuItem("Appearance...");
+            JMenuItem appearanceMenuItem = new JMenuItem("Appearance");
             appearanceMenuItem.addActionListener(e -> new AppearanceDialogController(this, "Appearance", true).setVisible(true));
             proxyMenu.add(appearanceMenuItem);
         }
-        JMenuItem proxySettingMenuItem = new JMenuItem("Proxy Setting...");
+        JMenuItem proxySettingMenuItem = new JMenuItem("Proxy Setting");
+        proxySettingMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         proxySettingMenuItem.addActionListener(e -> {
             int port = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_PROXY_PORT, ApplicationPreferences.DEFAULT_PROXY_PORT);
             boolean auth = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_PROXY_AUTH, ApplicationPreferences.DEFAULT_PROXY_AUTH);
@@ -876,13 +877,14 @@ public class MainFrame extends JFrame {
             new ProxySettingDialogController(this, "Proxy Setting", true, port, auth, user, pwd).setVisible(true);
         });
         proxyMenu.add(proxySettingMenuItem);
-        JMenuItem throttlingMenuItem = new JMenuItem("Throttling Setting...");
+        JMenuItem throttlingMenuItem = new JMenuItem("Throttling Setting");
+        throttlingMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         throttlingMenuItem.addActionListener(e -> new ThrottlingDialogController(this, "Throttling", true).setVisible(true));
         proxyMenu.add(throttlingMenuItem);
-        JMenuItem accessControlMenuItem = new JMenuItem("Access Control...");
+        JMenuItem accessControlMenuItem = new JMenuItem("Access Control");
         accessControlMenuItem.addActionListener(e -> new AccessControlController(this, "Access Control", true).setVisible(true));
         proxyMenu.add(accessControlMenuItem);
-        JMenuItem externalProxyMenuItem = new JMenuItem("External Proxy...");
+        JMenuItem externalProxyMenuItem = new JMenuItem("External Proxy");
         externalProxyMenuItem.addActionListener(e -> new ExternalProxyDialogController(this, "External Proxy", true).setVisible(true));
         proxyMenu.add(externalProxyMenuItem);
 

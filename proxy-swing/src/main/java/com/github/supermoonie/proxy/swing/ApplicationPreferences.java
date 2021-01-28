@@ -37,11 +37,6 @@ public class ApplicationPreferences {
     public static final String KEY_REMOTE_MAP_ENABLE = "remoteMapEnable";
     public static final String KEY_LOCAL_MAP_ENABLE = "localMapEnable";
     public static final String KEY_EXTERNAL_PROXY_ENABLE = "externalProxy";
-    public static final String KEY_EXTERNAL_PROXY_HOST = "externalProxyHost";
-    public static final String KEY_EXTERNAL_PROXY_PORT = "externalProxyPort";
-    public static final String KEY_EXTERNAL_PROXY_AUTH_ENABLE = "externalProxyAuth";
-    public static final String KEY_EXTERNAL_PROXY_AUTH_USER = "externalProxyUser";
-    public static final String KEY_EXTERNAL_PROXY_AUTH_PWD = "externalProxyPwd";
     public static final String KEY_EXTERNAL_PROXY_BYPASS_LIST = "externalProxyByPassList";
     public static final String KEY_EXTERNAL_PROXY_BYPASS_LOCALHOST = "externalProxyByPassLocalHost";
 
@@ -56,7 +51,6 @@ public class ApplicationPreferences {
     public static final long DEFAULT_PROXY_LIMIT_WRITE = 320_000L;
     public static final long DEFAULT_PROXY_LIMIT_READ = 640_000L;
     public static final boolean DEFAULT_EXTERNAL_PROXY_ENABLE = false;
-    public static final boolean DEFAULT_EXTERNAL_PROXY_AUTH_ENABLE = false;
     public static final boolean DEFAULT_EXTERNAL_PROXY_BYPASS_LOCALHOST = true;
 
     private static Preferences state;
