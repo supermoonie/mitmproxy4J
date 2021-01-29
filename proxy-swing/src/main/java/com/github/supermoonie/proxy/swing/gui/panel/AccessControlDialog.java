@@ -1,11 +1,15 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
-import com.github.supermoonie.proxy.swing.ApplicationPreferences;
+import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.AccessControl;
+import com.j256.ormlite.dao.Dao;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author supermoonie
@@ -56,9 +60,14 @@ public class AccessControlDialog extends JDialog {
         container.add(buttonPanel);
 
         DefaultTableModel model = (DefaultTableModel) accessTable.getModel();
-        Set<String> accessControlList = ApplicationPreferences.getAccessControl();
-        for (String ip : accessControlList) {
-            model.addRow(new String[]{ip});
+        Dao<AccessControl, Integer> accessDao = DaoCollections.getDao(AccessControl.class);
+        try {
+            List<AccessControl> acList = accessDao.queryForAll();
+            for (AccessControl ac : acList) {
+                model.addRow(new String[]{ac.getAccessIp()});
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
         }
 
         super.getContentPane().add(container);

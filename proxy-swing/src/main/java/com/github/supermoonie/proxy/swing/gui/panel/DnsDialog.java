@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
+import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.gui.table.BooleanRenderer;
 
 import javax.swing.*;
@@ -25,7 +26,7 @@ public class DnsDialog extends JDialog {
             return columnTypes[column];
         }
     };
-    private final JCheckBox enableSysDnsCheckBox = new JCheckBox("Enable System DNS");
+    private final JCheckBox enableSysDnsCheckBox = new JCheckBox("Enable Local Host");
     private final DefaultTableModel dnsMapTableModel = new DefaultTableModel(null, new String[]{"Enable", "Host", "IP Address"});
     private final JTable dnsMapTable = new JTable(dnsMapTableModel) {
         private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class};
@@ -52,14 +53,15 @@ public class DnsDialog extends JDialog {
         // enable panel
         JPanel enablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         enablePanel.add(enableCheckBox);
-        container.add(enablePanel);
         // dns list table panel
         initTable();
         JPanel dnsPanel = new JPanel(new BorderLayout() {{
             setVgap(10);
         }});
+        dnsPanel.setBorder(BorderFactory.createTitledBorder("DNS Server"));
+        dnsPanel.add(enablePanel, BorderLayout.NORTH);
         dnsPanel.add(new JScrollPane(dnsTable){{
-            setPreferredSize(new Dimension(450, 200));
+            setPreferredSize(new Dimension(600, 200));
         }}, BorderLayout.CENTER);
         JPanel operatePanel = new JPanel(new FlowLayout(FlowLayout.CENTER) {{
             setHgap(10);
@@ -71,11 +73,12 @@ public class DnsDialog extends JDialog {
         // enable sys dns panel
         JPanel enableSysDnsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         enableSysDnsPanel.add(enableSysDnsCheckBox);
-        container.add(enableSysDnsPanel);
         // dns map table panel
         JPanel dnsMapPanel = new JPanel(new BorderLayout(){{setVgap(10);}});
+        dnsMapPanel.setBorder(BorderFactory.createTitledBorder("Host Map"));
+        dnsMapPanel.add(enableSysDnsPanel, BorderLayout.NORTH);
         dnsMapPanel.add(new JScrollPane(dnsMapTable){{
-            setPreferredSize(new Dimension(450, 200));
+            setPreferredSize(new Dimension(600, 200));
         }}, BorderLayout.CENTER);
         JPanel dnsMapOpePanel = new JPanel(new FlowLayout(FlowLayout.CENTER){{setHgap(10);}});
         dnsMapOpePanel.add(dnsMapAddButton);
@@ -90,6 +93,14 @@ public class DnsDialog extends JDialog {
         buttonPanel.add(okButton);
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
+
+        boolean dnsEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_DNS_ENABLE, ApplicationPreferences.DEFAULT_DNS_ENABLE);
+        boolean localHostEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_DNS_LOCAL_HOST_ENABLE, ApplicationPreferences.DEFAULT_DNS_LOCAL_HOST_ENABLE);
+        enableCheckBox.setSelected(dnsEnable);
+        dnsTable.setEnabled(dnsEnable);
+        dnsAddButton.setEnabled(dnsEnable);
+        dnsRemoveButton.setEnabled(dnsEnable);
+        enableSysDnsCheckBox.setSelected(localHostEnable);
 
         super.getContentPane().add(container);
         super.getRootPane().setDefaultButton(okButton);

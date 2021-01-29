@@ -1,14 +1,18 @@
 package com.github.supermoonie.proxy.swing.gui.panel.controller;
 
-import com.github.supermoonie.proxy.swing.ApplicationPreferences;
+import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.AccessControl;
 import com.github.supermoonie.proxy.swing.gui.panel.AccessControlDialog;
+import com.j256.ormlite.dao.Dao;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -47,7 +51,19 @@ public class AccessControlController extends AccessControlDialog {
                     ipSet.add(ip);
                 }
             }
-            ApplicationPreferences.setAccessControl(ipSet);
+            Dao<AccessControl, Integer> accessDao = DaoCollections.getDao(AccessControl.class);
+            try {
+                accessDao.deleteBuilder().delete();
+                List<AccessControl> list = ipSet.stream().map(ip -> {
+                    AccessControl ac = new AccessControl();
+                    ac.setAccessIp(ip);
+                    ac.setTimeCreated(new Date());
+                    return ac;
+                }).collect(Collectors.toList());
+                accessDao.create(list);
+            } catch (SQLException ex) {
+                Application.showError(ex);
+            }
             setVisible(false);
         });
         getCancelButton().addActionListener(e -> setVisible(false));

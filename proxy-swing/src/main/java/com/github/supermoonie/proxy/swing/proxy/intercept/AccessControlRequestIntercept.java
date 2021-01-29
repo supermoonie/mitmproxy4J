@@ -13,11 +13,14 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -25,6 +28,8 @@ import java.util.Set;
  * @since 2020/12/20
  */
 public class AccessControlRequestIntercept implements RequestIntercept {
+
+    private final Logger log = LoggerFactory.getLogger(AccessControlRequestIntercept.class);
 
     public static final AccessControlRequestIntercept INSTANCE = new AccessControlRequestIntercept();
 
@@ -36,9 +41,15 @@ public class AccessControlRequestIntercept implements RequestIntercept {
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        Set<String> set = ApplicationPreferences.getAccessControl();
         String clientHost = ctx.getConnectionInfo().getClientHost();
-        if (set.contains(clientHost)) {
+        Dao<AccessControl, Integer> accessDao = DaoCollections.getDao(AccessControl.class);
+        try {
+            long count = accessDao.queryBuilder().where().eq(AccessControl.ACCESS_IP_FIELD_NAME, clientHost).countOf();
+            if (count <= 0) {
+                return null;
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
             return null;
         }
         if (!NOT_ALLOW_SET.contains(clientHost)) {
@@ -46,7 +57,6 @@ public class AccessControlRequestIntercept implements RequestIntercept {
             int i = JOptionPane.showOptionDialog(null, "Allow " + clientHost + " access ? ",
                     "Warning!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
             if (0 == i) {
-                ApplicationPreferences.getAccessControl().add(clientHost);
                 Dao<AccessControl, Integer> accessControlDao = DaoCollections.getDao(AccessControl.class);
                 AccessControl ac = new AccessControl();
                 ac.setAccessIp(clientHost);

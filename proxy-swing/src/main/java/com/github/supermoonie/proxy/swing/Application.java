@@ -62,6 +62,7 @@ public class Application {
 //            }
         }
         SwingUtilities.invokeLater(() -> {
+            ApplicationPreferences.init(PREFS_ROOT_PATH);
             Thread.setDefaultUncaughtExceptionHandler(Application::showError);
             try {
                 DaoCollections.init();
@@ -69,7 +70,6 @@ public class Application {
                 showError(e);
                 return;
             }
-            ApplicationPreferences.init(PREFS_ROOT_PATH);
             // enable window decorations
             JFrame.setDefaultLookAndFeelDecorated(true);
             JDialog.setDefaultLookAndFeelDecorated(true);

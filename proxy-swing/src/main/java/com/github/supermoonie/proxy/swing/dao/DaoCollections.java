@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.swing.dao;
 
+import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.entity.*;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
@@ -44,17 +45,24 @@ public class DaoCollections {
     }
 
     private static void setupDatabase(JdbcConnectionSource connectionSource) throws SQLException {
-        TableUtils.createTableIfNotExists(connectionSource, Request.class);
-        TableUtils.createTableIfNotExists(connectionSource, Response.class);
-        TableUtils.createTableIfNotExists(connectionSource, CertificateInfo.class);
-        TableUtils.createTableIfNotExists(connectionSource, CertificateMap.class);
-        TableUtils.createTableIfNotExists(connectionSource, ConnectionOverview.class);
-        TableUtils.createTableIfNotExists(connectionSource, Content.class);
-        TableUtils.createTableIfNotExists(connectionSource, Header.class);
-        TableUtils.createTableIfNotExists(connectionSource, AccessControl.class);
-        TableUtils.createTableIfNotExists(connectionSource, AllowBlock.class);
-        TableUtils.createTableIfNotExists(connectionSource, RequestMap.class);
-        TableUtils.createTableIfNotExists(connectionSource, ExternalProxy.class);
+        int localVersion = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_LOCAL_VERSION, 0);
+        if (localVersion < ApplicationPreferences.DEFAULT_LOCAL_VERSION) {
+            TableUtils.createTableIfNotExists(connectionSource, Request.class);
+            TableUtils.createTableIfNotExists(connectionSource, Response.class);
+            TableUtils.createTableIfNotExists(connectionSource, CertificateInfo.class);
+            TableUtils.createTableIfNotExists(connectionSource, CertificateMap.class);
+            TableUtils.createTableIfNotExists(connectionSource, ConnectionOverview.class);
+            TableUtils.createTableIfNotExists(connectionSource, Content.class);
+            TableUtils.createTableIfNotExists(connectionSource, Header.class);
+            TableUtils.createTableIfNotExists(connectionSource, AccessControl.class);
+            TableUtils.createTableIfNotExists(connectionSource, AllowBlock.class);
+            TableUtils.createTableIfNotExists(connectionSource, RequestMap.class);
+            TableUtils.createTableIfNotExists(connectionSource, ExternalProxy.class);
+            TableUtils.createTableIfNotExists(connectionSource, Dns.class);
+            TableUtils.createTableIfNotExists(connectionSource, HostMap.class);
+            ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_LOCAL_VERSION, ApplicationPreferences.DEFAULT_LOCAL_VERSION);
+        }
+
     }
 
     private static String dbPath() {
