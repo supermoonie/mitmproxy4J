@@ -43,7 +43,7 @@ public class ApplicationPreferences {
     public static final String KEY_DNS_ENABLE = "dnsEnable";
     public static final String KEY_DNS_LOCAL_HOST_ENABLE = "sysHostEnable";
 
-    public static final int DEFAULT_LOCAL_VERSION = 3;
+    public static final int DEFAULT_LOCAL_VERSION = 4;
     public static final String DEFAULT_FONT_FAMILY = "Helvetica Neue";
     public static final int DEFAULT_FONT_SIZE = 13;
     public static final int DEFAULT_PROXY_PORT = 10801;

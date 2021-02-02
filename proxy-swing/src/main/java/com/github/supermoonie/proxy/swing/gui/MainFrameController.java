@@ -8,6 +8,7 @@ import com.github.supermoonie.proxy.swing.gui.flow.Flow;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowList;
 import com.github.supermoonie.proxy.swing.gui.flow.FlowTreeNode;
 import com.github.supermoonie.proxy.swing.gui.lintener.FilterKeyListener;
+import com.github.supermoonie.proxy.swing.gui.panel.LocalAddressDialog;
 import com.github.supermoonie.proxy.swing.gui.panel.controller.DnsDialogController;
 import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.j256.ormlite.dao.Dao;
@@ -48,6 +49,7 @@ public class MainFrameController extends MainFrame {
                 }
             }
         });
+        getLocalAddressMenuItem().addActionListener(e -> new LocalAddressDialog(this, "Local IP Address", true).setVisible(true));
         getAllButton().addActionListener(e -> {
             filter(null);
             getAllButton().setSelected(true);

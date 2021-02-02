@@ -46,7 +46,10 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -69,6 +72,7 @@ public class MainFrame extends JFrame {
     private JMenuItem allowListMenuItem;
     private final JMenuItem dnsMenuItem = new JMenuItem("DNS");
     private final JMenuItem exportRootCertificateMenuItem = new JMenuItem("Export Root Certificate");
+    private final JMenuItem localAddressMenuItem = new JMenuItem("Local IP Address");
     // 工具栏
     private final JButton allButton = filterButton("All");
     private final JButton jsonFilterButton = filterButton("JSON");
@@ -296,7 +300,7 @@ public class MainFrame extends JFrame {
             public void keyPressed(KeyEvent e) {
                 boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
                 if (flag) {
-                    ClipboardUtil.copySelected(requestHeaderTable);
+                    ClipboardUtil.copySelectedRow(requestHeaderTable);
                 }
             }
         });
@@ -308,7 +312,7 @@ public class MainFrame extends JFrame {
             public void keyPressed(KeyEvent e) {
                 boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
                 if (flag) {
-                    ClipboardUtil.copySelected(requestQueryTable);
+                    ClipboardUtil.copySelectedRow(requestQueryTable);
                 }
             }
         });
@@ -320,7 +324,7 @@ public class MainFrame extends JFrame {
             public void keyPressed(KeyEvent e) {
                 boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
                 if (flag) {
-                    ClipboardUtil.copySelected(requestFormTable);
+                    ClipboardUtil.copySelectedRow(requestFormTable);
                 }
             }
         });
@@ -351,7 +355,7 @@ public class MainFrame extends JFrame {
             public void keyPressed(KeyEvent e) {
                 boolean flag = (e.isControlDown() || e.isMetaDown()) && (e.getKeyCode() == KeyEvent.VK_C);
                 if (flag) {
-                    ClipboardUtil.copySelected(responseHeaderTable);
+                    ClipboardUtil.copySelectedRow(responseHeaderTable);
                 }
             }
         });
@@ -389,7 +393,7 @@ public class MainFrame extends JFrame {
     private JPopupMenu addTablePopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem copySelectMenuItem = new JMenuItem("Copy") {{
-            addActionListener(e -> ClipboardUtil.copySelected(table));
+            addActionListener(e -> ClipboardUtil.copySelectedRow(table));
         }};
         JMenuItem selectAllMenuItem = new JMenuItem("Select All") {{
             addActionListener(e -> table.selectAll());
@@ -865,6 +869,7 @@ public class MainFrame extends JFrame {
 //        proxyMenu.add(new JSeparator());
         if (!SystemInfo.isMacOS) {
             JMenuItem appearanceMenuItem = new JMenuItem("Appearance");
+            appearanceMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
             appearanceMenuItem.addActionListener(e -> new AppearanceDialogController(this, "Appearance", true).setVisible(true));
             proxyMenu.add(appearanceMenuItem);
         }
@@ -921,10 +926,12 @@ public class MainFrame extends JFrame {
         // Help menu
         JMenu helpMenu = new JMenu("Help");
         helpMenu.add(exportRootCertificateMenuItem);
+        helpMenu.add(localAddressMenuItem);
         helpMenu.add(new JSeparator());
-        JMenuItem aboutMenuItem = new JMenuItem("About");
-        helpMenu.add(aboutMenuItem);
-
+        if (!SystemInfo.isMacOS) {
+            JMenuItem aboutMenuItem = new JMenuItem("About");
+            helpMenu.add(aboutMenuItem);
+        }
         menuBar.add(proxyMenu);
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
@@ -1236,5 +1243,9 @@ public class MainFrame extends JFrame {
 
     public JButton getXmlFilterButton() {
         return xmlFilterButton;
+    }
+
+    public JMenuItem getLocalAddressMenuItem() {
+        return localAddressMenuItem;
     }
 }

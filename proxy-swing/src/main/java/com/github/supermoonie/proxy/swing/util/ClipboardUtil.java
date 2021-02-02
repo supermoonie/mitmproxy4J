@@ -31,7 +31,27 @@ public class ClipboardUtil {
         systemClipboard.setContents(new StringSelection(text), null);
     }
 
-    public static void copySelected(JTable table) {
+    public static void copySelectedCell(JTable table) {
+        int[] selectedRows = table.getSelectedRows();
+        int[] selectedColumns = table.getSelectedColumns();
+        if (null == selectedRows || 0 == selectedRows.length
+                || null == selectedColumns || 0 == selectedColumns.length) {
+            return;
+        }
+        StringBuilder selected = new StringBuilder();
+        for (int row : selectedRows) {
+            for (int col : selectedColumns) {
+                Object value = table.getValueAt(row, col);
+                if (null != value) {
+                    selected.append(value.toString()).append(" ");
+                }
+            }
+            selected.append("\n");
+        }
+        copyText(selected.toString());
+    }
+
+    public static void copySelectedRow(JTable table) {
         int[] selectedRows = table.getSelectedRows();
         if (null == selectedRows || 0 == selectedRows.length) {
             return;
