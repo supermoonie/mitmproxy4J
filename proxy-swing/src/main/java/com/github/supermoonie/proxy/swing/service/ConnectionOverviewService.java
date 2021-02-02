@@ -43,7 +43,6 @@ public final class ConnectionOverviewService {
             ConnectionOverview connectionOverview = connectionOverviews.get(0);
             connectionOverview.setConnectStartTime(0 == connectionInfo.getConnectStartTime() ? null : connectionInfo.getConnectStartTime());
             connectionOverview.setConnectEndTime(0 == connectionInfo.getConnectEndTime() ? null : connectionInfo.getConnectEndTime());
-            connectionOverview.setDnsServer(connectionInfo.getDnsServer());
             connectionOverview.setDnsStartTime(0 == connectionInfo.getDnsStartTime() ? null : connectionInfo.getDnsStartTime());
             connectionOverview.setDnsEndTime(0 == connectionInfo.getDnsEndTime() ? null : connectionInfo.getDnsEndTime());
             if (null != connectionInfo.getRemoteAddressList()) {

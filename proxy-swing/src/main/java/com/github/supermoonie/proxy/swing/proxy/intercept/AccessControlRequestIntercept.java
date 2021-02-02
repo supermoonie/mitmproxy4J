@@ -33,8 +33,6 @@ public class AccessControlRequestIntercept implements RequestIntercept {
 
     public static final AccessControlRequestIntercept INSTANCE = new AccessControlRequestIntercept();
 
-    private static final Set<String> NOT_ALLOW_SET = new HashSet<>();
-
     private AccessControlRequestIntercept() {
 
     }
@@ -45,33 +43,29 @@ public class AccessControlRequestIntercept implements RequestIntercept {
         Dao<AccessControl, Integer> accessDao = DaoCollections.getDao(AccessControl.class);
         try {
             long count = accessDao.queryBuilder().where().eq(AccessControl.ACCESS_IP_FIELD_NAME, clientHost).countOf();
-            if (count <= 0) {
+            if (count > 0) {
                 return null;
             }
         } catch (SQLException e) {
             Application.showError(e);
-            return null;
+            return ResponseUtils.htmlResponse(e.getMessage(), HttpResponseStatus.OK);
         }
-        if (!NOT_ALLOW_SET.contains(clientHost)) {
-            String[] options = {"Allow", "Cancel"};
-            int i = JOptionPane.showOptionDialog(null, "Allow " + clientHost + " access ? ",
-                    "Warning!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-            if (0 == i) {
-                Dao<AccessControl, Integer> accessControlDao = DaoCollections.getDao(AccessControl.class);
-                AccessControl ac = new AccessControl();
-                ac.setAccessIp(clientHost);
-                ac.setTimeCreated(new Date());
-                try {
-                    accessControlDao.create(ac);
-                } catch (SQLException t) {
-                    Application.showError(t);
-                }
-                return null;
-            } else {
-                NOT_ALLOW_SET.add(clientHost);
-                return ResponseUtils.htmlResponse("Forbidden!", HttpResponseStatus.FORBIDDEN);
+        String[] options = {"Allow", "Cancel"};
+        int i = JOptionPane.showOptionDialog(null, "Allow " + clientHost + " access ? ",
+                "Warning!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+        if (0 == i) {
+            Dao<AccessControl, Integer> accessControlDao = DaoCollections.getDao(AccessControl.class);
+            AccessControl ac = new AccessControl();
+            ac.setAccessIp(clientHost);
+            ac.setTimeCreated(new Date());
+            try {
+                accessControlDao.create(ac);
+            } catch (SQLException t) {
+                Application.showError(t);
             }
+            return null;
+        } else {
+            return ResponseUtils.htmlResponse("Forbidden!", HttpResponseStatus.FORBIDDEN);
         }
-        return ResponseUtils.htmlResponse("Forbidden!", HttpResponseStatus.FORBIDDEN);
     }
 }

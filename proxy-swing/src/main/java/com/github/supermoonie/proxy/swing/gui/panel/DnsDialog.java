@@ -1,7 +1,12 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
+import com.github.supermoonie.proxy.swing.Application;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
+import com.github.supermoonie.proxy.swing.dao.DaoCollections;
+import com.github.supermoonie.proxy.swing.entity.Dns;
+import com.github.supermoonie.proxy.swing.entity.HostMap;
 import com.github.supermoonie.proxy.swing.gui.table.BooleanRenderer;
+import com.j256.ormlite.dao.Dao;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -9,6 +14,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author supermoonie
@@ -27,8 +34,8 @@ public class DnsDialog extends JDialog {
         }
     };
     private final JCheckBox enableSysDnsCheckBox = new JCheckBox("Enable Local Host");
-    private final DefaultTableModel dnsMapTableModel = new DefaultTableModel(null, new String[]{"Enable", "Host", "IP Address"});
-    private final JTable dnsMapTable = new JTable(dnsMapTableModel) {
+    private final DefaultTableModel hostMapTableModel = new DefaultTableModel(null, new String[]{"Enable", "Host", "IP Address"});
+    private final JTable hostMapTable = new JTable(hostMapTableModel) {
         private final Class<?>[] columnTypes = new Class<?>[]{Boolean.class, String.class, String.class};
 
         @Override
@@ -38,8 +45,8 @@ public class DnsDialog extends JDialog {
     };
     private final JButton dnsAddButton = new JButton("Add");
     private final JButton dnsRemoveButton = new JButton("Remove");
-    private final JButton dnsMapAddButton = new JButton("Add");
-    private final JButton dnsMapRemoveButton = new JButton("Remove");
+    private final JButton hostMapAddButton = new JButton("Add");
+    private final JButton hostMapRemoveButton = new JButton("Remove");
     private final JButton cancelButton = new JButton("Cancel");
     private final JButton okButton = new JButton("OK");
 
@@ -77,12 +84,12 @@ public class DnsDialog extends JDialog {
         JPanel dnsMapPanel = new JPanel(new BorderLayout(){{setVgap(10);}});
         dnsMapPanel.setBorder(BorderFactory.createTitledBorder("Host Map"));
         dnsMapPanel.add(enableSysDnsPanel, BorderLayout.NORTH);
-        dnsMapPanel.add(new JScrollPane(dnsMapTable){{
+        dnsMapPanel.add(new JScrollPane(hostMapTable){{
             setPreferredSize(new Dimension(600, 200));
         }}, BorderLayout.CENTER);
         JPanel dnsMapOpePanel = new JPanel(new FlowLayout(FlowLayout.CENTER){{setHgap(10);}});
-        dnsMapOpePanel.add(dnsMapAddButton);
-        dnsMapOpePanel.add(dnsMapRemoveButton);
+        dnsMapOpePanel.add(hostMapAddButton);
+        dnsMapOpePanel.add(hostMapRemoveButton);
         dnsMapPanel.add(dnsMapOpePanel, BorderLayout.SOUTH);
         container.add(dnsMapPanel);
         // button panel
@@ -101,6 +108,21 @@ public class DnsDialog extends JDialog {
         dnsAddButton.setEnabled(dnsEnable);
         dnsRemoveButton.setEnabled(dnsEnable);
         enableSysDnsCheckBox.setSelected(localHostEnable);
+        Dao<Dns, Integer> dnsDao = DaoCollections.getDao(Dns.class);
+        Dao<HostMap, Integer> hostMapDao = DaoCollections.getDao(HostMap.class);
+        try {
+            List<Dns> dnsList = dnsDao.queryForAll();
+            List<HostMap> hostMapList = hostMapDao.queryForAll();
+            for (Dns dns : dnsList) {
+                dnsTableModel.addRow(new Object[]{dns.getEnable() == Dns.ENABLE, dns.getIp(), dns.getPort()});
+            }
+            for (HostMap hm : hostMapList) {
+                hostMapTableModel.addRow(new Object[]{hm.getEnable() == Dns.ENABLE, hm.getHost(), hm.getIp()});
+            }
+        } catch (SQLException e) {
+            Application.showError(e);
+            return;
+        }
 
         super.getContentPane().add(container);
         super.getRootPane().setDefaultButton(okButton);
@@ -154,14 +176,14 @@ public class DnsDialog extends JDialog {
         portCellEditor.setClickCountToStart(2);
         dnsTable.getColumnModel().getColumn(2).setCellEditor(portCellEditor);
 
-        dnsMapTable.setShowHorizontalLines(true);
-        dnsMapTable.setShowVerticalLines(true);
-        dnsMapTable.setShowGrid(false);
-        dnsMapTable.getColumnModel().getColumn(0).setPreferredWidth(200);
-        dnsMapTable.getColumnModel().getColumn(1).setPreferredWidth(600);
-        dnsMapTable.getColumnModel().getColumn(2).setPreferredWidth(600);
-        dnsMapTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
-        dnsMapTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+        hostMapTable.setShowHorizontalLines(true);
+        hostMapTable.setShowVerticalLines(true);
+        hostMapTable.setShowGrid(false);
+        hostMapTable.getColumnModel().getColumn(0).setPreferredWidth(200);
+        hostMapTable.getColumnModel().getColumn(1).setPreferredWidth(600);
+        hostMapTable.getColumnModel().getColumn(2).setPreferredWidth(600);
+        hostMapTable.getColumnModel().getColumn(0).setCellRenderer(new BooleanRenderer());
+        hostMapTable.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
@@ -169,7 +191,7 @@ public class DnsDialog extends JDialog {
                 return this;
             }
         });
-        dnsMapTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+        hostMapTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
@@ -227,20 +249,20 @@ public class DnsDialog extends JDialog {
         return okButton;
     }
 
-    public DefaultTableModel getDnsMapTableModel() {
-        return dnsMapTableModel;
+    public DefaultTableModel getHostMapTableModel() {
+        return hostMapTableModel;
     }
 
-    public JTable getDnsMapTable() {
-        return dnsMapTable;
+    public JTable getHostMapTable() {
+        return hostMapTable;
     }
 
-    public JButton getDnsMapAddButton() {
-        return dnsMapAddButton;
+    public JButton getHostMapAddButton() {
+        return hostMapAddButton;
     }
 
-    public JButton getDnsMapRemoveButton() {
-        return dnsMapRemoveButton;
+    public JButton getHostMapRemoveButton() {
+        return hostMapRemoveButton;
     }
 
     public JCheckBox getEnableSysDnsCheckBox() {

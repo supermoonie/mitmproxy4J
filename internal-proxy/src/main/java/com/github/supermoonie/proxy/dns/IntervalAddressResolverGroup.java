@@ -9,7 +9,6 @@ import io.netty.resolver.AddressResolverGroup;
 import io.netty.resolver.InetSocketAddressResolver;
 import io.netty.resolver.dns.DnsNameResolver;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
-import io.netty.resolver.dns.DnsServerAddressStreamProviders;
 import io.netty.util.concurrent.EventExecutor;
 
 import java.net.InetSocketAddress;

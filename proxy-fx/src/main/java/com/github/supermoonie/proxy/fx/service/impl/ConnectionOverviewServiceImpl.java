@@ -48,7 +48,6 @@ public class ConnectionOverviewServiceImpl implements ConnectionOverviewService 
         ConnectionOverview connectionOverview = connectionOverviewMapper.selectOne(queryWrapper);
         connectionOverview.setConnectStartTime(connectionInfo.getConnectStartTime());
         connectionOverview.setConnectEndTime(connectionInfo.getConnectEndTime());
-        connectionOverview.setDnsServer(connectionInfo.getDnsServer());
         connectionOverview.setDnsStartTime(connectionInfo.getDnsStartTime());
         connectionOverview.setDnsEndTime(connectionInfo.getDnsEndTime());
         connectionOverview.setRemoteIp(JSON.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress).collect(Collectors.toList())));

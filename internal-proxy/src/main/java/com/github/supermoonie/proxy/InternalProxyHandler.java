@@ -254,8 +254,8 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
                                     } else {
                                         clientChannel.writeAndFlush(msg);
                                     }
-                                    ctx.channel().close();
-                                    clientChannel.close();
+//                                    ctx.channel().close();
+//                                    clientChannel.close();
                                 }
 
                                 @Override
