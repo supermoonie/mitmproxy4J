@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy.swing.entity;
 
-import com.github.supermoonie.proxy.swing.util.Jackson;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -19,8 +18,8 @@ public class ConnectionOverview {
     public static final String CLIENT_SESSION_ID_FIELD_NAME = "client_session_id";
     public static final String CLIENT_PROTOCOL_FIELD_NAME = "client_protocol";
     public static final String CLIENT_CIPHER_SUITE_FIELD_NAME = "client_cipher_suite";
-    public static final String DNS_SERVER_FIELD_NAME = "dns_server";
-    public static final String REMOTE_IP_FIELD_NAME = "remote_ip";
+    public static final String REMOTE_IP_LIST_FIELD_NAME = "remote_ip_list";
+    public static final String SELECTED_REMOTE_IP_FIELD_NAME = "selected_remote_ip";
     public static final String SERVER_SESSION_ID_FIELD_NAME = "server_session_id";
     public static final String SERVER_PROTOCOL_FIELD_NAME = "server_protocol";
     public static final String SERVER_CIPHER_SUITE_FIELD_NAME = "server_cipher_suite";
@@ -47,10 +46,10 @@ public class ConnectionOverview {
     private String clientProtocol;
     @DatabaseField(columnName = CLIENT_CIPHER_SUITE_FIELD_NAME)
     private String clientCipherSuite;
-    @DatabaseField(columnName = DNS_SERVER_FIELD_NAME)
-    private String dnsServer;
-    @DatabaseField(columnName = REMOTE_IP_FIELD_NAME)
-    private String remoteIp;
+    @DatabaseField(columnName = REMOTE_IP_LIST_FIELD_NAME)
+    private String remoteIpList;
+    @DatabaseField(columnName = SELECTED_REMOTE_IP_FIELD_NAME)
+    private String selectedRemoteIp;
     @DatabaseField(columnName = SERVER_SESSION_ID_FIELD_NAME)
     private String serverSessionId;
     @DatabaseField(columnName = SERVER_PROTOCOL_FIELD_NAME)
@@ -106,20 +105,20 @@ public class ConnectionOverview {
         this.clientPort = clientPort;
     }
 
-    public String getDnsServer() {
-        return dnsServer;
+    public String getRemoteIpList() {
+        return remoteIpList;
     }
 
-    public void setDnsServer(String dnsServer) {
-        this.dnsServer = dnsServer;
+    public void setRemoteIpList(String remoteIpList) {
+        this.remoteIpList = remoteIpList;
     }
 
-    public String getRemoteIp() {
-        return remoteIp;
+    public String getSelectedRemoteIp() {
+        return selectedRemoteIp;
     }
 
-    public void setRemoteIp(String remoteIp) {
-        this.remoteIp = remoteIp;
+    public void setSelectedRemoteIp(String selectedRemoteIp) {
+        this.selectedRemoteIp = selectedRemoteIp;
     }
 
     public String getClientProtocol() {
@@ -244,8 +243,8 @@ public class ConnectionOverview {
                 ", clientSessionId='" + clientSessionId + '\'' +
                 ", clientProtocol='" + clientProtocol + '\'' +
                 ", clientCipherSuite='" + clientCipherSuite + '\'' +
-                ", dnsServer='" + dnsServer + '\'' +
-                ", remoteIp='" + remoteIp + '\'' +
+                ", remoteIpList='" + remoteIpList + '\'' +
+                ", selectedRemoteIp='" + selectedRemoteIp + '\'' +
                 ", serverSessionId='" + serverSessionId + '\'' +
                 ", serverProtocol='" + serverProtocol + '\'' +
                 ", serverCipherSuite='" + serverCipherSuite + '\'' +

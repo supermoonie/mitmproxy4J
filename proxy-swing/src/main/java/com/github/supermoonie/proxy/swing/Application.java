@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.desktop.PreferencesEvent;
+import java.awt.desktop.PreferencesHandler;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.Date;
@@ -48,17 +51,27 @@ public class Application {
         if (SystemInfo.isMacOS) {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             try {
-                com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
-                app.setQuitHandler((e, response) -> response.performQuit());
-                app.setAboutHandler(e -> {
-                    // TODO
-                    System.out.println("about");
-                });
-                app.setPreferencesHandler(e -> new AppearanceDialogController(MAIN_FRAME, "Preferences", true).setVisible(true));
+                Class<?> appleAppClass = Class.forName("com.apple.eawt.Application");
+                Method getApplication = appleAppClass.getMethod("getApplication");
+                Object app = getApplication.invoke(appleAppClass);
+                Method setPreferencesHandler = appleAppClass.getMethod("setPreferencesHandler", PreferencesHandler.class);
+                setPreferencesHandler.invoke(app, (PreferencesHandler) e -> new AppearanceDialogController(MAIN_FRAME, "Preferences", true).setVisible(true));
+                Method setDockIconImage = appleAppClass.getMethod("setDockIconImage", Image.class);
                 URL url = Application.class.getClassLoader().getResource("M.png");
                 Image image = Toolkit.getDefaultToolkit().getImage(url);
-                app.setDockIconImage(image);
+                setDockIconImage.invoke(app, image);
+//                com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
+//                app.setQuitHandler((e, response) -> response.performQuit());
+//                app.setAboutHandler(e -> {
+//                    // TODO
+//                    System.out.println("about");
+//                });
+//                app.setPreferencesHandler(e -> new AppearanceDialogController(MAIN_FRAME, "Preferences", true).setVisible(true));
+//                URL url = Application.class.getClassLoader().getResource("M.png");
+//                Image image = Toolkit.getDefaultToolkit().getImage(url);
+//                app.setDockIconImage(image);
             } catch (Throwable e) {
+                log.error(e.getMessage(), e);
                 //This means that the application is not being run on MAC OS.
                 //Just do nothing and go on...
             }

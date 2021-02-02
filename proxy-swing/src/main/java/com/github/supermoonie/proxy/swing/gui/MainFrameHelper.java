@@ -386,7 +386,8 @@ public class MainFrameHelper {
             model.insertNodeInto(new ListTreeTableNode("Host", request.getHost()), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Port", request.getPort()), root, index++);
             model.insertNodeInto(new ListTreeTableNode("Client Address", connectionOverview.getClientHost() + ":" + connectionOverview.getClientPort()), root, index++);
-            model.insertNodeInto(new ListTreeTableNode("Remote IP", Objects.requireNonNullElse(connectionOverview.getRemoteIp(), "-")), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Remote IP List", Objects.requireNonNullElse(connectionOverview.getRemoteIpList(), "-")), root, index++);
+            model.insertNodeInto(new ListTreeTableNode("Selected Remote IP", Objects.requireNonNullElse(connectionOverview.getSelectedRemoteIp(), "-")), root, index++);
             ListTreeTableNode tlsNode = new ListTreeTableNode("TLS", null == response || null == connectionOverview.getServerProtocol() ? "-" : connectionOverview.getServerProtocol() + " (" + connectionOverview.getServerCipherSuite() + ")");
             ListTreeTableNode timingNode = new ListTreeTableNode("Timing", "");
             model.insertNodeInto(tlsNode, root, index++);

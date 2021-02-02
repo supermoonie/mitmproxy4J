@@ -75,7 +75,9 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                     if (numAddresses > 0) {
                         log.debug("host: {}, answer: {}", inetHost, inetAddresses.toString());
                         connectionInfo.setRemoteAddressList(inetAddresses);
-                        promise.setSuccess(inetAddresses.get(randomIndex(numAddresses)));
+                        InetAddress address = inetAddresses.get(randomIndex(numAddresses));
+                        connectionInfo.setSelectedRemoteAddress(address);
+                        promise.setSuccess(address);
                     } else {
                         doResolveRec(inetHost, promise, resolverIndex + 1);
                     }
@@ -106,7 +108,7 @@ public class InternalCompositeNameResolver extends SimpleNameResolver<InetAddres
                         connectionInfo.setDnsEndTime(System.currentTimeMillis());
                         connectionInfo.setRemoteAddressList(inetAddresses);
                         log.debug("host: {}, answer: {}", inetHost, inetAddresses.toString());
-                        List<InetAddress> result = new ArrayList<InetAddress>(inetAddresses);
+                        List<InetAddress> result = new ArrayList<>(inetAddresses);
                         Collections.rotate(result, randomIndex(inetAddresses.size()));
                         promise.setSuccess(result);
                     } else {

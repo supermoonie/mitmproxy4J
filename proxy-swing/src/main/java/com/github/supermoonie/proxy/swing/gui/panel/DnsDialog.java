@@ -67,7 +67,7 @@ public class DnsDialog extends JDialog {
         }});
         dnsPanel.setBorder(BorderFactory.createTitledBorder("DNS Server"));
         dnsPanel.add(enablePanel, BorderLayout.NORTH);
-        dnsPanel.add(new JScrollPane(dnsTable){{
+        dnsPanel.add(new JScrollPane(dnsTable) {{
             setPreferredSize(new Dimension(600, 200));
         }}, BorderLayout.CENTER);
         JPanel operatePanel = new JPanel(new FlowLayout(FlowLayout.CENTER) {{
@@ -81,13 +81,17 @@ public class DnsDialog extends JDialog {
         JPanel enableSysDnsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         enableSysDnsPanel.add(enableSysDnsCheckBox);
         // dns map table panel
-        JPanel dnsMapPanel = new JPanel(new BorderLayout(){{setVgap(10);}});
+        JPanel dnsMapPanel = new JPanel(new BorderLayout() {{
+            setVgap(10);
+        }});
         dnsMapPanel.setBorder(BorderFactory.createTitledBorder("Host Map"));
         dnsMapPanel.add(enableSysDnsPanel, BorderLayout.NORTH);
-        dnsMapPanel.add(new JScrollPane(hostMapTable){{
+        dnsMapPanel.add(new JScrollPane(hostMapTable) {{
             setPreferredSize(new Dimension(600, 200));
         }}, BorderLayout.CENTER);
-        JPanel dnsMapOpePanel = new JPanel(new FlowLayout(FlowLayout.CENTER){{setHgap(10);}});
+        JPanel dnsMapOpePanel = new JPanel(new FlowLayout(FlowLayout.CENTER) {{
+            setHgap(10);
+        }});
         dnsMapOpePanel.add(hostMapAddButton);
         dnsMapOpePanel.add(hostMapRemoveButton);
         dnsMapPanel.add(dnsMapOpePanel, BorderLayout.SOUTH);
@@ -101,28 +105,29 @@ public class DnsDialog extends JDialog {
         container.add(Box.createVerticalStrut(10));
         container.add(buttonPanel);
 
-        boolean dnsEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_DNS_ENABLE, ApplicationPreferences.DEFAULT_DNS_ENABLE);
-        boolean localHostEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_DNS_LOCAL_HOST_ENABLE, ApplicationPreferences.DEFAULT_DNS_LOCAL_HOST_ENABLE);
-        enableCheckBox.setSelected(dnsEnable);
-        dnsTable.setEnabled(dnsEnable);
-        dnsAddButton.setEnabled(dnsEnable);
-        dnsRemoveButton.setEnabled(dnsEnable);
-        enableSysDnsCheckBox.setSelected(localHostEnable);
-        Dao<Dns, Integer> dnsDao = DaoCollections.getDao(Dns.class);
-        Dao<HostMap, Integer> hostMapDao = DaoCollections.getDao(HostMap.class);
-        try {
-            List<Dns> dnsList = dnsDao.queryForAll();
-            List<HostMap> hostMapList = hostMapDao.queryForAll();
-            for (Dns dns : dnsList) {
-                dnsTableModel.addRow(new Object[]{dns.getEnable() == Dns.ENABLE, dns.getIp(), dns.getPort()});
+        SwingUtilities.invokeLater(() -> {
+            boolean dnsEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_DNS_ENABLE, ApplicationPreferences.DEFAULT_DNS_ENABLE);
+            boolean localHostEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_DNS_LOCAL_HOST_ENABLE, ApplicationPreferences.DEFAULT_DNS_LOCAL_HOST_ENABLE);
+            enableCheckBox.setSelected(dnsEnable);
+            dnsTable.setEnabled(dnsEnable);
+            dnsAddButton.setEnabled(dnsEnable);
+            dnsRemoveButton.setEnabled(dnsEnable);
+            enableSysDnsCheckBox.setSelected(localHostEnable);
+            Dao<Dns, Integer> dnsDao = DaoCollections.getDao(Dns.class);
+            Dao<HostMap, Integer> hostMapDao = DaoCollections.getDao(HostMap.class);
+            try {
+                List<Dns> dnsList = dnsDao.queryForAll();
+                List<HostMap> hostMapList = hostMapDao.queryForAll();
+                for (Dns dns : dnsList) {
+                    dnsTableModel.addRow(new Object[]{dns.getEnable() == Dns.ENABLE, dns.getIp(), dns.getPort()});
+                }
+                for (HostMap hm : hostMapList) {
+                    hostMapTableModel.addRow(new Object[]{hm.getEnable() == Dns.ENABLE, hm.getHost(), hm.getIp()});
+                }
+            } catch (SQLException e) {
+                Application.showError(e);
             }
-            for (HostMap hm : hostMapList) {
-                hostMapTableModel.addRow(new Object[]{hm.getEnable() == Dns.ENABLE, hm.getHost(), hm.getIp()});
-            }
-        } catch (SQLException e) {
-            Application.showError(e);
-            return;
-        }
+        });
 
         super.getContentPane().add(container);
         super.getRootPane().setDefaultButton(okButton);

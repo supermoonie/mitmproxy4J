@@ -46,7 +46,10 @@ public final class ConnectionOverviewService {
             connectionOverview.setDnsStartTime(0 == connectionInfo.getDnsStartTime() ? null : connectionInfo.getDnsStartTime());
             connectionOverview.setDnsEndTime(0 == connectionInfo.getDnsEndTime() ? null : connectionInfo.getDnsEndTime());
             if (null != connectionInfo.getRemoteAddressList()) {
-                connectionOverview.setRemoteIp(Jackson.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress).collect(Collectors.toList())));
+                connectionOverview.setRemoteIpList(Jackson.toJsonString(connectionInfo.getRemoteAddressList().stream().map(InetAddress::getHostAddress).collect(Collectors.toList())));
+            }
+            if (null != connectionInfo.getSelectedRemoteAddress()) {
+                connectionOverview.setSelectedRemoteIp(connectionInfo.getSelectedRemoteAddress().getHostAddress());
             }
             connectionOverview.setServerSessionId(connectionInfo.getServerSessionId());
             connectionOverview.setServerProtocol(connectionInfo.getServerProtocol());

@@ -96,7 +96,9 @@ public class MainFrameController extends MainFrame {
         FlowList flowList = super.getFlowList();
         flowList.clear();
         if (null != type) {
-            flowList.filter(flow -> flow.getContentType().contains(type));
+            flowList.filter(flow -> null != flow && flow.getContentType().contains(type));
+        } else {
+            flowList.filter(flow -> true);
         }
         Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
         Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);

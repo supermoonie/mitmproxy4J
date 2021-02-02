@@ -26,6 +26,8 @@ public class ConnectionInfo {
 
     private List<InetAddress> remoteAddressList;
 
+    private InetAddress selectedRemoteAddress;
+
     private boolean isHttps = false;
 
     private String clientProtocol;
@@ -118,6 +120,14 @@ public class ConnectionInfo {
 
     public void setClientPort(int clientPort) {
         this.clientPort = clientPort;
+    }
+
+    public InetAddress getSelectedRemoteAddress() {
+        return selectedRemoteAddress;
+    }
+
+    public void setSelectedRemoteAddress(InetAddress selectedRemoteAddress) {
+        this.selectedRemoteAddress = selectedRemoteAddress;
     }
 
     public List<InetAddress> getRemoteAddressList() {
