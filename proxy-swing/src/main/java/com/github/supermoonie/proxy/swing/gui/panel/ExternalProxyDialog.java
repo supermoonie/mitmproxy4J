@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
 import com.github.supermoonie.proxy.ProxyType;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.ExternalProxy;
@@ -96,7 +96,7 @@ public class ExternalProxyDialog extends JDialog {
                 proxyTableModel.addRow(new Object[]{proxy.getEnable() == ExternalProxy.ENABLE, proxy.getHost(), proxy.getProxyHost(), proxy.getProxyPort(), proxy.getProxyAuth() == ExternalProxy.ENABLE, proxy.getProxyUser(), proxy.getProxyPwd(), ProxyType.valueOf(proxy.getProxyType()).orElseThrow().name()});
             }
         } catch (SQLException e) {
-            Application.showError(e);
+            MitmProxy4J.showError(e);
         }
         proxyTable.setShowHorizontalLines(true);
         proxyTable.setShowVerticalLines(true);

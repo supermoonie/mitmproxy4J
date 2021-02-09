@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel.controller;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.gui.panel.ThrottlingDialog;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
@@ -48,7 +48,7 @@ public class ThrottlingDialogController extends ThrottlingDialog {
                 return;
             }
             boolean enable = getEnableCheckBox().isSelected();
-            Application.MAIN_FRAME.getThrottlingButton().setSelected(enable);
+            MitmProxy4J.MAIN_FRAME.getThrottlingButton().setSelected(enable);
             ProxyManager.enableLimit(enable);
             ProxyManager.setWriteLimit(writeLimit);
             ProxyManager.setReadLimit(readLimit);

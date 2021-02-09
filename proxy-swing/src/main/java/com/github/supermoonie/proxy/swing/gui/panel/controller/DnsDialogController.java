@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.swing.gui.panel.controller;
 
 import com.github.supermoonie.proxy.InternalProxy;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Dns;
@@ -117,7 +117,7 @@ public class DnsDialogController extends DnsDialog {
                     hostMapDao.create(hm);
                 }
             } catch (SQLException | UnknownHostException t) {
-                Application.showError(t);
+                MitmProxy4J.showError(t);
             }
             setVisible(false);
         });

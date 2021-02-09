@@ -21,9 +21,9 @@ import java.util.List;
  */
 public class LocalAddressDialog extends JDialog {
 
-    private final DefaultTableModel addressTableModel = new DefaultTableModel(null, new String[]{"Display Name", "Name", "IP Address"});
+    private final DefaultTableModel addressTableModel = new DefaultTableModel(null, new String[]{"Display Name", "IP Address"});
     private final JTable addressTable = new JTable(addressTableModel) {
-        private final Class<?>[] columnTypes = new Class<?>[]{String.class, String.class, String.class};
+        private final Class<?>[] columnTypes = new Class<?>[]{String.class, String.class};
 
         @Override
         public Class<?> getColumnClass(int column) {
@@ -31,7 +31,7 @@ public class LocalAddressDialog extends JDialog {
         }
 
         @Override
-        public boolean isCellEditable(int row, int column){
+        public boolean isCellEditable(int row, int column) {
             return false;
         }
     };
@@ -49,13 +49,11 @@ public class LocalAddressDialog extends JDialog {
         addressPanel.add(new JScrollPane(addressTable));
         container.add(addressPanel);
         List<NetworkInterfaceInfo> networkInterfaceInfoList = getNetworkInterfaceInfo();
-        System.out.println(networkInterfaceInfoList);
         for (NetworkInterfaceInfo info : networkInterfaceInfoList) {
-            addressTableModel.addRow(new Object[]{info.getDisplayName(), info.getName(), info.getIp()});
+            addressTableModel.addRow(new Object[]{info.getDisplayName(), info.getIp()});
         }
-        addressTable.getColumnModel().getColumn(0).setPreferredWidth(600);
-        addressTable.getColumnModel().getColumn(1).setPreferredWidth(200);
-        addressTable.getColumnModel().getColumn(2).setPreferredWidth(200);
+//        addressTable.getColumnModel().getColumn(0).setPreferredWidth(400);
+//        addressTable.getColumnModel().getColumn(1).setPreferredWidth(200);
         addressTable.setCellSelectionEnabled(true);
         addressTable.setShowHorizontalLines(true);
         addressTable.setShowVerticalLines(true);

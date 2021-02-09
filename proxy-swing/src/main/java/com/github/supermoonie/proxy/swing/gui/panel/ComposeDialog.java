@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
@@ -345,7 +345,7 @@ public class ComposeDialog extends JDialog {
     private void onSendButtonClicked() {
         sendButton.setText("Sending...");
         sendButton.setEnabled(false);
-        Application.EXECUTOR.execute(() -> {
+        MitmProxy4J.EXECUTOR.execute(() -> {
             try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
                     .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
                     .build()) {

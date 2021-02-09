@@ -4,7 +4,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.extras.SVGUtils;
 import com.formdev.flatlaf.util.SystemInfo;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.ThemeManager;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
@@ -124,8 +124,9 @@ public class MainFrame extends JFrame {
     private JPanel responseImagePane;
 
 
-    public MainFrame() {
-        setTitle("Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
+    public MainFrame(String title) {
+        super(title);
+//        setTitle("Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
         initMenuBar();
@@ -460,7 +461,7 @@ public class MainFrame extends JFrame {
                         ClipboardUtil.copyText(new String(content.getRawContent(), StandardCharsets.UTF_8));
                     }
                 } catch (SQLException | IOException t) {
-                    Application.showError(t);
+                    MitmProxy4J.showError(t);
                 }
             });
         }};
@@ -489,7 +490,7 @@ public class MainFrame extends JFrame {
                         FileUtils.writeByteArrayToFile(selectedFile, content.getRawContent());
                     }
                 } catch (SQLException | IOException t) {
-                    Application.showError(t);
+                    MitmProxy4J.showError(t);
                 }
             });
         }};
@@ -511,7 +512,7 @@ public class MainFrame extends JFrame {
                     try {
                         FileUtils.writeStringToFile(selectedFile, json, StandardCharsets.UTF_8);
                     } catch (IOException t) {
-                        Application.showError(t);
+                        MitmProxy4J.showError(t);
                     }
                 }
             });
@@ -549,7 +550,7 @@ public class MainFrame extends JFrame {
                     allowBlock.setTimeCreated(new Date());
                     allowBlockDao.create(allowBlock);
                 } catch (SQLException t) {
-                    Application.showError(t);
+                    MitmProxy4J.showError(t);
                 }
             });
         }};
@@ -571,7 +572,7 @@ public class MainFrame extends JFrame {
                     allowBlock.setTimeCreated(new Date());
                     allowBlockDao.create(allowBlock);
                 } catch (SQLException t) {
-                    Application.showError(t);
+                    MitmProxy4J.showError(t);
                 }
             });
         }};
@@ -603,7 +604,7 @@ public class MainFrame extends JFrame {
                             requestMapDao.create(requestMap);
                             DefaultRemoteMapIntercept.INSTANCE.getRemoteUriMap().put(url, to);
                         } catch (SQLException t) {
-                            Application.showError(t);
+                            MitmProxy4J.showError(t);
                         } finally {
                             mapRemoteDialog.setVisible(false);
                         }
@@ -648,7 +649,7 @@ public class MainFrame extends JFrame {
                             requestMapDao.create(requestMap);
                             DefaultLocalMapIntercept.INSTANCE.getLocalMap().put(url, to);
                         } catch (SQLException t) {
-                            Application.showError(t);
+                            MitmProxy4J.showError(t);
                         } finally {
                             mapLocalDialog.setVisible(false);
                         }
@@ -815,9 +816,9 @@ public class MainFrame extends JFrame {
         });
         JButton recordButton = new JButton();
         recordButton.addActionListener(e -> {
-            Application.RECORD_FLAG.set(!Application.RECORD_FLAG.get());
-            recordButton.setIcon(Application.RECORD_FLAG.get() ? SvgIcons.STOP : SvgIcons.PLAY);
-            recordButton.setToolTipText(Application.RECORD_FLAG.get() ? "Stop" : "Start");
+            MitmProxy4J.RECORD_FLAG.set(!MitmProxy4J.RECORD_FLAG.get());
+            recordButton.setIcon(MitmProxy4J.RECORD_FLAG.get() ? SvgIcons.STOP : SvgIcons.PLAY);
+            recordButton.setToolTipText(MitmProxy4J.RECORD_FLAG.get() ? "Stop" : "Start");
         });
         recordButton.setToolTipText("Stop");
         recordButton.setIcon(SvgIcons.STOP);
@@ -942,7 +943,7 @@ public class MainFrame extends JFrame {
         if (null == selectedFlow) {
             return;
         }
-        Application.EXECUTOR.execute(() -> {
+        MitmProxy4J.EXECUTOR.execute(() -> {
             try (CloseableHttpClient httpClient = HttpClientUtil.createTrustAllApacheHttpClientBuilder()
                     .setProxy(new HttpHost("127.0.0.1", ProxyManager.getInternalProxy().getPort()))
                     .build()) {
@@ -967,7 +968,7 @@ public class MainFrame extends JFrame {
                 }
                 httpClient.execute(requestBuilder.build()).close();
             } catch (Exception t) {
-                Application.showError(t);
+                MitmProxy4J.showError(t);
             }
         });
     }
@@ -1065,7 +1066,7 @@ public class MainFrame extends JFrame {
             map.put("tls", Map.of("local", certificateInfo(requestId, null), "server", certificateInfo(requestId, responseId)));
             return Jackson.toJsonString(map, true);
         } catch (SQLException t) {
-            Application.showError(t);
+            MitmProxy4J.showError(t);
             return null;
         }
     }

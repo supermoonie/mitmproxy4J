@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AccessControl;
 import com.j256.ormlite.dao.Dao;
@@ -67,7 +67,7 @@ public class AccessControlDialog extends JDialog {
                 model.addRow(new String[]{ac.getAccessIp()});
             }
         } catch (SQLException e) {
-            Application.showError(e);
+            MitmProxy4J.showError(e);
         }
 
         super.getContentPane().add(container);

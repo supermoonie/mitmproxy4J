@@ -2,7 +2,7 @@ package com.github.supermoonie.proxy.swing.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
 import com.github.supermoonie.proxy.swing.gui.flow.Flow;
@@ -35,14 +35,14 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        if (Application.RECORD_FLAG.get()) {
+        if (MitmProxy4J.RECORD_FLAG.get()) {
             try {
                 final Request req = RequestService.saveRequest(ctx, request);
                 log.info("request saved, uri: {}", ctx.getConnectionInfo().getUrl());
                 ctx.setUserData(req);
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        FlowList flowList = Application.MAIN_FRAME.getFlowList();
+                        FlowList flowList = MitmProxy4J.MAIN_FRAME.getFlowList();
                         Flow flow = new Flow();
                         flow.setRequestId(req.getId());
                         flow.setFlowType(FlowType.BASE_URL);
@@ -53,9 +53,9 @@ public class DumpHttpRequestIntercept implements RequestIntercept {
                         }
                         flowList.add(flow);
                         flowList.updateUI();
-                        FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
+                        FlowTreeNode rootNode = MitmProxy4J.MAIN_FRAME.getRootNode();
                         rootNode.add(flow);
-                        Application.MAIN_FRAME.getFlowTree().updateUI();
+                        MitmProxy4J.MAIN_FRAME.getFlowTree().updateUI();
                         if (MainFrameHelper.currentRequestId == -1
                                 || MainFrameHelper.currentRequestId == req.getId()) {
                             MainFrameHelper.fillOverviewTab(req, null);

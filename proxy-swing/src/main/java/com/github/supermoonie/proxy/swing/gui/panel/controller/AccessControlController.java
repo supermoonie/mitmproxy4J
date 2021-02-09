@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel.controller;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AccessControl;
 import com.github.supermoonie.proxy.swing.gui.panel.AccessControlDialog;
@@ -62,7 +62,7 @@ public class AccessControlController extends AccessControlDialog {
                 }).collect(Collectors.toList());
                 accessDao.create(list);
             } catch (SQLException ex) {
-                Application.showError(ex);
+                MitmProxy4J.showError(ex);
             }
             setVisible(false);
         });

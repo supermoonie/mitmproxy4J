@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel.controller;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.gui.panel.ProxySettingDialog;
 import com.github.supermoonie.proxy.swing.proxy.ProxyManager;
@@ -48,7 +48,7 @@ public class ProxySettingDialogController extends ProxySettingDialog {
                 ProxyManager.getInternalProxy().setUsername(username);
                 ProxyManager.getInternalProxy().setPassword(password);
             }
-            Application.MAIN_FRAME.setTitle("Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
+            MitmProxy4J.MAIN_FRAME.setTitle("Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());
             ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_PROXY_PORT, proxyPort);
             ApplicationPreferences.getState().putBoolean(ApplicationPreferences.KEY_PROXY_AUTH, proxyAuth);
             ApplicationPreferences.getState().put(ApplicationPreferences.KEY_PROXY_AUTH_USER, username);

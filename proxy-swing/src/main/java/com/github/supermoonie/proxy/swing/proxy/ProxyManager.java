@@ -3,7 +3,7 @@ package com.github.supermoonie.proxy.swing.proxy;
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.InternalProxy;
 import com.github.supermoonie.proxy.platform.mac.NetworkSetup;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import io.netty.util.internal.PlatformDependent;
 
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class ProxyManager {
                                InterceptInitializer interceptInitializer) {
         InternalProxy oldProxy = internalProxy;
         newHttpProxy(port, auth, username, password, interceptInitializer);
-        Application.EXECUTOR.execute(oldProxy::close);
+        MitmProxy4J.EXECUTOR.execute(oldProxy::close);
     }
 
     public static void enableLimit(boolean enable) {

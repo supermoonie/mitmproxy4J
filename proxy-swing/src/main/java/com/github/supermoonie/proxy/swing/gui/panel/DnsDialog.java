@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Dns;
@@ -125,7 +125,7 @@ public class DnsDialog extends JDialog {
                     hostMapTableModel.addRow(new Object[]{hm.getEnable() == Dns.ENABLE, hm.getHost(), hm.getIp()});
                 }
             } catch (SQLException e) {
-                Application.showError(e);
+                MitmProxy4J.showError(e);
             }
         });
 

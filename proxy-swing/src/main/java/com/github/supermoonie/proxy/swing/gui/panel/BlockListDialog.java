@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.panel;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AllowBlock;
@@ -84,7 +84,7 @@ public class BlockListDialog extends JDialog {
                 }
             }
         } catch (SQLException e) {
-            Application.showError(e);
+            MitmProxy4J.showError(e);
         }
         blockTable.setShowHorizontalLines(true);
         blockTable.setShowVerticalLines(true);

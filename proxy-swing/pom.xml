@@ -172,7 +172,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.4</version>
                 <configuration>
-                    <mainClass>com.github.supermoonie.proxy.swing.Application</mainClass>
+                    <mainClass>com.github.supermoonie.proxy.swing.MitmProxy4J</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -188,7 +188,7 @@
                         <configuration>
                             <displayName>MProxy</displayName>
                             <!-- mandatory -->
-                            <mainClass>com.github.supermoonie.proxy.swing.Application</mainClass>
+                            <mainClass>com.github.supermoonie.proxy.swing.MitmProxy4J</mainClass>
                             <!-- optional -->
                             <assetsDir>${basedir}/assets</assetsDir>
                             <copyDependencies>true</copyDependencies>

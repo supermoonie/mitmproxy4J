@@ -7,7 +7,7 @@ import org.junit.Test;
 /**
  * Unit test for simple App.
  */
-public class ApplicationTest
+public class MitmProxy4JTest
 {
     /**
      * Rigorous Test :-)

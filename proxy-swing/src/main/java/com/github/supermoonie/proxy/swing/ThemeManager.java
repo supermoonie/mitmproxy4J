@@ -4,13 +4,9 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Theme;
-import org.fife.ui.rsyntaxtextarea.Token;
 
 import javax.swing.*;
-import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.io.IOException;
 
@@ -45,11 +41,11 @@ public class ThemeManager {
                 boolean isDark = ((FlatLaf) UIManager.getLookAndFeel()).isDark();
                 ApplicationPreferences.getState().putBoolean(KEY_IS_DARK_THEME, isDark);
                 if (isDark) {
-                    codeAreaDarkTheme.apply(Application.MAIN_FRAME.getRequestJsonArea());
-                    codeAreaDarkTheme.apply(Application.MAIN_FRAME.getResponseCodeArea());
+                    codeAreaDarkTheme.apply(MitmProxy4J.MAIN_FRAME.getRequestJsonArea());
+                    codeAreaDarkTheme.apply(MitmProxy4J.MAIN_FRAME.getResponseCodeArea());
                 } else {
-                    codeAreaLightTheme.apply(Application.MAIN_FRAME.getRequestJsonArea());
-                    codeAreaLightTheme.apply(Application.MAIN_FRAME.getResponseCodeArea());
+                    codeAreaLightTheme.apply(MitmProxy4J.MAIN_FRAME.getRequestJsonArea());
+                    codeAreaLightTheme.apply(MitmProxy4J.MAIN_FRAME.getResponseCodeArea());
                 }
             }
         });
@@ -91,10 +87,10 @@ public class ThemeManager {
         Font newFont = new Font(fontFamily, font.getStyle(), fontSize);
         UIManager.put("defaultFont", newFont);
         SwingUtilities.invokeLater(() -> {
-            Application.MAIN_FRAME.getRequestJsonArea().setFont(newFont);
-            Application.MAIN_FRAME.getResponseCodeArea().setFont(newFont);
-            Application.MAIN_FRAME.getRequestJsonArea().revalidate();
-            Application.MAIN_FRAME.getResponseCodeArea().revalidate();
+            MitmProxy4J.MAIN_FRAME.getRequestJsonArea().setFont(newFont);
+            MitmProxy4J.MAIN_FRAME.getResponseCodeArea().setFont(newFont);
+            MitmProxy4J.MAIN_FRAME.getRequestJsonArea().revalidate();
+            MitmProxy4J.MAIN_FRAME.getResponseCodeArea().revalidate();
         });
         FlatLaf.updateUI();
         FlatAnimatedLafChange.hideSnapshotWithAnimation();

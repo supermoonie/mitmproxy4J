@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.desktop.PreferencesEvent;
 import java.awt.desktop.PreferencesHandler;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -32,9 +31,9 @@ import java.util.stream.Collectors;
  *
  * @author supermoonie
  */
-public class Application {
+public class MitmProxy4J {
 
-    private static final Logger log = LoggerFactory.getLogger(Application.class);
+    private static final Logger log = LoggerFactory.getLogger(MitmProxy4J.class);
 
     public static final ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(5);
 
@@ -57,7 +56,7 @@ public class Application {
                 Method setPreferencesHandler = appleAppClass.getMethod("setPreferencesHandler", PreferencesHandler.class);
                 setPreferencesHandler.invoke(app, (PreferencesHandler) e -> new AppearanceDialogController(MAIN_FRAME, "Preferences", true).setVisible(true));
                 Method setDockIconImage = appleAppClass.getMethod("setDockIconImage", Image.class);
-                URL url = Application.class.getClassLoader().getResource("M.png");
+                URL url = MitmProxy4J.class.getClassLoader().getResource("mitm.png");
                 Image image = Toolkit.getDefaultToolkit().getImage(url);
                 setDockIconImage.invoke(app, image);
 //                com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
@@ -78,7 +77,7 @@ public class Application {
         }
         SwingUtilities.invokeLater(() -> {
             ApplicationPreferences.init(PREFS_ROOT_PATH);
-            Thread.setDefaultUncaughtExceptionHandler(Application::showError);
+            Thread.setDefaultUncaughtExceptionHandler(MitmProxy4J::showError);
             try {
                 DaoCollections.init();
             } catch (SQLException e) {
@@ -104,10 +103,7 @@ public class Application {
             long readLimit = ApplicationPreferences.getState().getLong(ApplicationPreferences.KEY_PROXY_LIMIT_READ, ApplicationPreferences.DEFAULT_PROXY_LIMIT_READ);
             ProxyManager.setWriteLimit(writeLimit);
             ProxyManager.setReadLimit(readLimit);
-//            Application.EXECUTOR.execute(() -> {
-//
-//            });
-            MAIN_FRAME = new MainFrameController();
+            MAIN_FRAME = new MainFrameController("MitmProxy4J");
             MAIN_FRAME.setPreferredSize(new Dimension(1280, 800));
             // show frame
             MAIN_FRAME.pack();

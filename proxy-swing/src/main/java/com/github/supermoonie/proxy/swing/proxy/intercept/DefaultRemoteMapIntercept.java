@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.swing.proxy.intercept;
 
 import com.github.supermoonie.proxy.intercept.RemoteMapIntercept;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.RequestMap;
@@ -31,7 +31,7 @@ public class DefaultRemoteMapIntercept extends RemoteMapIntercept {
                 }
             }
         } catch (SQLException e) {
-            Application.showError(e);
+            MitmProxy4J.showError(e);
         }
     }
 

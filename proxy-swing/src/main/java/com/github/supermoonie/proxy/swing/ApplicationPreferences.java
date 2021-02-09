@@ -1,17 +1,11 @@
 package com.github.supermoonie.proxy.swing;
 
-import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.entity.AccessControl;
-import com.j256.ormlite.dao.Dao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -79,7 +73,7 @@ public class ApplicationPreferences {
             Font font = getFont();
             ThemeManager.setFont(font.getFamily(), font.getSize());
         } catch (Throwable e) {
-            Application.showError(e);
+            MitmProxy4J.showError(e);
         }
     }
 

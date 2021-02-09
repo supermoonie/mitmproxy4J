@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.lintener;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
@@ -43,16 +43,16 @@ public class FilterKeyListener extends KeyAdapter {
             String text = filterField.getText();
             filter = flow -> flow.getUrl().contains(text);
             try {
-                FlowList flowList = Application.MAIN_FRAME.getFlowList();
+                FlowList flowList = MitmProxy4J.MAIN_FRAME.getFlowList();
                 flowList.filter(filter);
-                FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
+                FlowTreeNode rootNode = MitmProxy4J.MAIN_FRAME.getRootNode();
                 rootNode.removeAllChildren();
                 flowList.clear();
                 Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
                 List<Request> requestList = requestDao.queryBuilder()
                         .orderBy(Request.TIME_CREATED_FIELD_NAME, true)
                         .where()
-                        .gt(Request.TIME_CREATED_FIELD_NAME, Application.START_TIME)
+                        .gt(Request.TIME_CREATED_FIELD_NAME, MitmProxy4J.START_TIME)
                         .and()
                         .like(Request.URI_FIELD_NAME, "%" + text + "%")
                         .query();
@@ -76,8 +76,8 @@ public class FilterKeyListener extends KeyAdapter {
                     }
                 }
                 flowList.updateUI();
-                setTreeExpandedState(Application.MAIN_FRAME.getFlowTree(), true);
-                Application.MAIN_FRAME.getFlowTree().updateUI();
+                setTreeExpandedState(MitmProxy4J.MAIN_FRAME.getFlowTree(), true);
+                MitmProxy4J.MAIN_FRAME.getFlowTree().updateUI();
             } catch (SQLException | URISyntaxException ex) {
                 ex.printStackTrace();
             }

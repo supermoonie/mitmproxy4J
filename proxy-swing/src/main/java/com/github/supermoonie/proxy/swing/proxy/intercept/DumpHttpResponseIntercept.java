@@ -2,7 +2,7 @@ package com.github.supermoonie.proxy.swing.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
 import com.github.supermoonie.proxy.swing.gui.MainFrameHelper;
@@ -34,17 +34,17 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
 
     @Override
     public void onRead(InterceptContext ctx, HttpRequest request) {
-        if (Application.RECORD_FLAG.get()) {
+        if (MitmProxy4J.RECORD_FLAG.get()) {
             SwingUtilities.invokeLater(() -> {
                 try {
                     Request req = (Request) ctx.getUserData();
-                    FlowList flowList = Application.MAIN_FRAME.getFlowList();
+                    FlowList flowList = MitmProxy4J.MAIN_FRAME.getFlowList();
                     flowList.findFirst(req.getId()).ifPresent(flow -> {
                         flow.setIcon(SvgIcons.DOWNLOAD);
                         flowList.updateUI();
-                        FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
+                        FlowTreeNode rootNode = MitmProxy4J.MAIN_FRAME.getRootNode();
                         rootNode.update(req, null);
-                        Application.MAIN_FRAME.getFlowTree().updateUI();
+                        MitmProxy4J.MAIN_FRAME.getFlowTree().updateUI();
                     });
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
@@ -58,17 +58,17 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
         if (null == ctx.getUserData()) {
             return null;
         }
-        if (Application.RECORD_FLAG.get()) {
+        if (MitmProxy4J.RECORD_FLAG.get()) {
             Request req = (Request) ctx.getUserData();
             try {
                 Response res = ResponseService.saveResponse(ctx, req, response);
                 log.info("response saved, uri: {}", ctx.getConnectionInfo().getUrl());
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
+                        FlowTreeNode rootNode = MitmProxy4J.MAIN_FRAME.getRootNode();
                         rootNode.update(req, res);
-                        Application.MAIN_FRAME.getFlowTree().updateUI();
-                        FlowList flowList = Application.MAIN_FRAME.getFlowList();
+                        MitmProxy4J.MAIN_FRAME.getFlowTree().updateUI();
+                        FlowList flowList = MitmProxy4J.MAIN_FRAME.getFlowList();
                         flowList.findFirst(req.getId()).ifPresent(flow -> {
                             if (null == res) {
                                 flow.setIcon(SvgIcons.BOMB);

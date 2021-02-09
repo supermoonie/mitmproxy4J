@@ -1,8 +1,7 @@
 package com.github.supermoonie.proxy.swing.icon;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.github.supermoonie.proxy.swing.Application;
-import com.github.supermoonie.proxy.swing.entity.Response;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.swing.*;
@@ -15,8 +14,8 @@ public interface SvgIcons {
 
     FlatSVGIcon LIGHTING = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/lighting.svg");
     FlatSVGIcon REPEAT = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/repeat.svg");
-    Icon HTML = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/html.svg", Application.class.getClassLoader());
-    FlatSVGIcon JSON = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/json.svg", Application.class.getClassLoader());
+    Icon HTML = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/html.svg", MitmProxy4J.class.getClassLoader());
+    FlatSVGIcon JSON = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/json.svg", MitmProxy4J.class.getClassLoader());
     FlatSVGIcon JAVA_SCRIPT = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/js.svg");
     FlatSVGIcon CSS = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/css.svg");
     FlatSVGIcon PLAIN_TEXT = new FlatSVGIcon("com/github/supermoonie/proxy/swing/icon/text.svg");

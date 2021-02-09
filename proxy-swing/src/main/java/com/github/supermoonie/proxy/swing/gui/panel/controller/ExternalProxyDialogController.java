@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.swing.gui.panel.controller;
 
 import com.github.supermoonie.proxy.ProxyType;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.ExternalProxy;
@@ -76,7 +76,7 @@ public class ExternalProxyDialogController extends ExternalProxyDialog {
                     }
                 }
             } catch (SQLException t) {
-                Application.showError(t);
+                MitmProxy4J.showError(t);
             }
             setVisible(false);
         });

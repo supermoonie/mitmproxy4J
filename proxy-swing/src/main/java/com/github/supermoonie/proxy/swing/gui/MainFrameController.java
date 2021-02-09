@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Request;
 import com.github.supermoonie.proxy.swing.entity.Response;
@@ -31,11 +31,11 @@ import java.util.Objects;
  */
 public class MainFrameController extends MainFrame {
 
-    public MainFrameController() {
-        super();
+    public MainFrameController(String title) {
+        super(title);
         getDnsMenuItem().addActionListener(e -> new DnsDialogController(this, "DNS", true).setVisible(true));
         getExportRootCertificateMenuItem().addActionListener(e -> {
-            InputStream in = Application.class.getClassLoader().getResourceAsStream("ca.crt");
+            InputStream in = MitmProxy4J.class.getClassLoader().getResourceAsStream("ca.crt");
             JFileChooser fileChooser = new JFileChooser();
             Action details = fileChooser.getActionMap().get("viewTypeDetails");
             details.actionPerformed(null);
@@ -45,7 +45,7 @@ public class MainFrameController extends MainFrame {
                 try {
                     FileUtils.writeByteArrayToFile(new File(selectedFile.getAbsolutePath() + "/ca.crt"), IOUtils.readFully(in, Objects.requireNonNull(in).available()));
                 } catch (IOException ex) {
-                    Application.showError(ex);
+                    MitmProxy4J.showError(ex);
                 }
             }
         });
@@ -108,7 +108,7 @@ public class MainFrameController extends MainFrame {
             Where<Response, Integer> where = responseDao.queryBuilder()
                     .orderBy(Request.TIME_CREATED_FIELD_NAME, true)
                     .where()
-                    .gt(Response.TIME_CREATED_NAME, Application.START_TIME);
+                    .gt(Response.TIME_CREATED_NAME, MitmProxy4J.START_TIME);
             if (null != type) {
                 where.and().like(Response.CONTENT_TYPE_FIELD_NAME, "%" + type + "%");
             }
@@ -130,7 +130,7 @@ public class MainFrameController extends MainFrame {
             FilterKeyListener.setTreeExpandedState(super.getFlowTree(), true);
             super.getFlowTree().updateUI();
         } catch (SQLException | URISyntaxException t) {
-            Application.showError(t);
+            MitmProxy4J.showError(t);
         }
     }
 

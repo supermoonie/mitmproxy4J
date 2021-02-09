@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.swing.gui;
 
 import com.formdev.flatlaf.FlatLaf;
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.*;
@@ -53,7 +53,7 @@ public class MainFrameHelper {
     }
 
     public static Flow getSelectedFlow() {
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         JPanel selectedComponent = (JPanel) mainFrame.getFlowTabPane().getSelectedComponent();
         Flow flow;
         if (selectedComponent.equals(mainFrame.getStructureTab())) {
@@ -74,7 +74,7 @@ public class MainFrameHelper {
     // -- response tab
 
     public static void showResponseContent(Request request, Response response) {
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         if (null == response) {
             mainFrame.getResponseTablePane().removeAll();
             JPanel waitingPanel = new JPanel(new BorderLayout());
@@ -117,7 +117,7 @@ public class MainFrameHelper {
     }
 
     private static void fillResponseContent(Response response, List<Header> responseHeaderList, Content content, List<Component> responseTabs) {
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         JTextArea responseTextArea = mainFrame.getResponseTextArea();
         RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
         JTextArea responseRawArea = mainFrame.getResponseRawArea();
@@ -191,9 +191,9 @@ public class MainFrameHelper {
     }
 
     private static void fillResponseHeader(List<Header> headerList, List<Component> responseTabs) {
-        JTable responseHeaderTable = Application.MAIN_FRAME.getResponseHeaderTable();
+        JTable responseHeaderTable = MitmProxy4J.MAIN_FRAME.getResponseHeaderTable();
         resetHeaderTable(headerList, responseHeaderTable);
-        JScrollPane responseHeaderScrollPane = Application.MAIN_FRAME.getResponseHeaderScrollPane();
+        JScrollPane responseHeaderScrollPane = MitmProxy4J.MAIN_FRAME.getResponseHeaderScrollPane();
         responseHeaderScrollPane.setName("Header");
         responseTabs.add(responseHeaderScrollPane);
         TableHelper.fitTableColumns(responseHeaderTable);
@@ -211,7 +211,7 @@ public class MainFrameHelper {
                     .eq(Header.REQUEST_ID_FIELD_NAME, request.getId()).and()
                     .isNull(Header.RESPONSE_ID_FIELD_NAME).query();
             Content requestContent = contentDao.queryForId(request.getContentId());
-            MainFrame mainFrame = Application.MAIN_FRAME;
+            MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
             // 清除Request的所有Tab
             mainFrame.getRequestTablePane().removeAll();
             List<Component> requestTabs = new ArrayList<>();
@@ -234,10 +234,10 @@ public class MainFrameHelper {
     }
 
     private static void fillRequestHeader(List<Header> headerList, List<Component> requestTabs) {
-        JTable requestHeaderTable = Application.MAIN_FRAME.getRequestHeaderTable();
+        JTable requestHeaderTable = MitmProxy4J.MAIN_FRAME.getRequestHeaderTable();
         // 重新加载Header
         resetHeaderTable(headerList, requestHeaderTable);
-        JScrollPane requestHeaderScrollPane = Application.MAIN_FRAME.getRequestHeaderScrollPane();
+        JScrollPane requestHeaderScrollPane = MitmProxy4J.MAIN_FRAME.getRequestHeaderScrollPane();
         requestHeaderScrollPane.setName("Header");
         requestTabs.add(requestHeaderScrollPane);
         // Table 宽度自适应
@@ -253,7 +253,7 @@ public class MainFrameHelper {
             return;
         }
         String query = uri.getQuery();
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         DefaultTableModel model = (DefaultTableModel) mainFrame.getRequestQueryTable().getModel();
         int rowCount = model.getRowCount();
         for (int i = rowCount - 1; i >= 0; i--) {
@@ -273,7 +273,7 @@ public class MainFrameHelper {
     }
 
     private static void fillRequestForm(Request request, List<Header> requestHeaderList, Content requestContent, List<Component> requestTabs) {
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         DefaultTableModel requestFormModel = (DefaultTableModel) mainFrame.getRequestFormTable().getModel();
         // 清除FormTab、TextTab、JSONTab中的数据
         int rowCount = requestFormModel.getRowCount();
@@ -341,7 +341,7 @@ public class MainFrameHelper {
     }
 
     private static void fillRequestRaw(Request request, List<Header> requestHeaderList, String body) {
-        JTextArea requestRawArea = Application.MAIN_FRAME.getRequestRawArea();
+        JTextArea requestRawArea = MitmProxy4J.MAIN_FRAME.getRequestRawArea();
         requestRawArea.setText("");
         StringBuilder raw = new StringBuilder();
         raw.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
@@ -361,14 +361,14 @@ public class MainFrameHelper {
 
     public static void fillOverviewTab(Request request, Response response) {
         if (currentRequestId == -1) {
-            FilterKeyListener.setTreeExpandedState(Application.MAIN_FRAME.getFlowTree(), true);
-            FlowTreeNode rootNode = Application.MAIN_FRAME.getRootNode();
+            FilterKeyListener.setTreeExpandedState(MitmProxy4J.MAIN_FRAME.getFlowTree(), true);
+            FlowTreeNode rootNode = MitmProxy4J.MAIN_FRAME.getRootNode();
             FlowTreeNode leaf = rootNode.findLeaf(rootNode, request.getId());
-            Application.MAIN_FRAME.getFlowTree().setSelectionPath(new TreePath(leaf.getPath()));
+            MitmProxy4J.MAIN_FRAME.getFlowTree().setSelectionPath(new TreePath(leaf.getPath()));
         }
         currentRequestId = request.getId();
-        ListTreeTableNode root = Application.MAIN_FRAME.getOverviewTreeTableRoot();
-        DefaultTreeTableModel model = Application.MAIN_FRAME.getOverviewTreeTableModel();
+        ListTreeTableNode root = MitmProxy4J.MAIN_FRAME.getOverviewTreeTableRoot();
+        DefaultTreeTableModel model = MitmProxy4J.MAIN_FRAME.getOverviewTreeTableModel();
         int childCount = model.getChildCount(root);
         for (int i = childCount - 1; i >= 0; i--) {
             model.removeNodeFromParent((MutableTreeTableNode) root.getChildAt(i));

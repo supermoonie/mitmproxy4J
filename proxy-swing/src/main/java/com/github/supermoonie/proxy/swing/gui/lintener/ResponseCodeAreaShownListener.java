@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.swing.gui.lintener;
 
-import com.github.supermoonie.proxy.swing.Application;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.ApplicationPreferences;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.Content;
@@ -39,7 +39,7 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
 
     @Override
     public void componentShown(ComponentEvent e) {
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
         Flow flow = MainFrameHelper.getSelectedFlow();
         if (null == flow || null == flow.getResponseId() || null == flow.getContentType()) {
@@ -76,19 +76,19 @@ public class ResponseCodeAreaShownListener extends ComponentAdapter {
                 prettifyAndShow(SyntaxConstants.SYNTAX_STYLE_NONE, content);
             }
         } catch (SQLException ex) {
-            Application.showError(ex);
+            MitmProxy4J.showError(ex);
         }
     }
 
     private void prettifyAndShow(String style, Content content) {
-        MainFrame mainFrame = Application.MAIN_FRAME;
+        MainFrame mainFrame = MitmProxy4J.MAIN_FRAME;
         JPanel responseCodePane = mainFrame.getResponseCodePane();
         RSyntaxTextArea responseCodeArea = mainFrame.getResponseCodeArea();
         responseCodePane.removeAll();
         processBar.setValue(0);
         processBar.setIndeterminate(true);
         responseCodePane.add(processBar, BorderLayout.SOUTH);
-        Application.EXECUTOR.execute(() -> {
+        MitmProxy4J.EXECUTOR.execute(() -> {
             String body = new String(content.getRawContent(), StandardCharsets.UTF_8);
             final AtomicReference<String> codeText = new AtomicReference<>();
             switch (style) {

@@ -2,14 +2,11 @@ package com.github.supermoonie.proxy.swing.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
-import com.github.supermoonie.proxy.swing.Application;
-import com.github.supermoonie.proxy.swing.ApplicationPreferences;
+import com.github.supermoonie.proxy.swing.MitmProxy4J;
 import com.github.supermoonie.proxy.swing.dao.DaoCollections;
 import com.github.supermoonie.proxy.swing.entity.AccessControl;
-import com.github.supermoonie.proxy.swing.icon.SvgIcons;
 import com.github.supermoonie.proxy.util.ResponseUtils;
 import com.j256.ormlite.dao.Dao;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -19,9 +16,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author supermoonie
@@ -47,7 +41,7 @@ public class AccessControlRequestIntercept implements RequestIntercept {
                 return null;
             }
         } catch (SQLException e) {
-            Application.showError(e);
+            MitmProxy4J.showError(e);
             return ResponseUtils.htmlResponse(e.getMessage(), HttpResponseStatus.OK);
         }
         String[] options = {"Allow", "Cancel"};
@@ -61,7 +55,7 @@ public class AccessControlRequestIntercept implements RequestIntercept {
             try {
                 accessControlDao.create(ac);
             } catch (SQLException t) {
-                Application.showError(t);
+                MitmProxy4J.showError(t);
             }
             return null;
         } else {
