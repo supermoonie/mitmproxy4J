@@ -15,7 +15,6 @@ import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewSelectLi
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.*;
-import com.github.supermoonie.proxy.fx.mapper.*;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
@@ -35,7 +34,6 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -49,15 +47,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
@@ -446,7 +441,7 @@ public class MainController implements Initializable {
         if (null != file) {
             try {
                 String data = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                HexContentFlow flow = JSON.parse(data, HexContentFlow.class);
+                HexContentFlow flow = JacksonUtil.parse(data, HexContentFlow.class);
                 flowService.save(flow);
                 ConnectionInfo connectionInfo = new ConnectionInfo();
                 connectionInfo.setUrl(flow.getRequest().getUri());
@@ -478,7 +473,7 @@ public class MainController implements Initializable {
                 Content content = contentMapper.selectById(flow.getResponse().getContentId());
                 hexContentFlow.setHexResponseContent(Hex.toHexString(content.getContent()));
             }
-            String data = JSON.toJsonString(hexContentFlow, true);
+            String data = JacksonUtil.toJsonString(hexContentFlow, true);
             try {
                 String filePath = dir.getAbsolutePath() + File.separator + flow.getRequest().getId() + ".json";
                 FileUtils.writeStringToFile(new File(filePath), data, StandardCharsets.UTF_8);

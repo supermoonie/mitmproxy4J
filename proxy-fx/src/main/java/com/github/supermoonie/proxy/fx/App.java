@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.fx;
 
 import com.github.supermoonie.proxy.fx.controller.main.MainController;
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
@@ -20,19 +21,11 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import org.apache.commons.io.IOUtils;
-import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.annotation.Resource;
 import javax.swing.*;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -43,8 +36,6 @@ import java.util.concurrent.TimeUnit;
  *
  * @author supermoonie
  */
-@SpringBootApplication
-@MapperScan(basePackages = "com.github.supermoonie.proxy.fx.mapper")
 public class App extends Application {
 
     private final Logger log = LoggerFactory.getLogger(App.class);
@@ -55,20 +46,7 @@ public class App extends Application {
         launch(args);
     }
 
-    @Resource
-    private ApplicationContext applicationContext;
-
-    @Resource
-    private SystemTrayManager systemTrayManager;
-
-    @Resource
-    private InternalProxyInterceptInitializer initializer;
-
-    @Resource
     private DefaultConfigIntercept defaultConfigIntercept;
-
-    @Resource
-    private JdbcTemplate jdbcTemplate;
 
     private static Stage primaryStage;
 
@@ -86,8 +64,7 @@ public class App extends Application {
 //        new InspectNode(primaryStage);
         primaryStage.show();
         primaryStage.setOnCloseRequest(windowEvent -> {
-            SpringApplication.exit(applicationContext, () -> 0);
-            SwingUtilities.invokeLater(() -> systemTrayManager.destroy());
+            SwingUtilities.invokeLater(SystemTrayManager::destroy);
             EXECUTOR.shutdown();
             Platform.runLater(() -> {
                 SettingUtil.save(GlobalSetting.getInstance());
@@ -99,21 +76,19 @@ public class App extends Application {
 
     @Override
     public void init() throws Exception {
-        SpringApplication.run(getClass()).getAutowireCapableBeanFactory().autowireBean(this);
-        initDatabase();
+        DaoCollections.init();
         Platform.runLater(() -> {
             SettingUtil.load();
             initSetting();
         });
         EXECUTOR.scheduleAtFixedRate(() -> SettingUtil.save(GlobalSetting.getInstance()), 10, 30, TimeUnit.SECONDS);
-
-        systemTrayManager.init();
+        SystemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }
 
     private void initSetting() {
         GlobalSetting instance = GlobalSetting.getInstance();
-        ProxyManager.start(instance.getPort(), instance.isAuth(), instance.getUsername(), instance.getPassword(), initializer);
+        ProxyManager.start(instance.getPort(), instance.isAuth(), instance.getUsername(), instance.getPassword(), InternalProxyInterceptInitializer.INSTANCE);
         ProxyManager.getInternalProxy().setTrafficShaping(instance.isThrottling());
         defaultConfigIntercept.setAllowFlag(instance.isAllowUrl());
         defaultConfigIntercept.setBlockFlag(instance.isBlockUrl());
@@ -155,17 +130,6 @@ public class App extends Application {
         });
     }
 
-
-    private void initDatabase() throws IOException {
-        try (InputStream in = getClass().getResourceAsStream("/crate_table.sql")) {
-            byte[] bytes = IOUtils.readFully(in, in.available());
-            String initSql = new String(bytes);
-            String[] sqlArr = initSql.split("--EOF--");
-            for (String sql : sqlArr) {
-                jdbcTemplate.execute(sql);
-            }
-        }
-    }
 
     public static void setCommonIcon(Stage stage) {
         setCommonIcon(stage, "Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());

@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.fx.controller.component;
 
 import com.github.supermoonie.proxy.fx.dto.FormDataColumnMap;
-import com.github.supermoonie.proxy.fx.util.JSON;
+import com.github.supermoonie.proxy.fx.util.JacksonUtil;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 
@@ -46,7 +46,7 @@ public class DataFormValueTableCell extends TableCell<FormDataColumnMap, String>
         } else {
 //            setText(item);
             FormDataColumnMap map = this.getTableRow().getItem();
-            System.out.println("item: " + item + ", map: " + JSON.toJsonString(map));
+            System.out.println("item: " + item + ", map: " + JacksonUtil.toJsonString(map));
             if ("Text".equals(map.getValueType())) {
                 if (null == textField) {
                     textField = new TextField();

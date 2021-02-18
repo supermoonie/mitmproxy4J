@@ -1,26 +1,24 @@
 package com.github.supermoonie.proxy.fx.entity;
 
-import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-import java.util.Arrays;
 import java.util.Date;
 
 /**
  * @author supermoonie
- * @date 2020-06-06
+ * @since 2020/12/20
  */
-@DatabaseTable(tableName = "content")
-public class Content {
+@DatabaseTable(tableName = "access_control")
+public class AccessControl {
 
-    public static final String RAW_CONTENT_FIELD_NAME = "raw_content";
+    public static final String ACCESS_IP_FIELD_NAME = "access_ip";
     public static final String TIME_CREATED_FIELD_NAME = "time_created";
 
     @DatabaseField(generatedId = true)
     private int id;
-    @DatabaseField(columnName = RAW_CONTENT_FIELD_NAME, dataType = DataType.BYTE_ARRAY, canBeNull = false)
-    private byte[] rawContent;
+    @DatabaseField(columnName = ACCESS_IP_FIELD_NAME, canBeNull = false)
+    private String accessIp;
     @DatabaseField(columnName = TIME_CREATED_FIELD_NAME, canBeNull = false, index = true, indexName = "idx_time_created")
     private Date timeCreated;
 
@@ -32,12 +30,12 @@ public class Content {
         this.id = id;
     }
 
-    public byte[] getRawContent() {
-        return rawContent;
+    public String getAccessIp() {
+        return accessIp;
     }
 
-    public void setRawContent(byte[] rawContent) {
-        this.rawContent = rawContent;
+    public void setAccessIp(String accessIp) {
+        this.accessIp = accessIp;
     }
 
     public Date getTimeCreated() {
@@ -50,9 +48,9 @@ public class Content {
 
     @Override
     public String toString() {
-        return "Content{" +
+        return "AccessControl{" +
                 "id=" + id +
-                ", rawContent=" + Arrays.toString(rawContent) +
+                ", accessIp='" + accessIp + '\'' +
                 ", timeCreated=" + timeCreated +
                 '}';
     }

@@ -3,25 +3,25 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.Map;
 
 /**
  * @author supermoonie
  * @date 2020-09-09
  */
-@Component
 public class InternalProxyInterceptInitializer implements InterceptInitializer {
 
-    @Resource
+    public static final InternalProxyInterceptInitializer INSTANCE = new InternalProxyInterceptInitializer();
+
+    private InternalProxyInterceptInitializer() {
+
+    }
+
     private DumpHttpRequestIntercept dumpHttpRequestIntercept;
 
-    @Resource
     private DumpHttpResponseIntercept dumpHttpResponseIntercept;
 
-    @Resource
     private DefaultConfigIntercept defaultConfigIntercept;
 
     @Override

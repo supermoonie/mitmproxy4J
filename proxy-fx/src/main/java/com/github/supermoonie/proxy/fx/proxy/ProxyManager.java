@@ -2,7 +2,7 @@ package com.github.supermoonie.proxy.fx.proxy;
 
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.InternalProxy;
-import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.platform.mac.NetworkSetup;
 import io.netty.util.internal.PlatformDependent;
 
@@ -21,29 +21,54 @@ public class ProxyManager {
 
     }
 
-    public static void start(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
+    public static void start(int port,
+                             boolean auth,
+                             String username,
+                             String password,
+                             InterceptInitializer interceptInitializer) {
         if (null != internalProxy) {
             return;
         }
-        newHttpProxy(null, port, auth, username, password, interceptInitializer);
+        newHttpProxy(port, auth, username, password, interceptInitializer);
     }
 
-    private static void newHttpProxy(String host, int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
+    private static void newHttpProxy(int port,
+                                     boolean auth,
+                                     String username,
+                                     String password,
+                                     InterceptInitializer interceptInitializer) {
         internalProxy = new InternalProxy(interceptInitializer);
-        internalProxy.setHost(host);
+        internalProxy.setHost(null);
         internalProxy.setPort(port);
         internalProxy.setAuth(auth);
         internalProxy.setUsername(username);
         internalProxy.setPassword(password);
         internalProxy.start();
         internalProxy.getTrafficShapingHandler().setCheckInterval(1_000);
-        internalProxy.getTrafficShapingHandler().setWriteLimit(GlobalSetting.getInstance().getThrottlingWriteLimit());
-        internalProxy.getTrafficShapingHandler().setReadLimit(GlobalSetting.getInstance().getThrottlingReadLimit());
     }
 
-    public static void restart(int port, boolean auth, String username, String password, InterceptInitializer interceptInitializer) {
-        internalProxy.close();
-        newHttpProxy(null, port, auth, username, password, interceptInitializer);
+    public static void restart(int port,
+                               boolean auth,
+                               String username,
+                               String password,
+                               InterceptInitializer interceptInitializer) {
+        InternalProxy oldProxy = internalProxy;
+        newHttpProxy(port, auth, username, password, interceptInitializer);
+        App.EXECUTOR.execute(oldProxy::close);
+    }
+
+    public static void enableLimit(boolean enable) {
+        internalProxy.setTrafficShaping(enable);
+    }
+
+    public static void setWriteLimit(long writeLimit) {
+        internalProxy.getTrafficShapingHandler().setWriteLimit(writeLimit);
+        internalProxy.getTrafficShapingHandler().setWriteChannelLimit(writeLimit);
+    }
+
+    public static void setReadLimit(long readLimit) {
+        internalProxy.getTrafficShapingHandler().setReadLimit(readLimit);
+        internalProxy.getTrafficShapingHandler().setReadChannelLimit(readLimit);
     }
 
     public static void enableSystemProxy() throws IOException {

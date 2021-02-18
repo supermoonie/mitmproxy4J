@@ -13,16 +13,16 @@ import java.io.IOException;
  * @author supermoonie
  * @since 2020/6/25
  */
-public class JSON {
+public class JacksonUtil {
 
-    private static final ObjectMapper objectMapper;
+    private static final ObjectMapper OBJECT_MAPPER;
 
     static {
-        objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        OBJECT_MAPPER = new ObjectMapper();
+        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.ALWAYS);
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+        OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
     public static String toJsonString(Object value) {
@@ -32,8 +32,8 @@ public class JSON {
     public static String toJsonString(Object value, boolean pretty) {
         try {
             return pretty ?
-                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(value)
-                    : objectMapper.writeValueAsString(value);
+                    OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(value)
+                    : OBJECT_MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -41,7 +41,7 @@ public class JSON {
 
     public static <T> T parse(String content, Class<T> clazz) {
         try {
-            return objectMapper.readValue(content, clazz);
+            return OBJECT_MAPPER.readValue(content, clazz);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -49,13 +49,13 @@ public class JSON {
 
     public static <T> T parse(String content, TypeReference<T> typeReference) {
         try {
-            return objectMapper.readValue(content, typeReference);
+            return OBJECT_MAPPER.readValue(content, typeReference);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static ObjectMapper getObjectMapper() {
-        return objectMapper;
+        return OBJECT_MAPPER;
     }
 }

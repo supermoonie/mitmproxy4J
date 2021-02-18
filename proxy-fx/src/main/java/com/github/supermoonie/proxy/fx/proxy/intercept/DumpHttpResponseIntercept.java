@@ -3,8 +3,6 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.controller.main.MainController;
-import com.github.supermoonie.proxy.fx.entity.Request;
-import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.service.ResponseService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
@@ -13,20 +11,15 @@ import io.netty.handler.codec.http.HttpRequest;
 import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * @author supermoonie
  * @since 2020/9/11
  */
-@Component
 public class DumpHttpResponseIntercept implements ResponseIntercept {
 
     private final Logger log = LoggerFactory.getLogger(DumpHttpResponseIntercept.class);
 
-    @Resource
     private ResponseService responseService;
 
     @Override

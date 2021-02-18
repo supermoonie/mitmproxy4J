@@ -1,34 +1,61 @@
 package com.github.supermoonie.proxy.fx.entity;
 
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.util.Date;
 
 /**
  * @author supermoonie
  * @date 2020-05-30
  */
-public class Response extends BaseEntity {
+@DatabaseTable(tableName = "response")
+public class Response {
 
-    private String requestId;
+    public static final String REQUEST_ID_FIELD_NAME = "request_id";
+    public static final String HTTP_VERSION_FIELD_NAME = "http_version";
+    public static final String STATUS_FIELD_NAME = "status";
+    public static final String CONTENT_TYPE_FIELD_NAME = "content_type";
+    public static final String CONTENT_ID_FIELD_NAME = "content_id";
+    public static final String START_TIME_FIELD_NAME = "start_time";
+    public static final String EDN_TIME_FIELD_NAME = "end_time";
+    public static final String SIZE_FIELD_NAME = "size";
+    public static final String TIME_CREATED_NAME = "time_created";
 
+    @DatabaseField(generatedId = true)
+    private int id;
+    @DatabaseField(columnName = REQUEST_ID_FIELD_NAME, unique = true, uniqueIndexName = "uk_request_id")
+    private Integer requestId;
+    @DatabaseField(columnName = HTTP_VERSION_FIELD_NAME)
     private String httpVersion;
-
+    @DatabaseField(columnName = STATUS_FIELD_NAME)
     private Integer status;
-
+    @DatabaseField(columnName = CONTENT_TYPE_FIELD_NAME)
     private String contentType;
-
-    private String contentId;
-
+    @DatabaseField(columnName = CONTENT_ID_FIELD_NAME)
+    private Integer contentId;
+    @DatabaseField(columnName = START_TIME_FIELD_NAME)
     private Long startTime;
-
+    @DatabaseField(columnName = EDN_TIME_FIELD_NAME)
     private Long endTime;
-
+    @DatabaseField(columnName = SIZE_FIELD_NAME)
     private Integer size;
+    @DatabaseField(columnName = TIME_CREATED_NAME, canBeNull = false, index = true, indexName = "idx_time_created")
+    private Date timeCreated;
 
-    public String getRequestId() {
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Integer getRequestId() {
         return requestId;
     }
 
-    public void setRequestId(String requestId) {
+    public void setRequestId(Integer requestId) {
         this.requestId = requestId;
     }
 
@@ -56,11 +83,11 @@ public class Response extends BaseEntity {
         this.contentType = contentType;
     }
 
-    public String getContentId() {
+    public Integer getContentId() {
         return contentId;
     }
 
-    public void setContentId(String contentId) {
+    public void setContentId(Integer contentId) {
         this.contentId = contentId;
     }
 
@@ -88,17 +115,27 @@ public class Response extends BaseEntity {
         this.size = size;
     }
 
+    public Date getTimeCreated() {
+        return timeCreated;
+    }
+
+    public void setTimeCreated(Date timeCreated) {
+        this.timeCreated = timeCreated;
+    }
+
     @Override
     public String toString() {
         return "Response{" +
-                "requestId='" + requestId + '\'' +
+                "id=" + id +
+                ", requestId=" + requestId +
                 ", httpVersion='" + httpVersion + '\'' +
                 ", status=" + status +
                 ", contentType='" + contentType + '\'' +
-                ", contentId='" + contentId + '\'' +
+                ", contentId=" + contentId +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", size=" + size +
+                ", timeCreated=" + timeCreated +
                 '}';
     }
 }

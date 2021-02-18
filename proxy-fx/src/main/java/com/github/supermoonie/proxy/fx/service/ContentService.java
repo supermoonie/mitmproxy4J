@@ -1,20 +1,32 @@
 package com.github.supermoonie.proxy.fx.service;
 
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.entity.Content;
+import com.j256.ormlite.dao.Dao;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+
+import java.sql.SQLException;
+import java.util.Date;
 
 /**
  * @author supermoonie
- * @date 2020-06-07
+ * @since 2020/11/25
  */
-public interface ContentService {
+public final class ContentService {
 
-    /**
-     * 保存Content
-     *
-     * @param buf {@link ByteBuf}
-     * @param uri {@link com.github.supermoonie.proxy.fx.entity.Request#getUri()}
-     * @return {@link Content}
-     */
-    Content saveContent(ByteBuf buf, String uri);
+    private ContentService() {
+        throw new UnsupportedOperationException();
+    }
+
+    public static int saveContent(ByteBuf buf) throws SQLException {
+        buf.markReaderIndex();
+        Content content = new Content();
+        content.setTimeCreated(new Date());
+        content.setRawContent(ByteBufUtil.getBytes(buf));
+        buf.resetReaderIndex();
+        Dao<Content, Integer> dao = DaoCollections.getDao(Content.class);
+        dao.create(content);
+        return content.getId();
+    }
 }
