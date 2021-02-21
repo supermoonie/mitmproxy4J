@@ -11,8 +11,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.util.Optional;
-
 /**
  * @author supermoonie
  * @since 2020/8/23
@@ -29,6 +27,12 @@ public class AlertUtil {
         AlertUtil.toFront(alert);
     }
 
+    public static void showError(Thread thread, Throwable cause) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Error: " + cause.getMessage(), ButtonType.OK);
+        alert.setHeaderText("Thread : " + thread.getName());
+        toFront(alert);
+    }
+
     public static void error(Throwable cause) {
         Alert alert = new Alert(Alert.AlertType.ERROR, "Error: " + cause.getMessage(), ButtonType.OK);
         alert.setHeaderText("");
@@ -41,7 +45,7 @@ public class AlertUtil {
         AlertUtil.toFront(alert);
     }
 
-    public static Optional<ButtonType> toFront(Alert alert) {
+    public static void toFront(Alert alert) {
         DialogPane root = alert.getDialogPane();
         Stage dialogStage = new Stage(StageStyle.UTILITY);
         for (ButtonType buttonType : root.getButtonTypes()) {
@@ -60,6 +64,6 @@ public class AlertUtil {
         dialogStage.setAlwaysOnTop(true);
         dialogStage.setResizable(false);
         dialogStage.showAndWait();
-        return Optional.ofNullable((ButtonType) root.getUserData());
+        root.getUserData();
     }
 }

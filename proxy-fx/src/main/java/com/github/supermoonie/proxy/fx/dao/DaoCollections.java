@@ -1,7 +1,7 @@
 package com.github.supermoonie.proxy.fx.dao;
 
+import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.entity.*;
-import com.github.supermoonie.proxy.fx.util.ApplicationPreferences;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
@@ -45,8 +45,8 @@ public class DaoCollections {
     }
 
     private static void setupDatabase(JdbcConnectionSource connectionSource) throws SQLException {
-        int localVersion = ApplicationPreferences.getState().getInt(ApplicationPreferences.KEY_LOCAL_VERSION, 0);
-        if (localVersion < ApplicationPreferences.DEFAULT_LOCAL_VERSION) {
+        int localVersion = AppPreferences.getState().getInt(AppPreferences.KEY_LOCAL_VERSION, 0);
+        if (localVersion < AppPreferences.DEFAULT_LOCAL_VERSION) {
             TableUtils.createTableIfNotExists(connectionSource, Request.class);
             TableUtils.createTableIfNotExists(connectionSource, Response.class);
             TableUtils.createTableIfNotExists(connectionSource, CertificateInfo.class);
@@ -60,14 +60,14 @@ public class DaoCollections {
             TableUtils.createTableIfNotExists(connectionSource, ExternalProxy.class);
             TableUtils.createTableIfNotExists(connectionSource, Dns.class);
             TableUtils.createTableIfNotExists(connectionSource, HostMap.class);
-            ApplicationPreferences.getState().putInt(ApplicationPreferences.KEY_LOCAL_VERSION, ApplicationPreferences.DEFAULT_LOCAL_VERSION);
+            AppPreferences.getState().putInt(AppPreferences.KEY_LOCAL_VERSION, AppPreferences.DEFAULT_LOCAL_VERSION);
         }
 
     }
 
     private static String dbPath() {
         String homeDir = System.getProperty("user.home");
-        File dbDir = new File(homeDir + File.separator + ".proxy_fx");
+        File dbDir = new File(homeDir + File.separator + ".mitmproxy4j");
         if (!dbDir.exists() && !dbDir.mkdir()) {
             throw new RuntimeException(dbDir.getAbsolutePath() + " create fail!");
         }

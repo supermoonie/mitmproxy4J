@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy.fx.controller.main.handler;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import javafx.event.ActionEvent;
@@ -21,10 +20,6 @@ public class CopyResponseMenuItemHandler implements EventHandler<ActionEvent> {
     private final Tab structureTab;
     private final TreeView<FlowNode> treeView;
     private final ListView<FlowNode> listView;
-
-    private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
-    private final ResponseMapper responseMapper = ApplicationContextUtil.getBean(ResponseMapper.class);
-    private final ContentMapper contentMapper = ApplicationContextUtil.getBean(ContentMapper.class);
 
     public CopyResponseMenuItemHandler(TabPane tabPane, Tab structureTab, TreeView<FlowNode> treeView, ListView<FlowNode> listView) {
         this.tabPane = tabPane;

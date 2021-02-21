@@ -1,9 +1,9 @@
 package com.github.supermoonie.proxy.fx.proxy.intercept;
 
+import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.entity.AllowBlock;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
-import com.github.supermoonie.proxy.fx.util.ApplicationPreferences;
 import com.github.supermoonie.proxy.intercept.ConfigurableIntercept;
 import com.j256.ormlite.dao.Dao;
 
@@ -19,8 +19,8 @@ public class DefaultConfigIntercept extends ConfigurableIntercept {
     public static final DefaultConfigIntercept INSTANCE = new DefaultConfigIntercept();
 
     private DefaultConfigIntercept() {
-        super.setAllowFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_ALLOW_LIST_ENABLE, ApplicationPreferences.DEFAULT_ALLOW_LIST_ENABLE));
-        super.setBlockFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_BLOCK_LIST_ENABLE, ApplicationPreferences.DEFAULT_BLOCK_LIST_ENABLE));
+        super.setAllowFlag(AppPreferences.getState().getBoolean(AppPreferences.KEY_ALLOW_LIST_ENABLE, AppPreferences.DEFAULT_ALLOW_LIST_ENABLE));
+        super.setBlockFlag(AppPreferences.getState().getBoolean(AppPreferences.KEY_BLOCK_LIST_ENABLE, AppPreferences.DEFAULT_BLOCK_LIST_ENABLE));
         Dao<AllowBlock, Integer> allowBlockDao = DaoCollections.getDao(AllowBlock.class);
         try {
             List<AllowBlock> allowBlockList = allowBlockDao.queryForAll();

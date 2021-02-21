@@ -3,10 +3,10 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.ProxyType;
 import com.github.supermoonie.proxy.SecondProxyConfig;
+import com.github.supermoonie.proxy.fx.AppPreferences;
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
+import com.github.supermoonie.proxy.fx.entity.ExternalProxy;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
-import com.github.supermoonie.proxy.swing.ApplicationPreferences;
-import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.entity.ExternalProxy;
 import com.j256.ormlite.dao.Dao;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
@@ -32,7 +32,7 @@ public class ExternalProxyIntercept implements RequestIntercept {
 
     @Override
     public FullHttpResponse onRequest(InterceptContext ctx, HttpRequest request) {
-        boolean proxyEnable = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_ENABLE, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_ENABLE);
+        boolean proxyEnable = AppPreferences.getState().getBoolean(AppPreferences.KEY_EXTERNAL_PROXY_ENABLE, AppPreferences.DEFAULT_EXTERNAL_PROXY_ENABLE);
         if (proxyEnable) {
             Dao<ExternalProxy, Integer> externalProxyDao = DaoCollections.getDao(ExternalProxy.class);
             try {
@@ -40,8 +40,8 @@ public class ExternalProxyIntercept implements RequestIntercept {
                 if (null == externalProxyList || 0 == externalProxyList.size()) {
                     return null;
                 }
-                boolean bypassLocalhost = ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LOCALHOST, ApplicationPreferences.DEFAULT_EXTERNAL_PROXY_BYPASS_LOCALHOST);
-                StringBuilder bypassHostListBuilder = new StringBuilder(ApplicationPreferences.getState().get(ApplicationPreferences.KEY_EXTERNAL_PROXY_BYPASS_LIST, ""));
+                boolean bypassLocalhost = AppPreferences.getState().getBoolean(AppPreferences.KEY_EXTERNAL_PROXY_BYPASS_LOCALHOST, AppPreferences.DEFAULT_EXTERNAL_PROXY_BYPASS_LOCALHOST);
+                StringBuilder bypassHostListBuilder = new StringBuilder(AppPreferences.getState().get(AppPreferences.KEY_EXTERNAL_PROXY_BYPASS_LIST, ""));
                 if (bypassLocalhost) {
                     bypassHostListBuilder.append(",").append(LOCAL_HOST).append(",").append(LOCAL_IP);
                 }
@@ -83,8 +83,6 @@ public class ExternalProxyIntercept implements RequestIntercept {
                 log.error(e.getMessage(), e);
                 return null;
             }
-
-
         }
         return null;
     }

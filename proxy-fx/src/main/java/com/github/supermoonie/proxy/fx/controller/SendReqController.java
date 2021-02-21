@@ -1,6 +1,5 @@
 package com.github.supermoonie.proxy.fx.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.EnumFormValueType;
 import com.github.supermoonie.proxy.fx.constant.EnumReqBodyType;
@@ -8,6 +7,9 @@ import com.github.supermoonie.proxy.fx.constant.HttpMethod;
 import com.github.supermoonie.proxy.fx.constant.RequestRawType;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FormDataColumnMap;
+import com.github.supermoonie.proxy.fx.entity.Header;
+import com.github.supermoonie.proxy.fx.entity.Request;
+import com.github.supermoonie.proxy.fx.mime.MimeMappings;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.support.PropertyPair;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
@@ -31,6 +33,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.converter.DefaultStringConverter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
@@ -43,8 +46,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.server.MimeMappings;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.net.URI;
@@ -169,10 +170,6 @@ public class SendReqController implements Initializable {
     @FXML
     protected Button cancelButton;
     private ToggleGroup radioGroup;
-
-    private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
-    private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
-    private final ContentMapper contentMapper = ApplicationContextUtil.getBean(ContentMapper.class);
 
     private String requestId;
     private Stage stage;

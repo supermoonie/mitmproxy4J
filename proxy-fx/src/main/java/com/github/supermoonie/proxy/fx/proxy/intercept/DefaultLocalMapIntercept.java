@@ -1,9 +1,9 @@
 package com.github.supermoonie.proxy.fx.proxy.intercept;
 
+import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.entity.RequestMap;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
-import com.github.supermoonie.proxy.fx.util.ApplicationPreferences;
 import com.github.supermoonie.proxy.intercept.LocalMapIntercept;
 import com.j256.ormlite.dao.Dao;
 
@@ -19,7 +19,7 @@ public class DefaultLocalMapIntercept extends LocalMapIntercept {
     public static final DefaultLocalMapIntercept INSTANCE = new DefaultLocalMapIntercept();
 
     private DefaultLocalMapIntercept() {
-        super.setLocalMapFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_LOCAL_MAP_ENABLE, ApplicationPreferences.DEFAULT_LOCAL_MAP_ENABLE));
+        super.setLocalMapFlag(AppPreferences.getState().getBoolean(AppPreferences.KEY_LOCAL_MAP_ENABLE, AppPreferences.DEFAULT_LOCAL_MAP_ENABLE));
         Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
         try {
             List<RequestMap> requestMapList = requestMapDao.queryBuilder().where()

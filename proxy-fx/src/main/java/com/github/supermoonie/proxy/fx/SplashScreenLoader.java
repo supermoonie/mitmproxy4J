@@ -25,7 +25,7 @@ public class SplashScreenLoader extends Preloader {
         Scene splashScene = new Scene(getParent(), Color.TRANSPARENT);
         stage.setScene(splashScene);
         stage.show();
-//        stage.toFront();
+        stage.toFront();
     }
 
     public Parent getParent() {

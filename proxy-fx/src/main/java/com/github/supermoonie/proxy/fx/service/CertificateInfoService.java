@@ -1,9 +1,9 @@
 package com.github.supermoonie.proxy.fx.service;
 
-import com.github.supermoonie.proxy.swing.codec.SHACoder;
-import com.github.supermoonie.proxy.swing.dao.DaoCollections;
-import com.github.supermoonie.proxy.swing.entity.CertificateInfo;
-import com.github.supermoonie.proxy.swing.entity.CertificateMap;
+import com.github.supermoonie.proxy.fx.codec.SHACoder;
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
+import com.github.supermoonie.proxy.fx.entity.CertificateInfo;
+import com.github.supermoonie.proxy.fx.entity.CertificateMap;
 import com.j256.ormlite.dao.Dao;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;

@@ -17,10 +17,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.ToggleSwitch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -102,8 +102,7 @@ public class ProxySettingDialog implements Initializable {
             confirmButton.setDisable(true);
             cancelButton.setDisable(true);
             App.EXECUTOR.execute(() -> {
-                InternalProxyInterceptInitializer initializer = ApplicationContextUtil.getBean(InternalProxyInterceptInitializer.class);
-                ProxyManager.restart(port, authToggleSwitch.isSelected(), username, password, initializer);
+                ProxyManager.restart(port, authToggleSwitch.isSelected(), username, password, InternalProxyInterceptInitializer.INSTANCE);
                 Platform.runLater(() -> {
                     instance.setPort(port);
                     instance.setAuth(authToggleSwitch.isSelected());

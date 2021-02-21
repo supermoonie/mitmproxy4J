@@ -1,9 +1,9 @@
 package com.github.supermoonie.proxy.fx.proxy.intercept;
 
+import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.entity.RequestMap;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
-import com.github.supermoonie.proxy.fx.util.ApplicationPreferences;
 import com.github.supermoonie.proxy.intercept.RemoteMapIntercept;
 import com.j256.ormlite.dao.Dao;
 
@@ -19,7 +19,7 @@ public class DefaultRemoteMapIntercept extends RemoteMapIntercept {
     public static final DefaultRemoteMapIntercept INSTANCE = new DefaultRemoteMapIntercept();
 
     private DefaultRemoteMapIntercept() {
-        super.setRemoteMapFlag(ApplicationPreferences.getState().getBoolean(ApplicationPreferences.KEY_REMOTE_MAP_ENABLE, ApplicationPreferences.DEFAULT_REMOTE_MAP_ENABLE));
+        super.setRemoteMapFlag(AppPreferences.getState().getBoolean(AppPreferences.KEY_REMOTE_MAP_ENABLE, AppPreferences.DEFAULT_REMOTE_MAP_ENABLE));
         Dao<RequestMap, Integer> requestMapDao = DaoCollections.getDao(RequestMap.class);
         try {
             List<RequestMap> requestMapList = requestMapDao.queryBuilder().where()

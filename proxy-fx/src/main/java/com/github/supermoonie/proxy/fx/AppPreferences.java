@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.fx.util;
+package com.github.supermoonie.proxy.fx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +10,9 @@ import java.util.prefs.Preferences;
  * @author supermoonie
  * @date 2020-11-21
  */
-public class ApplicationPreferences {
+public class AppPreferences {
 
-    private final static Logger log = LoggerFactory.getLogger(ApplicationPreferences.class);
+    private final static Logger log = LoggerFactory.getLogger(AppPreferences.class);
 
     public static final String KEY_LOCAL_VERSION = "localVersion";
     public static final String KEY_IS_DARK_THEME = "isDarkTheme";
