@@ -12,6 +12,7 @@ import com.github.supermoonie.proxy.fx.controller.main.factory.ListViewCellFacto
 import com.github.supermoonie.proxy.fx.controller.main.handler.*;
 import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewFocusListener;
 import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewSelectListener;
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.*;
@@ -25,6 +26,7 @@ import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import com.github.supermoonie.proxy.fx.util.HttpClientUtil;
 import com.github.supermoonie.proxy.fx.util.JacksonUtil;
+import com.j256.ormlite.dao.Dao;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.application.Platform;
@@ -69,6 +71,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
@@ -490,8 +493,9 @@ public class MainController implements Initializable {
                     }
                 });
                 if (null != request.getContentId()) {
-                    Content content = contentMapper.selectById(request.getContentId());
-                    requestBuilder.setEntity(new ByteArrayEntity(content.getContent()));
+                    Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+                    Content content = contentDao.queryForId(request.getContentId());
+                    requestBuilder.setEntity(new ByteArrayEntity(content.getRawContent()));
                 }
                 httpClient.execute(requestBuilder.build()).close();
             } catch (Exception e) {
@@ -579,15 +583,16 @@ public class MainController implements Initializable {
         tabPane.getTabs().removeIf(tab -> tab.getText().equals(tabToRemove.getText()));
     }
 
-    private void fillRequestRawTab(Request request, List<Header> requestHeaders) {
+    private void fillRequestRawTab(Request request, List<Header> requestHeaders) throws SQLException {
         StringBuilder requestRawBuilder = new StringBuilder();
         requestRawBuilder.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
         for (Header header : requestHeaders) {
             requestRawBuilder.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
         }
-        if (!StringUtils.isEmpty(request.getContentId())) {
-            Content content = contentMapper.selectById(request.getContentId());
-            byte[] bytes = content.getContent();
+        if (null != request.getContentId()) {
+            Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+            Content content = contentDao.queryForId(request.getContentId());
+            byte[] bytes = content.getRawContent();
             requestRawBuilder.append("\n");
             // TODO charset utf8 gbk gb2312 iso8859-1
             String raw = new String(bytes);
@@ -618,15 +623,16 @@ public class MainController implements Initializable {
         }
     }
 
-    private void fillResponseRawTab(Response response, List<Header> responseHeaders) {
+    private void fillResponseRawTab(Response response, List<Header> responseHeaders) throws SQLException {
         StringBuilder responseRawBuilder = new StringBuilder();
         responseRawBuilder.append("Status : ").append(response.getStatus()).append("\n");
         for (Header header : responseHeaders) {
             responseRawBuilder.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
         }
-        if (!StringUtils.isEmpty(response.getContentId())) {
-            Content content = contentMapper.selectById(response.getContentId());
-            byte[] bytes = content.getContent();
+        if (null != response.getContentId()) {
+            Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
+            Content content = contentDao.queryForId(response.getContentId());
+            byte[] bytes = content.getRawContent();
             responseRawBuilder.append("\n");
             responseHeaders.stream().filter(header -> HttpHeaderNames.CONTENT_TYPE.toString().equalsIgnoreCase(header.getName())).findFirst().ifPresent(header -> {
                 WebEngine engine = responseJsonWebView.getEngine();
@@ -686,10 +692,11 @@ public class MainController implements Initializable {
         responseRawTextArea.appendText(responseRawBuilder.toString());
     }
 
-    private void fillOverviewTab(FlowNode selectedNode) {
+    private void fillOverviewTab(FlowNode selectedNode) throws SQLException {
         overviewRoot.getChildren().clear();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        Request request = requestMapper.selectById(selectedNode.getId());
+        Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+        Request request = requestDao.queryForId(selectedNode.getId());
         overviewTreeTableView.setUserData(selectedNode.getId());
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Url", request.getUri())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Status", selectedNode.getStatus() == -1 ? "Loading" : "Complete")));
@@ -698,9 +705,8 @@ public class MainController implements Initializable {
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Method", request.getMethod())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Host", request.getHost())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Port", String.valueOf(request.getPort()))));
-        QueryWrapper<Response> responseQuery = new QueryWrapper<>();
-        responseQuery.eq("request_id", request.getId());
-        Response response = responseMapper.selectOne(responseQuery);
+        Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
+        Response response = responseDao.queryBuilder().where().eq(Response.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
         if (null != response) {
             overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Content-Type", response.getContentType())));
             QueryWrapper<ConnectionOverview> connectionOverviewQuery = new QueryWrapper<>();

@@ -1,0 +1,12 @@
+/*.tab-pane {*/
+/*    -fx-tab-max-height: 0 ;*/
+/*}*/
+/*.tab-pane .tab-header-area {*/
+/*    visibility: hidden ;*/
+/*}*/
+.wizard {
+    -fx-tab-max-height: 0 ;
+}
+.wizard .tab-header-area {
+    visibility: hidden ;
+}

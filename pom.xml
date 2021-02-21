@@ -13,6 +13,7 @@
         <module>internal-proxy</module>
         <module>proxy-fx</module>
         <module>proxy-swing</module>
+        <module>mitmproxy4j-fx</module>
     </modules>
 
     <name>mitmproxy4J</name>
