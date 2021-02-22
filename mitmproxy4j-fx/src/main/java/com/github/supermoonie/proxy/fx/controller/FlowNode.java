@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.fx;
+package com.github.supermoonie.proxy.fx.controller;
 
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import javafx.beans.property.SimpleIntegerProperty;

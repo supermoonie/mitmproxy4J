@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.fx;
+package com.github.supermoonie.proxy.fx.controller;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

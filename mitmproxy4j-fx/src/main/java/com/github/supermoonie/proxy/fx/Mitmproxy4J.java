@@ -1,66 +1,52 @@
 package com.github.supermoonie.proxy.fx;
 
-import com.github.supermoonie.proxy.fx.controller.MainController;
-import com.sun.javafx.PlatformUtil;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.application.Preloader;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.stage.Stage;
+import com.sun.javafx.application.LauncherImpl;
+import io.netty.util.internal.PlatformDependent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import java.awt.*;
+import java.awt.desktop.PreferencesHandler;
+import java.lang.reflect.Method;
 import java.net.URL;
 
 /**
- * Hello world!
- *
- * @author wangc
+ * @author supermoonie
+ * @date 2021-02-21
  */
-public class Mitmproxy4J extends Application {
+public class Mitmproxy4J {
 
-    private static Stage primaryStage;
+    private static final Logger log = LoggerFactory.getLogger(Mitmproxy4J.class);
 
-    private static MainController mainController;
-
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        Mitmproxy4J.primaryStage = primaryStage;
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/Main.fxml"));
-        Parent root = fxmlLoader.load();
-        mainController = fxmlLoader.getController();
-        primaryStage.setScene(new Scene(root));
-        setCommonIcon(primaryStage);
-        primaryStage.show();
-        primaryStage.setOnCloseRequest(windowEvent -> Platform.runLater(Platform::exit));
-    }
-
-    @Override
-    public void init() throws Exception {
-        this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
-    }
-
-    public static void setCommonIcon(Stage stage) {
-        setCommonIcon(stage, "Lightning | Listening on ");
-    }
-
-    public static void setCommonIcon(Stage stage, String title) {
-        URL iconUrl;
-        if (PlatformUtil.isWindows()) {
-            iconUrl = Mitmproxy4J.class.getResource("/lightning-win.png");
-        } else {
-            iconUrl = Mitmproxy4J.class.getResource("/lightning-mac.png");
-        }
-        stage.getIcons().add(new Image(iconUrl.toString()));
-        stage.setTitle(title);
-        stage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode().equals(KeyCode.ESCAPE)) {
-                stage.close();
+    public static void main(String[] args) {
+        if (PlatformDependent.isOsx()) {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            try {
+                Class<?> appleAppClass = Class.forName("com.apple.eawt.Application");
+                Method getApplication = appleAppClass.getMethod("getApplication");
+                Object app = getApplication.invoke(appleAppClass);
+                Method setPreferencesHandler = appleAppClass.getMethod("setPreferencesHandler", PreferencesHandler.class);
+                setPreferencesHandler.invoke(app, (PreferencesHandler) e -> System.out.println("..."));
+                Method setDockIconImage = appleAppClass.getMethod("setDockIconImage", Image.class);
+                URL url = App.class.getClassLoader().getResource("mitm.png");
+                Image image = Toolkit.getDefaultToolkit().getImage(url);
+                setDockIconImage.invoke(app, image);
+//                com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
+//                app.setQuitHandler((e, response) -> response.performQuit());
+//                app.setAboutHandler(e -> {
+//                    // TODO
+//                    System.out.println("about");
+//                });
+//                app.setPreferencesHandler(e -> new AppearanceDialogController(MAIN_FRAME, "Preferences", true).setVisible(true));
+//                URL url = Application.class.getClassLoader().getResource("M.png");
+//                Image image = Toolkit.getDefaultToolkit().getImage(url);
+//                app.setDockIconImage(image);
+            } catch (Throwable e) {
+                log.error(e.getMessage(), e);
+                //This means that the application is not being run on MAC OS.
+                //Just do nothing and go on...
             }
-        });
+        }
+        LauncherImpl.launchApplication(App.class, SplashScreenLoader.class, args);
     }
 }

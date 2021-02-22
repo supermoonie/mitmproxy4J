@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RichText</title>
+    <style type="text/css" media="screen">
+        #editor {
+            z-index: 1;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        #loading {
+            opacity: 0.6;
+            z-index: 9999;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 124px;
+            height: 124px;
+            margin-top: -30px;
+            margin-left: -30px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+<div id="loading">
+    <img src="img/loading.gif" alt="">
+</div>
+<div id="editor"></div>
+</body>
+<script src="js/crypto-js/crypto-js.js"></script>
+<script src="js/crypto-js/cipher-core.js"></script>
+<script src="js/crypto-js/enc-base64.js"></script>
+<script src="js/crypto-js/format-hex.js"></script>
+<script src="js/beautify/beautify.min.js"></script>
+<script src="js/beautify/beautify-css.min.js"></script>
+<script src="js/beautify/beautify-html.min.js"></script>
+<script src="js/ace/ace.min.js"></script>
+<script src="js/ace/theme-chrome.min.js"></script>
+<script src="js/ace/mode-html.min.js"></script>
+<script src="js/ace/mode-javascript.min.js"></script>
+<script src="js/ace/mode-json.min.js"></script>
+<script src="js/ace/mode-xml.min.js"></script>
+<script src="js/ace/mode-plain_text.min.js"></script>
+<script src="js/ace/ext-language_tools.min.js"></script>
+<script>
+    const opts = {
+        indent_size: '4',
+        indent_char: ' ',
+        max_preserve_newlines: '5',
+        preserve_newlines: true,
+        keep_array_indentation: false,
+        break_chained_methods: false,
+        indent_scripts: 'normal',
+        brace_style: 'collapse',
+        space_before_conditional: true,
+        unescape_strings: false,
+        jslint_happy: false,
+        end_with_newline: false,
+        wrap_line_length: '0',
+        indent_inner_html: false,
+        comma_first: false,
+        e4x: false,
+        indent_empty_lines: false
+    };
+    ace.config.set("basePath", "third/ace");
+    let codeEditor = ace.edit("editor");
+    codeEditor.setTheme("ace/theme/chrome");
+    codeEditor.getSession().setMode("ace/mode/json");
+    codeEditor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true
+    });
+    ![
+        "dragenter", "dragover", "dragend", "dragstart", "dragleave", "drop"
+    ].forEach(function (eventName) {
+        codeEditor.container.addEventListener(eventName, function (e) {
+            e.stopPropagation()
+        }, true)
+    });
+    codeEditor.setOption("dragEnabled", false)
+    codeEditor.setScrollSpeed(0.02);
+    window.codeEditor = codeEditor;
+    window.setHexText = function(hexText) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/text');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexText)), 1);
+        hideLoading();
+    }
+    window.setHexJson = function (hexJson) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/json');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(js_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexJson)), opts), 1);
+        hideLoading();
+    }
+    window.setHexHtml = function (hexHtml) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/html');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexHtml)), opts), 1);
+        hideLoading();
+    }
+    window.setHexJavaScript = function (hexJavaScript) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/javascript');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(js_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexJavaScript)), opts), 1);
+        hideLoading();
+    }
+    window.setHexXml = function (hexXml) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/xml');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexXml)), opts), 1);
+        hideLoading();
+    }
+    window.setHexCss = function (hexCss) {
+        showLoading();
+        codeEditor.getSession().setMode('ace/mode/css');
+        codeEditor.setReadOnly(true);
+        codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexCss)), opts), 1);
+        hideLoading();
+    }
+    window.hideLoading = function () {
+        document.getElementById("loading").style.display = 'none';
+    }
+    window.showLoading = function () {
+        document.getElementById("loading").style.display = 'block';
+    }
+</script>
+</html>

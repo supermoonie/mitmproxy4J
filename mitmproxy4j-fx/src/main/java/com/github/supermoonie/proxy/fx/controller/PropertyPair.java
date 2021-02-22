@@ -1,4 +1,4 @@
-package com.github.supermoonie.proxy.fx;
+package com.github.supermoonie.proxy.fx.controller;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
