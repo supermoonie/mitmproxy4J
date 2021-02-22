@@ -51,8 +51,10 @@ public class App extends Application {
         setCommonIcon(primaryStage);
         primaryStage.show();
         primaryStage.setOnCloseRequest(windowEvent -> {
+//            ProxyManager.stop();
             App.EXECUTOR.shutdown();
             Platform.runLater(Platform::exit);
+            System.exit(0);
         });
     }
 

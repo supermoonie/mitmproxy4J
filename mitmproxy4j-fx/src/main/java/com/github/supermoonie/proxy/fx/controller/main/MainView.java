@@ -153,6 +153,7 @@ public abstract class MainView implements Initializable {
         blockListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_BLOCK_LIST_ENABLE, AppPreferences.DEFAULT_BLOCK_LIST_ENABLE));
         allowListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_ALLOW_LIST_ENABLE, AppPreferences.DEFAULT_ALLOW_LIST_ENABLE));
         initTreeView();
+        initWebview(responseJsonWebView);
     }
 
     private void initWebview(WebView webView) {
