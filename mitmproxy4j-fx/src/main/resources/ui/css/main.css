@@ -3,3 +3,18 @@
     -fx-border-color: #ccc;
     -fx-border-style: solid none solid none;
 }
+/*.tree-view {*/
+/*    -fx-background-color:lightsteelblue;*/
+/*}*/
+
+/*.tree-cell {*/
+/*    -fx-background-color:lightsteelblue; // Default color*/
+/*}*/
+
+.tree-view:focused .tree-cell:filled:selected {
+    -fx-background-color: #2675BF; // Focused color
+}
+
+.tree-cell:filled:selected{
+    -fx-background-color: #D3D3D3; // Unfocused color
+}

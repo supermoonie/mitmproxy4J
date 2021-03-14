@@ -8,9 +8,9 @@ public interface ContentType {
 
     String APPLICATION_FORM = "application/x-www-form-urlencoded";
 
-    String APPLICATION_JSON = "application/json";
+    String APPLICATION_JSON = "json";
 
-    String APPLICATION_JAVASCRIPT = "application/javascript";
+    String APPLICATION_JAVASCRIPT = "javascript";
 
     String TEXT_HTML = "text/html";
 

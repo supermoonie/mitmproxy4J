@@ -291,7 +291,7 @@ public abstract class MainView implements Initializable {
         treeView.setRoot(filterRoot);
     }
 
-    private void updateTreeItem(FlowNode flowNode) throws URISyntaxException {
+    public void updateTreeItem(FlowNode flowNode) throws URISyntaxException {
         URI uri = new URI(flowNode.getUrl());
         String baseUri = uri.getScheme() + "://" + uri.getAuthority();
         ObservableList<TreeItem<FlowNode>> children = root.getChildren();

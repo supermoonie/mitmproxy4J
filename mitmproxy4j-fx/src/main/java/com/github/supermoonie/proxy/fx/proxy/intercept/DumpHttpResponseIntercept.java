@@ -1,7 +1,10 @@
 package com.github.supermoonie.proxy.fx.proxy.intercept;
 
+import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.App;
+import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.controller.FlowNode;
 import com.github.supermoonie.proxy.fx.controller.main.MainController;
 import com.github.supermoonie.proxy.fx.controller.main.MainView;
 import com.github.supermoonie.proxy.fx.dao.ResponseDao;
@@ -29,6 +32,29 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
 
     private DumpHttpResponseIntercept() {
 
+    }
+
+    @Override
+    public void onRead(InterceptContext ctx, HttpRequest request) {
+        if (null == ctx.getUserData()) {
+            return;
+        }
+        ConnectionInfo connectionInfo = ctx.getConnectionInfo();
+        Request req = (Request) ctx.getUserData();
+        FlowNode flowNode = new FlowNode();
+        flowNode.setId(req.getId());
+        flowNode.setType(EnumFlowType.TARGET);
+        flowNode.setUrl(connectionInfo.getUrl());
+        flowNode.setRequestTime(req.getTimeCreated());
+        flowNode.setStatus(0);
+        Platform.runLater(() -> {
+            try {
+                MainController mainController = App.getMainController();
+                mainController.updateTreeItem(flowNode);
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
     }
 
     @Override

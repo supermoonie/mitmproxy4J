@@ -191,7 +191,7 @@ public class MainController extends MainView {
                         appendTab(responseTabPane, responseTextTab);
                     }
 
-                    if (header.getValue().startsWith(ContentType.APPLICATION_JSON)) {
+                    if (header.getValue().contains(ContentType.APPLICATION_JSON)) {
                         engine.executeScript(String.format("setHexJson('%s')", hexRaw));
                         responseContentTab.setText("JSON");
                         appendTab(responseTabPane, responseContentTab);
@@ -199,7 +199,7 @@ public class MainController extends MainView {
                         engine.executeScript(String.format("setHexHtml('%s')", hexRaw));
                         responseContentTab.setText("HTML");
                         appendTab(responseTabPane, responseContentTab);
-                    } else if (header.getValue().startsWith(ContentType.APPLICATION_JAVASCRIPT)) {
+                    } else if (header.getValue().contains(ContentType.APPLICATION_JAVASCRIPT)) {
                         Platform.runLater(() -> engine.executeScript(String.format("setHexJavaScript('%s')", hexRaw)));
                         responseContentTab.setText("JavaScript");
                         appendTab(responseTabPane, responseContentTab);

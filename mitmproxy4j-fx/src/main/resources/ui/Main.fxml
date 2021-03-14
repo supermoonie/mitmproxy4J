@@ -107,7 +107,6 @@
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <ToggleSwitch selected="false" text="Recording" alignment="CENTER"/>
               </items>
             </ToolBar>
          </children>
