@@ -3,6 +3,7 @@ package com.github.supermoonie.proxy.fx.util;
 import com.github.supermoonie.proxy.fx.support.PropertyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,7 +33,7 @@ public final class UrlUtil {
                 return null;
             }
             String last = fragment[fragment.length - 1];
-            if (null == last || "".equals(last)) {
+            if (StringUtils.isEmpty(last)) {
                 return null;
             }
             return last;

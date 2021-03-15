@@ -1,8 +1,8 @@
 package com.github.supermoonie.proxy.fx.controller.main;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.supermoonie.proxy.ConnectionInfo;
 import com.github.supermoonie.proxy.fx.App;
-import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.constant.KeyEvents;
@@ -12,21 +12,18 @@ import com.github.supermoonie.proxy.fx.controller.main.factory.ListViewCellFacto
 import com.github.supermoonie.proxy.fx.controller.main.handler.*;
 import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewFocusListener;
 import com.github.supermoonie.proxy.fx.controller.main.listener.TreeViewSelectListener;
-import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dto.ColumnMap;
 import com.github.supermoonie.proxy.fx.dto.FlowNode;
 import com.github.supermoonie.proxy.fx.entity.*;
+import com.github.supermoonie.proxy.fx.mapper.*;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
+import com.github.supermoonie.proxy.fx.service.FlowService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.source.Icons;
 import com.github.supermoonie.proxy.fx.support.Flow;
 import com.github.supermoonie.proxy.fx.support.HexContentFlow;
 import com.github.supermoonie.proxy.fx.support.PropertyPair;
-import com.github.supermoonie.proxy.fx.util.AlertUtil;
-import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
-import com.github.supermoonie.proxy.fx.util.HttpClientUtil;
-import com.github.supermoonie.proxy.fx.util.JacksonUtil;
-import com.j256.ormlite.dao.Dao;
+import com.github.supermoonie.proxy.fx.util.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 import javafx.application.Platform;
@@ -38,23 +35,30 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ByteArrayEntity;
@@ -63,6 +67,8 @@ import org.bouncycastle.util.encoders.Hex;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -71,7 +77,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
@@ -216,14 +221,31 @@ public class MainController implements Initializable {
     private final MenuItem ovCopyValueMenuItem = new MenuItem("Copy Value");
     private final MenuItem ovCopyRowMenuItem = new MenuItem("Copy Row");
 
+    private final RequestMapper requestMapper = ApplicationContextUtil.getBean(RequestMapper.class);
+    private final HeaderMapper headerMapper = ApplicationContextUtil.getBean(HeaderMapper.class);
+    private final ResponseMapper responseMapper = ApplicationContextUtil.getBean(ResponseMapper.class);
+    private final ContentMapper contentMapper = ApplicationContextUtil.getBean(ContentMapper.class);
+    private final FlowService flowService = ApplicationContextUtil.getBean(FlowService.class);
+    private final ConnectionOverviewMapper connectionOverviewMapper = ApplicationContextUtil.getBean(ConnectionOverviewMapper.class);
+    private final CertificateMapMapper certificateMapMapper = ApplicationContextUtil.getBean(CertificateMapMapper.class);
+    private final CertificateInfoMapper certificateInfoMapper = ApplicationContextUtil.getBean(CertificateInfoMapper.class);
+
     private final ObservableList<FlowNode> allNode = FXCollections.observableList(new LinkedList<>());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     private String currentRequestId;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        blockListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_BLOCK_LIST_ENABLE, AppPreferences.DEFAULT_BLOCK_LIST_ENABLE));
-        allowListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_ALLOW_LIST_ENABLE, AppPreferences.DEFAULT_ALLOW_LIST_ENABLE));
+        tabPane.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (structureTab.equals(newValue)) {
+                filterTextField.setPromptText("Domain Filter");
+            } else if (sequenceTab.equals(newValue)) {
+                filterTextField.setPromptText("Filter");
+            }
+        });
+        blockListMenuItem.setSelected(GlobalSetting.getInstance().isBlockUrl());
+        allowListMenuItem.setSelected(GlobalSetting.getInstance().isAllowUrl());
+        systemProxyMenuItem.setSelected(GlobalSetting.getInstance().isSystemProxy());
         initToolBar();
         initRecordSetting();
         initThrottlingSetting();
@@ -332,8 +354,8 @@ public class MainController implements Initializable {
     }
 
     private void initRecordSetting() {
-        recordMenuItem.setSelected(true);
-        ImageView imageView = new ImageView(Icons.GREEN_DOT_ICON);
+        recordMenuItem.setSelected(GlobalSetting.getInstance().isRecord());
+        ImageView imageView = new ImageView(GlobalSetting.getInstance().isRecord() ? Icons.GREEN_DOT_ICON : Icons.GRAY_DOT_ICON);
         imageView.setFitWidth(12);
         imageView.setFitHeight(12);
         recordingSwitchButton.setGraphic(imageView);
@@ -418,53 +440,53 @@ public class MainController implements Initializable {
     }
 
     public void onOpenMenuItemClicked() {
-//        FileChooser fileChooser = new FileChooser();
-//        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Json Files", "*.json"));
-//        File file = fileChooser.showOpenDialog(App.getPrimaryStage());
-//        if (null != file) {
-//            try {
-//                String data = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-//                HexContentFlow flow = JacksonUtil.parse(data, HexContentFlow.class);
-//                flowService.save(flow);
-//                ConnectionInfo connectionInfo = new ConnectionInfo();
-//                connectionInfo.setUrl(flow.getRequest().getUri());
-//                addFlow(connectionInfo, flow.getRequest(), flow.getResponse());
-//            } catch (IOException | URISyntaxException e) {
-//                log.error(e.getMessage(), e);
-//            }
-//        }
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Json Files", "*.json"));
+        File file = fileChooser.showOpenDialog(App.getPrimaryStage());
+        if (null != file) {
+            try {
+                String data = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                HexContentFlow flow = JSON.parse(data, HexContentFlow.class);
+                flowService.save(flow);
+                ConnectionInfo connectionInfo = new ConnectionInfo();
+                connectionInfo.setUrl(flow.getRequest().getUri());
+                addFlow(connectionInfo, flow.getRequest(), flow.getResponse());
+            } catch (IOException | URISyntaxException e) {
+                log.error(e.getMessage(), e);
+            }
+        }
     }
 
     public void onSaveMenuClicked() {
-//        if (StringUtils.isEmpty(currentRequestId)) {
-//            return;
-//        }
-//        DirectoryChooser directoryChooser = new DirectoryChooser();
-//        File dir = directoryChooser.showDialog(App.getPrimaryStage());
-//        if (null != dir) {
-//            Flow flow = getFlow(currentRequestId);
-//            HexContentFlow hexContentFlow = new HexContentFlow();
-//            hexContentFlow.setRequest(flow.getRequest());
-//            hexContentFlow.setResponse(flow.getResponse());
-//            hexContentFlow.setRequestHeaders(flow.getRequestHeaders());
-//            hexContentFlow.setResponseHeaders(flow.getResponseHeaders());
-//            if (!StringUtils.isEmpty(flow.getRequest().getContentId())) {
-//                Content content = contentMapper.selectById(flow.getRequest().getContentId());
-//                hexContentFlow.setHexRequestContent(Hex.toHexString(content.getContent()));
-//            }
-//            if (!StringUtils.isEmpty(flow.getResponse().getContentId())) {
-//                Content content = contentMapper.selectById(flow.getResponse().getContentId());
-//                hexContentFlow.setHexResponseContent(Hex.toHexString(content.getContent()));
-//            }
-//            String data = JacksonUtil.toJsonString(hexContentFlow, true);
-//            try {
-//                String filePath = dir.getAbsolutePath() + File.separator + flow.getRequest().getId() + ".json";
-//                FileUtils.writeStringToFile(new File(filePath), data, StandardCharsets.UTF_8);
-//            } catch (IOException e) {
-//                log.error(e.getMessage(), e);
-//                AlertUtil.error(e);
-//            }
-//        }
+        if (StringUtils.isEmpty(currentRequestId)) {
+            return;
+        }
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File dir = directoryChooser.showDialog(App.getPrimaryStage());
+        if (null != dir) {
+            Flow flow = getFlow(currentRequestId);
+            HexContentFlow hexContentFlow = new HexContentFlow();
+            hexContentFlow.setRequest(flow.getRequest());
+            hexContentFlow.setResponse(flow.getResponse());
+            hexContentFlow.setRequestHeaders(flow.getRequestHeaders());
+            hexContentFlow.setResponseHeaders(flow.getResponseHeaders());
+            if (!StringUtils.isEmpty(flow.getRequest().getContentId())) {
+                Content content = contentMapper.selectById(flow.getRequest().getContentId());
+                hexContentFlow.setHexRequestContent(Hex.toHexString(content.getContent()));
+            }
+            if (!StringUtils.isEmpty(flow.getResponse().getContentId())) {
+                Content content = contentMapper.selectById(flow.getResponse().getContentId());
+                hexContentFlow.setHexResponseContent(Hex.toHexString(content.getContent()));
+            }
+            String data = JSON.toJsonString(hexContentFlow, true);
+            try {
+                String filePath = dir.getAbsolutePath() + File.separator + flow.getRequest().getId() + ".json";
+                FileUtils.writeStringToFile(new File(filePath), data, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+                AlertUtil.error(e);
+            }
+        }
     }
 
     public void onRecordMenuItemClicked() {
@@ -493,9 +515,8 @@ public class MainController implements Initializable {
                     }
                 });
                 if (null != request.getContentId()) {
-                    Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
-                    Content content = contentDao.queryForId(request.getContentId());
-                    requestBuilder.setEntity(new ByteArrayEntity(content.getRawContent()));
+                    Content content = contentMapper.selectById(request.getContentId());
+                    requestBuilder.setEntity(new ByteArrayEntity(content.getContent()));
                 }
                 httpClient.execute(requestBuilder.build()).close();
             } catch (Exception e) {
@@ -583,16 +604,15 @@ public class MainController implements Initializable {
         tabPane.getTabs().removeIf(tab -> tab.getText().equals(tabToRemove.getText()));
     }
 
-    private void fillRequestRawTab(Request request, List<Header> requestHeaders) throws SQLException {
+    private void fillRequestRawTab(Request request, List<Header> requestHeaders) {
         StringBuilder requestRawBuilder = new StringBuilder();
         requestRawBuilder.append(request.getMethod()).append(" ").append(request.getUri()).append("\n");
         for (Header header : requestHeaders) {
             requestRawBuilder.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
         }
-        if (null != request.getContentId()) {
-            Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
-            Content content = contentDao.queryForId(request.getContentId());
-            byte[] bytes = content.getRawContent();
+        if (!StringUtils.isEmpty(request.getContentId())) {
+            Content content = contentMapper.selectById(request.getContentId());
+            byte[] bytes = content.getContent();
             requestRawBuilder.append("\n");
             // TODO charset utf8 gbk gb2312 iso8859-1
             String raw = new String(bytes);
@@ -623,16 +643,15 @@ public class MainController implements Initializable {
         }
     }
 
-    private void fillResponseRawTab(Response response, List<Header> responseHeaders) throws SQLException {
+    private void fillResponseRawTab(Response response, List<Header> responseHeaders) {
         StringBuilder responseRawBuilder = new StringBuilder();
         responseRawBuilder.append("Status : ").append(response.getStatus()).append("\n");
         for (Header header : responseHeaders) {
             responseRawBuilder.append(header.getName()).append(" : ").append(header.getValue()).append("\n");
         }
-        if (null != response.getContentId()) {
-            Dao<Content, Integer> contentDao = DaoCollections.getDao(Content.class);
-            Content content = contentDao.queryForId(response.getContentId());
-            byte[] bytes = content.getRawContent();
+        if (!StringUtils.isEmpty(response.getContentId())) {
+            Content content = contentMapper.selectById(response.getContentId());
+            byte[] bytes = content.getContent();
             responseRawBuilder.append("\n");
             responseHeaders.stream().filter(header -> HttpHeaderNames.CONTENT_TYPE.toString().equalsIgnoreCase(header.getName())).findFirst().ifPresent(header -> {
                 WebEngine engine = responseJsonWebView.getEngine();
@@ -692,11 +711,10 @@ public class MainController implements Initializable {
         responseRawTextArea.appendText(responseRawBuilder.toString());
     }
 
-    private void fillOverviewTab(FlowNode selectedNode) throws SQLException {
+    private void fillOverviewTab(FlowNode selectedNode) {
         overviewRoot.getChildren().clear();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
-        Request request = requestDao.queryForId(selectedNode.getId());
+        Request request = requestMapper.selectById(selectedNode.getId());
         overviewTreeTableView.setUserData(selectedNode.getId());
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Url", request.getUri())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Status", selectedNode.getStatus() == -1 ? "Loading" : "Complete")));
@@ -705,8 +723,9 @@ public class MainController implements Initializable {
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Method", request.getMethod())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Host", request.getHost())));
         overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Port", String.valueOf(request.getPort()))));
-        Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
-        Response response = responseDao.queryBuilder().where().eq(Response.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
+        QueryWrapper<Response> responseQuery = new QueryWrapper<>();
+        responseQuery.eq("request_id", request.getId());
+        Response response = responseMapper.selectOne(responseQuery);
         if (null != response) {
             overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Content-Type", response.getContentType())));
             QueryWrapper<ConnectionOverview> connectionOverviewQuery = new QueryWrapper<>();

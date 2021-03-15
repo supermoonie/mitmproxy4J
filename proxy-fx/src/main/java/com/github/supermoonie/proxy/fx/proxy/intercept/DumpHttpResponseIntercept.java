@@ -7,29 +7,27 @@ import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.service.ResponseService;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
-import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import java.sql.SQLException;
+import javax.annotation.Resource;
 
 /**
  * @author supermoonie
  * @since 2020/9/11
  */
+@Component
 public class DumpHttpResponseIntercept implements ResponseIntercept {
 
     private final Logger log = LoggerFactory.getLogger(DumpHttpResponseIntercept.class);
 
-    public static final DumpHttpResponseIntercept INSTANCE = new DumpHttpResponseIntercept();
-
-    private DumpHttpResponseIntercept() {
-
-    }
+    @Resource
+    private ResponseService responseService;
 
     @Override
     public FullHttpResponse onResponse(InterceptContext ctx, HttpRequest request, FullHttpResponse response) {
@@ -38,13 +36,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
         }
         if (GlobalSetting.getInstance().isRecord()) {
             Request req = (Request) ctx.getUserData();
-            Response res;
-            try {
-                res = ResponseService.saveResponse(ctx, req, response);
-            } catch (SQLException e) {
-                AlertUtil.error(e);
-                return null;
-            }
+            Response res = responseService.saveResponse(ctx, response, req);
             log.info("response saved, uri: {}", request.uri());
             Platform.runLater(() -> {
                 try {

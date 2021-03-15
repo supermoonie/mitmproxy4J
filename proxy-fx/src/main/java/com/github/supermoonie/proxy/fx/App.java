@@ -1,12 +1,13 @@
 package com.github.supermoonie.proxy.fx;
 
 import com.github.supermoonie.proxy.fx.controller.main.MainController;
-import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
+import com.github.supermoonie.proxy.fx.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
+import com.github.supermoonie.proxy.fx.support.AllowUrl;
+import com.github.supermoonie.proxy.fx.support.BlockUrl;
 import com.github.supermoonie.proxy.fx.tray.SystemTrayManager;
-import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.fx.util.SettingUtil;
 import com.sun.javafx.PlatformUtil;
 import javafx.application.Application;
@@ -19,20 +20,31 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import org.apache.commons.io.IOUtils;
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.annotation.Resource;
 import javax.swing.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.prefs.Preferences;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
  *
  * @author supermoonie
  */
+@SpringBootApplication
+@MapperScan(basePackages = "com.github.supermoonie.proxy.fx.mapper")
 public class App extends Application {
 
     private final Logger log = LoggerFactory.getLogger(App.class);
@@ -43,7 +55,20 @@ public class App extends Application {
         launch(args);
     }
 
-    private static final String PREFS_ROOT_PATH = "/mitmproxy4j";
+    @Resource
+    private ApplicationContext applicationContext;
+
+    @Resource
+    private SystemTrayManager systemTrayManager;
+
+    @Resource
+    private InternalProxyInterceptInitializer initializer;
+
+    @Resource
+    private DefaultConfigIntercept defaultConfigIntercept;
+
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
     private static Stage primaryStage;
 
@@ -58,9 +83,11 @@ public class App extends Application {
         mainController = fxmlLoader.getController();
         primaryStage.setScene(new Scene(root));
         setCommonIcon(primaryStage);
+//        new InspectNode(primaryStage);
         primaryStage.show();
         primaryStage.setOnCloseRequest(windowEvent -> {
-            SwingUtilities.invokeLater(SystemTrayManager::destroy);
+            SpringApplication.exit(applicationContext, () -> 0);
+            SwingUtilities.invokeLater(() -> systemTrayManager.destroy());
             EXECUTOR.shutdown();
             Platform.runLater(() -> {
                 SettingUtil.save(GlobalSetting.getInstance());
@@ -72,30 +99,73 @@ public class App extends Application {
 
     @Override
     public void init() throws Exception {
-        log.info("init app preferences");
-        AppPreferences.init(PREFS_ROOT_PATH);
-        log.info("init db");
-        DaoCollections.init();
-        Thread.setDefaultUncaughtExceptionHandler(AlertUtil::showError);
-        log.info("init proxy");
-        initProxy();
+        SpringApplication.run(getClass()).getAutowireCapableBeanFactory().autowireBean(this);
+        initDatabase();
+        Platform.runLater(() -> {
+            SettingUtil.load();
+            initSetting();
+        });
+        EXECUTOR.scheduleAtFixedRate(() -> SettingUtil.save(GlobalSetting.getInstance()), 10, 30, TimeUnit.SECONDS);
+
+        systemTrayManager.init();
         this.notifyPreloader(new Preloader.StateChangeNotification(Preloader.StateChangeNotification.Type.BEFORE_LOAD));
     }
 
-    private void initProxy() {
-        Preferences state = AppPreferences.getState();
-        int port = state.getInt(AppPreferences.KEY_PROXY_PORT, AppPreferences.DEFAULT_PROXY_PORT);
-        boolean auth = state.getBoolean(AppPreferences.KEY_PROXY_AUTH, AppPreferences.DEFAULT_PROXY_AUTH);
-        String username = state.get(AppPreferences.KEY_PROXY_AUTH_USER, "");
-        String password = state.get(AppPreferences.KEY_PROXY_AUTH_PWD, "");
-        ProxyManager.start(port, auth, username, password, InternalProxyInterceptInitializer.INSTANCE);
-        long writeLimit = state.getLong(AppPreferences.KEY_PROXY_LIMIT_WRITE, AppPreferences.DEFAULT_PROXY_LIMIT_WRITE);
-        long readLimit = state.getLong(AppPreferences.KEY_PROXY_LIMIT_READ, AppPreferences.DEFAULT_PROXY_LIMIT_READ);
-        ProxyManager.setWriteLimit(writeLimit);
-        ProxyManager.setReadLimit(readLimit);
-        log.info("mitmproxy4J is listening on " + port);
+    private void initSetting() {
+        GlobalSetting instance = GlobalSetting.getInstance();
+        ProxyManager.start(instance.getPort(), instance.isAuth(), instance.getUsername(), instance.getPassword(), initializer);
+        ProxyManager.getInternalProxy().setTrafficShaping(instance.isThrottling());
+        defaultConfigIntercept.setAllowFlag(instance.isAllowUrl());
+        defaultConfigIntercept.setBlockFlag(instance.isBlockUrl());
+        for (AllowUrl allowUrl : instance.getAllowUrlList()) {
+            if (allowUrl.isEnable()) {
+                defaultConfigIntercept.getAllowUriList().add(allowUrl.getUrlRegex());
+            }
+        }
+        for (BlockUrl blockUrl : instance.getBlockUrlList()) {
+            if (blockUrl.isEnable()) {
+                defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
+            }
+        }
+        try {
+            if (instance.isSystemProxy()) {
+                ProxyManager.enableSystemProxy();
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        instance.portProperty().addListener((observable, oldValue, newValue) -> primaryStage.setTitle("Lighting:" + newValue));
+        instance.blockUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setBlockFlag(newValue));
+        instance.blockUrlListProperty().addListener((observable, oldValue, newValue) -> {
+            defaultConfigIntercept.getBlockUriList().clear();
+            for (BlockUrl blockUrl : newValue) {
+                if (blockUrl.isEnable()) {
+                    defaultConfigIntercept.getBlockUriList().add(blockUrl.getUrlRegex());
+                }
+            }
+        });
+        instance.allowUrlProperty().addListener((observable, oldValue, newValue) -> defaultConfigIntercept.setAllowFlag(newValue));
+        instance.allowUrlListProperty().addListener((observable, oldValue, newValue) -> {
+            defaultConfigIntercept.getAllowUriList().clear();
+            for (AllowUrl allowUrl : newValue) {
+                if (allowUrl.isEnable()) {
+                    defaultConfigIntercept.getAllowUriList().add(allowUrl.getUrlRegex());
+                }
+            }
+        });
     }
 
+
+    private void initDatabase() throws IOException {
+        try (InputStream in = getClass().getResourceAsStream("/crate_table.sql")) {
+            byte[] bytes = IOUtils.readFully(in, in.available());
+            String initSql = new String(bytes);
+            String[] sqlArr = initSql.split("--EOF--");
+            for (String sql : sqlArr) {
+                jdbcTemplate.execute(sql);
+            }
+        }
+    }
 
     public static void setCommonIcon(Stage stage) {
         setCommonIcon(stage, "Lightning | Listening on " + ProxyManager.getInternalProxy().getPort());

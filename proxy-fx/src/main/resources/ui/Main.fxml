@@ -106,7 +106,6 @@
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </padding>
                   </Button>
-                  <ToggleButton mnemonicParsing="false" text="ToggleButton" />
               </items>
             </ToolBar>
          </children>
