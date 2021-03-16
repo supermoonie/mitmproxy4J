@@ -152,6 +152,7 @@ public abstract class MainView implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         blockListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_BLOCK_LIST_ENABLE, AppPreferences.DEFAULT_BLOCK_LIST_ENABLE));
         allowListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_ALLOW_LIST_ENABLE, AppPreferences.DEFAULT_ALLOW_LIST_ENABLE));
+        initToolBar();
         initTreeView();
         initWebview(responseJsonWebView);
     }
@@ -180,6 +181,28 @@ public abstract class MainView implements Initializable {
 //        treeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectListener());
     }
 
+    private void initToolBar() {
+        ImageView clearIconView = new ImageView(Icons.CLEAR_ICON);
+        clearIconView.setFitHeight(12);
+        clearIconView.setFitWidth(12);
+        clearButton.setGraphic(clearIconView);
+        editButton.setGraphic(Icons.FONT_AWESOME.create(FontAwesome.Glyph.EDIT));
+        repeatButton.setGraphic(Icons.FONT_AWESOME.create(FontAwesome.Glyph.REPEAT));
+        ImageView throttlingImageView = new ImageView(Icons.GRAY_DOT_ICON);
+        throttlingImageView.setFitWidth(12);
+        throttlingImageView.setFitHeight(12);
+        throttlingSwitchButton.setGraphic(throttlingImageView);
+        ImageView recordingImageView = new ImageView(Icons.GREEN_DOT_ICON);
+        recordingImageView.setFitWidth(12);
+        recordingImageView.setFitHeight(12);
+        recordingSwitchButton.setGraphic(recordingImageView);
+    }
+
+    /**
+     * tree clicked
+     *
+     * @param event event
+     */
     protected abstract void onTreeViewClicked(MouseEvent event);
 
     public void addFlow(ConnectionInfo connectionInfo, Request request, Response response) throws URISyntaxException {
