@@ -5,14 +5,13 @@ import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.controller.ColumnMap;
 import com.github.supermoonie.proxy.fx.controller.Flow;
 import com.github.supermoonie.proxy.fx.controller.FlowNode;
+import com.github.supermoonie.proxy.fx.controller.PropertyPair;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dao.FlowDao;
-import com.github.supermoonie.proxy.fx.entity.Content;
-import com.github.supermoonie.proxy.fx.entity.Header;
-import com.github.supermoonie.proxy.fx.entity.Request;
-import com.github.supermoonie.proxy.fx.entity.Response;
+import com.github.supermoonie.proxy.fx.entity.*;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.Where;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import javafx.application.Platform;
 import javafx.collections.transformation.FilteredList;
@@ -33,6 +32,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -125,9 +125,130 @@ public class MainController extends MainView {
             return;
         }
         try {
+            fillOverviewTab(selectedNode);
             fillContentsTab(selectedNode);
         } catch (SQLException e) {
             AlertUtil.error(e);
+        }
+    }
+
+    private void fillOverviewTab(FlowNode selectedNode) throws SQLException {
+        overviewRoot.getChildren().clear();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+        Request request = requestDao.queryForId(selectedNode.getId());
+        overviewTreeTableView.setUserData(selectedNode.getId());
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Url", request.getUri())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Status", selectedNode.getStatus() == -1 ? "Loading" : "Complete")));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Response Code", selectedNode.getStatus() == -1 ? "" : String.valueOf(selectedNode.getStatus()))));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Protocol", request.getHttpVersion())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Method", request.getMethod())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Host", request.getHost())));
+        overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Port", String.valueOf(request.getPort()))));
+        Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
+        Response response = responseDao.queryBuilder().where().eq(Response.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
+        if (null != response) {
+            overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Content-Type", response.getContentType())));
+            Dao<ConnectionOverview, Integer> overviewDao = DaoCollections.getDao(ConnectionOverview.class);
+            ConnectionOverview connectionOverview = overviewDao.queryBuilder().where().eq(ConnectionOverview.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
+            overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Client Address", connectionOverview.getClientHost() + ":" + connectionOverview.getClientPort())));
+//            overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("DNS", connectionOverview.getDnsServer())));
+            overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("Remote Address", connectionOverview.getRemoteIpList())));
+            TreeItem<PropertyPair> tlsTreeItem = new TreeItem<>(new PropertyPair("TLS", connectionOverview.getServerProtocol() + " (" + connectionOverview.getServerCipherSuite() + ")"));
+            TreeItem<PropertyPair> clientSessionIdTreeItem = new TreeItem<>(new PropertyPair("Client Session ID", connectionOverview.getClientSessionId()));
+            TreeItem<PropertyPair> serverSessionIdTreeItem = new TreeItem<>(new PropertyPair("Server Session ID", connectionOverview.getServerSessionId()));
+            TreeItem<PropertyPair> clientTreeItem = new TreeItem<>(new PropertyPair("Client Certificate", ""));
+            clientTreeItem.getChildren().clear();
+            TreeItem<PropertyPair> serverTreeItem = new TreeItem<>(new PropertyPair("Server Certificate", ""));
+            Dao<CertificateMap, Integer> certificateMapDao = DaoCollections.getDao(CertificateMap.class);
+            List<CertificateMap> certificateMaps = certificateMapDao.queryBuilder().where().eq(CertificateMap.REQUEST_ID_FIELD_NAME, request.getId()).query();
+            for (CertificateMap certificateMap : certificateMaps) {
+                Dao<CertificateInfo, Integer> certificateInfoDao = DaoCollections.getDao(CertificateInfo.class);
+                CertificateInfo certificateInfo = certificateInfoDao.queryBuilder().orderBy(CertificateInfo.TIME_CREATED_FIELD_NAME, false).where().eq(CertificateInfo.SERIAL_NUMBER_FIELD_NAME, certificateMap.getCertificateSerialNumber()).queryForFirst();
+                TreeItem<PropertyPair> certTreeItem = new TreeItem<>(new PropertyPair(certificateInfo.getSubjectCommonName(), ""));
+                TreeItem<PropertyPair> serialNumberTreeItem = new TreeItem<>(new PropertyPair("Serial Number", certificateInfo.getSerialNumber()));
+                TreeItem<PropertyPair> typeTreeItem = new TreeItem<>(new PropertyPair("Type", certificateInfo.getType() + " [v" + certificateInfo.getVersion() + "] (" + certificateInfo.getSigAlgName() + ")"));
+                TreeItem<PropertyPair> issuedToTreeItem = new TreeItem<>(new PropertyPair("Issued To", ""));
+                issuedToTreeItem.getChildren().clear();
+                if (!StringUtils.isEmpty(certificateInfo.getSubjectCommonName())) {
+                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Common Name", certificateInfo.getSubjectCommonName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getSubjectOrganizationDepartment())) {
+                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Unit", certificateInfo.getSubjectOrganizationDepartment())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getSubjectOrganizationName())) {
+                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Name", certificateInfo.getSubjectOrganizationName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getSubjectLocalityName())) {
+                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Locality Name", certificateInfo.getSubjectLocalityName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getSubjectStateName())) {
+                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("State Name", certificateInfo.getSubjectStateName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getSubjectCountry())) {
+                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Country", certificateInfo.getSubjectCountry())));
+                }
+                TreeItem<PropertyPair> issuedByTreeItem = new TreeItem<>(new PropertyPair("Issued By", ""));
+                issuedByTreeItem.getChildren().clear();
+                if (!StringUtils.isEmpty(certificateInfo.getIssuerCommonName())) {
+                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Common Name", certificateInfo.getIssuerCommonName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getIssuerOrganizationDepartment())) {
+                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Unit", certificateInfo.getIssuerOrganizationDepartment())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getIssuerOrganizationName())) {
+                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Name", certificateInfo.getIssuerOrganizationName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getIssuerLocalityName())) {
+                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Locality Name", certificateInfo.getIssuerLocalityName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getIssuerStateName())) {
+                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("State Name", certificateInfo.getIssuerStateName())));
+                }
+                if (!StringUtils.isEmpty(certificateInfo.getIssuerCountry())) {
+                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Country", certificateInfo.getIssuerCountry())));
+                }
+                TreeItem<PropertyPair> notValidBeforeTreeItem = new TreeItem<>(new PropertyPair("Not Valid Before", dateFormat.format(certificateInfo.getNotValidBefore())));
+                TreeItem<PropertyPair> notValidAfterTreeItem = new TreeItem<>(new PropertyPair("Not Valid After", dateFormat.format(certificateInfo.getNotValidAfter())));
+                TreeItem<PropertyPair> fingerprintsTreeItem = new TreeItem<>(new PropertyPair("Fingerprints", ""));
+                fingerprintsTreeItem.getChildren().clear();
+                fingerprintsTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("SHA-1", certificateInfo.getShaOne())));
+                fingerprintsTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("SHA-256", certificateInfo.getShaTwoFiveSix())));
+//                TreeItem<PropertyPair> fullDetailTreeItem = new TreeItem<>(new PropertyPair("Full Detail", certificateInfo.getFullDetail()));
+                certTreeItem.getChildren().clear();
+                certTreeItem.getChildren().add(serialNumberTreeItem);
+                certTreeItem.getChildren().add(typeTreeItem);
+                certTreeItem.getChildren().add(issuedToTreeItem);
+                certTreeItem.getChildren().add(issuedByTreeItem);
+                certTreeItem.getChildren().add(notValidBeforeTreeItem);
+                certTreeItem.getChildren().add(notValidAfterTreeItem);
+                certTreeItem.getChildren().add(fingerprintsTreeItem);
+//                certTreeItem.getChildren().add(fullDetailTreeItem);
+                if (null == certificateMap.getResponseId()) {
+                    clientTreeItem.getChildren().add(certTreeItem);
+                } else {
+                    serverTreeItem.getChildren().add(certTreeItem);
+                }
+            }
+            tlsTreeItem.getChildren().clear();
+            tlsTreeItem.getChildren().add(clientSessionIdTreeItem);
+            tlsTreeItem.getChildren().add(serverSessionIdTreeItem);
+            tlsTreeItem.getChildren().add(clientTreeItem);
+            tlsTreeItem.getChildren().add(serverTreeItem);
+            overviewRoot.getChildren().add(tlsTreeItem);
+            TreeItem<PropertyPair> timingTreeItem = new TreeItem<>(new PropertyPair("Timing", ""));
+            timingTreeItem.getChildren().clear();
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Request Start Time", dateFormat.format(request.getStartTime()))));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Request End Time", dateFormat.format(request.getEndTime()))));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Connect Start Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Connect End Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Response Start Time", dateFormat.format(response.getStartTime()))));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Response End Time", dateFormat.format(response.getEndTime()))));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Request", (request.getEndTime() - request.getStartTime()) + " ms")));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Response", (response.getEndTime() - response.getStartTime()) + " ms")));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Duration", (response.getEndTime() - request.getStartTime()) + " ms")));
+            timingTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("DNS", (connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime()) + " ms")));
+            overviewRoot.getChildren().add(timingTreeItem);
         }
     }
 

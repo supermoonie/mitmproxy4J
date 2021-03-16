@@ -13,6 +13,7 @@ import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -144,7 +145,7 @@ public abstract class MainView implements Initializable {
     @FXML
     protected Button recordingSwitchButton;
 
-    private final TreeItem<PropertyPair> overviewRoot = new TreeItem<>(new PropertyPair());
+    protected final TreeItem<PropertyPair> overviewRoot = new TreeItem<>(new PropertyPair());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     protected Integer currentRequestId;
 
@@ -154,8 +155,26 @@ public abstract class MainView implements Initializable {
         allowListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_ALLOW_LIST_ENABLE, AppPreferences.DEFAULT_ALLOW_LIST_ENABLE));
         initTreeView();
         initWebview(responseJsonWebView);
+        initOverviewTreeTableView();
     }
 
+    /**
+     * 初始化 overview
+     */
+    private void initOverviewTreeTableView() {
+        overviewNameColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getKey()));
+        overviewValueColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getValue()));
+        overviewRoot.setExpanded(true);
+        overviewTreeTableView.setShowRoot(false);
+        overviewTreeTableView.setRoot(overviewRoot);
+        overviewTreeTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    }
+
+    /**
+     * 初始化webview
+     *
+     * @param webView webview
+     */
     private void initWebview(WebView webView) {
         webView.setContextMenuEnabled(false);
         webView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
