@@ -13,6 +13,7 @@ import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -66,6 +67,8 @@ public abstract class MainView implements Initializable {
     protected ListView<FlowNode> listView;
     @FXML
     protected Label infoLabel;
+    @FXML
+    protected TabPane mainTabPane;
     @FXML
     protected Tab overviewTab;
     @FXML
@@ -157,6 +160,10 @@ public abstract class MainView implements Initializable {
         initTreeView();
         initWebview(responseJsonWebView);
         initOverviewTreeTableView();
+        mainTabPane.getTabs().remove(contentsTab);
+        responseTabPane.getTabs().remove(responseImageTab);
+        responseTabPane.getTabs().remove(responseContentTab);
+        Platform.runLater(() -> filterTextField.requestFocus());
     }
 
     /**

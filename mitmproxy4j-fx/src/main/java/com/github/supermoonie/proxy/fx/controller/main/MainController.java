@@ -127,6 +127,11 @@ public class MainController extends MainView {
         try {
             fillOverviewTab(selectedNode);
             fillContentsTab(selectedNode);
+            Platform.runLater(() -> {
+                if (!mainTabPane.getTabs().contains(contentsTab)) {
+                    mainTabPane.getTabs().add(contentsTab);
+                }
+            });
         } catch (SQLException e) {
             AlertUtil.error(e);
         }

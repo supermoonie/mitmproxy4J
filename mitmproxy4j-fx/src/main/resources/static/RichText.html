@@ -96,45 +96,58 @@
     window.codeEditor = codeEditor;
     window.setHexText = function(hexText) {
         showLoading();
-        codeEditor.getSession().setMode('ace/mode/text');
-        codeEditor.setReadOnly(true);
-        codeEditor.setValue(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexText)), 1);
-        hideLoading();
+        setTimeout(function () {
+            codeEditor.getSession().setMode('ace/mode/text');
+            codeEditor.setReadOnly(true);
+            codeEditor.setValue(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexText)), 1);
+            hideLoading();
+        }, 100);
+
     }
     window.setHexJson = function (hexJson) {
         showLoading();
-        codeEditor.getSession().setMode('ace/mode/json');
-        codeEditor.setReadOnly(true);
-        codeEditor.setValue(js_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexJson)), opts), 1);
-        hideLoading();
+        setTimeout(function () {
+            codeEditor.getSession().setMode('ace/mode/json');
+            codeEditor.setReadOnly(true);
+            codeEditor.setValue(js_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexJson)), opts), 1);
+            hideLoading();
+        }, 100);
     }
     window.setHexHtml = function (hexHtml) {
         showLoading();
-        codeEditor.getSession().setMode('ace/mode/html');
-        codeEditor.setReadOnly(true);
-        codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexHtml)), opts), 1);
-        hideLoading();
+        setTimeout(function () {
+            codeEditor.getSession().setMode('ace/mode/html');
+            codeEditor.setReadOnly(true);
+            codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexHtml)), opts), 1);
+            hideLoading();
+        }, 100);
     }
     window.setHexJavaScript = function (hexJavaScript) {
         showLoading();
-        codeEditor.getSession().setMode('ace/mode/javascript');
-        codeEditor.setReadOnly(true);
-        codeEditor.setValue(js_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexJavaScript)), opts), 1);
-        hideLoading();
+        setTimeout(function () {
+            codeEditor.getSession().setMode('ace/mode/javascript');
+            codeEditor.setReadOnly(true);
+            codeEditor.setValue(js_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexJavaScript)), opts), 1);
+            hideLoading();
+        }, 100);
     }
     window.setHexXml = function (hexXml) {
         showLoading();
-        codeEditor.getSession().setMode('ace/mode/xml');
-        codeEditor.setReadOnly(true);
-        codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexXml)), opts), 1);
-        hideLoading();
+        setTimeout(function () {
+            codeEditor.getSession().setMode('ace/mode/xml');
+            codeEditor.setReadOnly(true);
+            codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexXml)), opts), 1);
+            hideLoading();
+        }, 100);
     }
     window.setHexCss = function (hexCss) {
         showLoading();
-        codeEditor.getSession().setMode('ace/mode/css');
-        codeEditor.setReadOnly(true);
-        codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexCss)), opts), 1);
-        hideLoading();
+        setTimeout(function () {
+            codeEditor.getSession().setMode('ace/mode/css');
+            codeEditor.setReadOnly(true);
+            codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexCss)), opts), 1);
+            hideLoading();
+        }, 100);
     }
     window.hideLoading = function () {
         document.getElementById("loading").style.display = 'none';
