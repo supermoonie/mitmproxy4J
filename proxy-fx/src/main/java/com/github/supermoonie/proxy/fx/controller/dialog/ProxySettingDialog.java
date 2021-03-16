@@ -5,7 +5,10 @@ import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
+import com.github.supermoonie.proxy.fx.util.ApplicationContextUtil;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,10 +20,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.ToggleSwitch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -102,7 +105,8 @@ public class ProxySettingDialog implements Initializable {
             confirmButton.setDisable(true);
             cancelButton.setDisable(true);
             App.EXECUTOR.execute(() -> {
-                ProxyManager.restart(port, authToggleSwitch.isSelected(), username, password, InternalProxyInterceptInitializer.INSTANCE);
+                InternalProxyInterceptInitializer initializer = ApplicationContextUtil.getBean(InternalProxyInterceptInitializer.class);
+                ProxyManager.restart(port, authToggleSwitch.isSelected(), username, password, initializer);
                 Platform.runLater(() -> {
                     instance.setPort(port);
                     instance.setAuth(authToggleSwitch.isSelected());

@@ -3,29 +3,31 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 import com.github.supermoonie.proxy.InterceptInitializer;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
 import com.github.supermoonie.proxy.intercept.ResponseIntercept;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.Map;
 
 /**
  * @author supermoonie
  * @date 2020-09-09
  */
+@Component
 public class InternalProxyInterceptInitializer implements InterceptInitializer {
 
-    public static final InternalProxyInterceptInitializer INSTANCE = new InternalProxyInterceptInitializer();
+    @Resource
+    private DumpHttpRequestIntercept dumpHttpRequestIntercept;
 
-    private InternalProxyInterceptInitializer() {
+    @Resource
+    private DumpHttpResponseIntercept dumpHttpResponseIntercept;
 
-    }
+    @Resource
+    private DefaultConfigIntercept defaultConfigIntercept;
 
     @Override
     public void initIntercept(Map<String, RequestIntercept> requestIntercepts, Map<String, ResponseIntercept> responseIntercepts) {
-        requestIntercepts.put("accessControlRequestIntercept", AccessControlRequestIntercept.INSTANCE);
-        requestIntercepts.put("configurableIntercept", DefaultConfigIntercept.INSTANCE);
-        requestIntercepts.put("defaultRemoteMapIntercept", DefaultRemoteMapIntercept.INSTANCE);
-        requestIntercepts.put("externalProxyIntercept", ExternalProxyIntercept.INSTANCE);
-        requestIntercepts.put("dumpHttpRequestIntercept", DumpHttpRequestIntercept.INSTANCE);
-        requestIntercepts.put("defaultLocalMapIntercept", DefaultLocalMapIntercept.INSTANCE);
-        responseIntercepts.put("dumpHttpResponseIntercept", DumpHttpResponseIntercept.INSTANCE);
+        requestIntercepts.put("dumpHttpRequestIntercept", dumpHttpRequestIntercept);
+        responseIntercepts.put("dumpHttpResponseIntercept", dumpHttpResponseIntercept);
+        requestIntercepts.put("configurableIntercept", defaultConfigIntercept);
     }
 }

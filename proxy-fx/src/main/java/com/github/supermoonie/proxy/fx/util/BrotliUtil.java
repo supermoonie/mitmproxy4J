@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author supermoonie
  * @since 2020/10/15
  */
-public class BrUtil {
+public class BrotliUtil {
 
     public static byte[] decompress(byte[] data, boolean byByte) throws IOException {
         byte[] buffer = new byte[65536];

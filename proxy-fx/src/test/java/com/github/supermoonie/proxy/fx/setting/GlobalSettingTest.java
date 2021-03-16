@@ -1,7 +1,9 @@
 package com.github.supermoonie.proxy.fx.setting;
 
-import com.github.supermoonie.proxy.fx.util.JacksonUtil;
+import com.github.supermoonie.proxy.fx.util.JSON;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author supermoonie
@@ -12,9 +14,9 @@ public class GlobalSettingTest {
     @Test
     public void test() {
         GlobalSetting setting = GlobalSetting.getInstance();
-        System.out.println(JacksonUtil.toJsonString(setting));
-        GlobalSetting globalSetting = JacksonUtil.parse(JacksonUtil.toJsonString(setting), GlobalSetting.class);
-        System.out.println(JacksonUtil.toJsonString(globalSetting));
+        System.out.println(JSON.toJsonString(setting));
+        GlobalSetting globalSetting = JSON.parse(JSON.toJsonString(setting), GlobalSetting.class);
+        System.out.println(JSON.toJsonString(globalSetting));
     }
 
 }

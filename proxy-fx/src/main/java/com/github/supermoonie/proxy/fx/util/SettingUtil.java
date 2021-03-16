@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 
@@ -35,7 +36,7 @@ public class SettingUtil {
         }
         try {
             String settings = FileUtils.readFileToString(settingFile, StandardCharsets.UTF_8);
-            SerializeGlobalSetting globalSetting = JacksonUtil.parse(settings, SerializeGlobalSetting.class);
+            SerializeGlobalSetting globalSetting = JSON.parse(settings, SerializeGlobalSetting.class);
             GlobalSetting instance = GlobalSetting.getInstance();
             instance.setRecord(Objects.requireNonNullElse(globalSetting.getRecord(), true));
             instance.setPort(Objects.requireNonNullElse(globalSetting.getPort(), 10801));
@@ -63,7 +64,7 @@ public class SettingUtil {
         }
         File settingFile = new File(settingHome.getAbsolutePath() + File.separator + "global_settings.json");
         try {
-            FileUtils.writeStringToFile(settingFile, JacksonUtil.toJsonString(globalSetting), StandardCharsets.UTF_8);
+            FileUtils.writeStringToFile(settingFile, JSON.toJsonString(globalSetting), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }

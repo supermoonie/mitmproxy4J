@@ -1,11 +1,16 @@
 package com.github.supermoonie.proxy.fx.tray;
 
 import com.github.supermoonie.proxy.fx.App;
+import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.setting.GlobalSetting;
 import com.github.supermoonie.proxy.fx.util.SettingUtil;
 import com.sun.javafx.PlatformUtil;
 import javafx.application.Platform;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -18,13 +23,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author supermoonie
  * @since 2020/9/24
  */
+@Component
 public class SystemTrayManager {
+
+    @Resource
+    private ApplicationContext applicationContext;
 
     public static final String MAIN_TRAY = "MAIN";
 
     private static final Map<String, TrayIconWrapper> TRAY_ICON_WRAPPER_MAP = new ConcurrentHashMap<>();
 
-    public static void init() throws AWTException, IOException {
+    public void init() throws AWTException, IOException {
         SystemTray systemTray = SystemTray.getSystemTray();
         if (!SystemTray.isSupported()) {
             return;
@@ -41,6 +50,7 @@ public class SystemTrayManager {
         MenuItem quitItem = new MenuItem("Quit");
         quitItem.addActionListener(event -> {
             destroy();
+            SpringApplication.exit(applicationContext, () -> 0);
             Platform.runLater(() -> {
                 SettingUtil.save(GlobalSetting.getInstance());
                 App.EXECUTOR.shutdown();
@@ -54,7 +64,7 @@ public class SystemTrayManager {
         TRAY_ICON_WRAPPER_MAP.put(primaryTray.getName(), primaryTray);
     }
 
-    public static void destroy() {
+    public void destroy() {
         SystemTray systemTray = SystemTray.getSystemTray();
         if (!SystemTray.isSupported()) {
             return;
