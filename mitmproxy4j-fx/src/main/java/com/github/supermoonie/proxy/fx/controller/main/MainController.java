@@ -11,8 +11,9 @@ import com.github.supermoonie.proxy.fx.dao.FlowDao;
 import com.github.supermoonie.proxy.fx.entity.*;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.stmt.Where;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.Tab;
@@ -22,6 +23,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebEngine;
+import javafx.util.Duration;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
@@ -113,11 +115,11 @@ public class MainController extends MainView {
 
     @Override
     protected void onTreeViewClicked(MouseEvent event) {
-        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == selectedItem) {
+        treeViewSelectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == treeViewSelectedItem) {
             return;
         }
-        FlowNode selectedNode = selectedItem.getValue();
+        FlowNode selectedNode = treeViewSelectedItem.getValue();
         if (null == selectedNode) {
             return;
         }
@@ -250,6 +252,8 @@ public class MainController extends MainView {
             if (!responseHeaders.isEmpty()) {
                 responseHeaderTableView.getItems().addAll(responseHeaders);
             }
+            removeTabByTitle(requestTabPane, requestQueryTab);
+            removeTabByTitle(requestTabPane, requestFormTab);
             fillRequestRawTab(request, requestHeaders);
             fillRequestQueryTab(request);
             if (null != response) {
@@ -259,6 +263,9 @@ public class MainController extends MainView {
     }
 
     private void fillResponseRawTab(Response response, List<Header> responseHeaders) throws SQLException {
+        int selectedIndex = responseTabPane.getSelectionModel().getSelectedIndex();
+        removeTabByTitle(responseTabPane, responseImageTab);
+        removeTabByTitle(responseTabPane, responseContentTab);
         StringBuilder responseRawBuilder = new StringBuilder();
         responseRawBuilder.append("Status : ").append(response.getStatus()).append("\n");
         for (Header header : responseHeaders) {
@@ -273,14 +280,18 @@ public class MainController extends MainView {
                 WebEngine engine = responseJsonWebView.getEngine();
                 String hexRaw = Hex.toHexString(bytes);
                 if (header.getValue().startsWith("image")) {
-                    Image image = new Image(new ByteArrayInputStream(bytes));
-                    responseImageView.setImage(image);
-                    responseImageView.setFitHeight(image.getHeight());
-                    responseImageView.setFitWidth(image.getWidth());
                     responseRawBuilder.append("<Image>");
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseTextTab.getText()));
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
                     appendTab(responseTabPane, responseImageTab);
+                    final KeyFrame kf1 = new KeyFrame(Duration.millis(150), e -> {
+                        Image image = new Image(new ByteArrayInputStream(bytes));
+                        responseImageView.setImage(image);
+                        responseImageView.setFitHeight(image.getHeight());
+                        responseImageView.setFitWidth(image.getWidth());
+                    });
+                    final Timeline timeline = new Timeline(kf1);
+                    Platform.runLater(timeline::play);
                 } else {
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
                     if (bytes.length > 100_000) {
@@ -325,12 +336,8 @@ public class MainController extends MainView {
             responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
         }
         responseRawTextArea.appendText(responseRawBuilder.toString());
-        System.out.println("--------------------------");
-        System.out.println(currentResponseTabIndex);
-        System.out.println(responseTabPane.getTabs().size());
-        currentResponseTabIndex = Math.min(responseTabPane.getTabs().size() - 1, currentResponseTabIndex);
-        System.out.println(currentResponseTabIndex);
-        responseTabPane.getSelectionModel().select(currentResponseTabIndex);
+        selectedIndex = Math.min(responseTabPane.getTabs().size() - 1, selectedIndex);
+        responseTabPane.getSelectionModel().select(selectedIndex);
     }
 
     private void appendTab(TabPane tabPane, Tab tab) {
@@ -388,10 +395,6 @@ public class MainController extends MainView {
         responseHeaderTableView.getItems().clear();
         responseRawTextArea.clear();
         responseTextArea.clear();
-        removeTabByTitle(requestTabPane, requestQueryTab);
-        removeTabByTitle(requestTabPane, requestFormTab);
-        removeTabByTitle(responseTabPane, responseImageTab);
-        removeTabByTitle(responseTabPane, responseContentTab);
     }
 
     private void removeTabByTitle(TabPane tabPane, Tab tabToRemove) {
