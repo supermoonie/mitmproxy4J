@@ -18,6 +18,8 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -166,10 +168,41 @@ public abstract class MainView implements Initializable {
         mainTabPane.getTabs().remove(contentsTab);
         responseTabPane.getTabs().remove(responseImageTab);
         responseTabPane.getTabs().remove(responseContentTab);
-        responseTabPane.getSelectionModel().selectedIndexProperty().addListener((observableValue, number, t1) -> {
-            System.out.println("number: " + number.intValue() + ", t1: " + t1.intValue());
-            currentResponseTabIndex = t1.intValue();
+        responseHeaderTab.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("response header tab oldValue: " + oldValue + ", newValue: " + newValue);
+            if (newValue) {
+                currentResponseTabIndex = 0;
+            }
         });
+        responseTextTab.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("response text tab oldValue: " + oldValue + ", newValue: " + newValue);
+            if (newValue) {
+                currentResponseTabIndex = 1;
+            }
+        });
+        responseRawTab.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("response raw tab oldValue: " + oldValue + ", newValue: " + newValue);
+            if (newValue) {
+                currentResponseTabIndex = 2;
+            }
+        });
+        responseContentTab.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("response content tab oldValue: " + oldValue + ", newValue: " + newValue);
+            if (newValue) {
+                currentResponseTabIndex = 3;
+            }
+        });
+        responseContentTab.setOnSelectionChanged(new EventHandler<Event>() {
+            @Override
+            public void handle(Event event) {
+
+            }
+        });
+
+//        responseTabPane.getSelectionModel().selectedIndexProperty().addListener((observableValue, number, t1) -> {
+//            System.out.println("number: " + number.intValue() + ", t1: " + t1.intValue());
+//            currentResponseTabIndex = t1.intValue();
+//        });
         Platform.runLater(() -> filterTextField.requestFocus());
     }
 

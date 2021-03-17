@@ -328,8 +328,8 @@ public class MainController extends MainView {
         System.out.println("--------------------------");
         System.out.println(currentResponseTabIndex);
         System.out.println(responseTabPane.getTabs().size());
-//        currentResponseTabIndex = Math.min(responseTabPane.getTabs().size(), currentResponseTabIndex);
-//        System.out.println(currentResponseTabIndex);
+        currentResponseTabIndex = Math.min(responseTabPane.getTabs().size() - 1, currentResponseTabIndex);
+        System.out.println(currentResponseTabIndex);
         responseTabPane.getSelectionModel().select(currentResponseTabIndex);
     }
 
