@@ -15,6 +15,8 @@ import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -151,6 +153,7 @@ public abstract class MainView implements Initializable {
     protected final TreeItem<PropertyPair> overviewRoot = new TreeItem<>(new PropertyPair());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     protected Integer currentRequestId;
+    protected int currentResponseTabIndex = 0;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -163,6 +166,10 @@ public abstract class MainView implements Initializable {
         mainTabPane.getTabs().remove(contentsTab);
         responseTabPane.getTabs().remove(responseImageTab);
         responseTabPane.getTabs().remove(responseContentTab);
+        responseTabPane.getSelectionModel().selectedIndexProperty().addListener((observableValue, number, t1) -> {
+            System.out.println("number: " + number.intValue() + ", t1: " + t1.intValue());
+            currentResponseTabIndex = t1.intValue();
+        });
         Platform.runLater(() -> filterTextField.requestFocus());
     }
 

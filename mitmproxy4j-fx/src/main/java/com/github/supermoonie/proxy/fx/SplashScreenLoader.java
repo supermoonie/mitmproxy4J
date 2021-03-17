@@ -29,7 +29,7 @@ public class SplashScreenLoader extends Preloader {
     }
 
     public Parent getParent() {
-        final ImageView imageView = new ImageView(getClass().getResource("/splash/javafx.png").toExternalForm());
+        final ImageView imageView = new ImageView(getClass().getResource("/splash/mitm.png").toExternalForm());
         final ProgressBar splashProgressBar = new ProgressBar();
         splashProgressBar.setPrefWidth(imageView.getImage().getWidth());
         final VBox vbox = new VBox();

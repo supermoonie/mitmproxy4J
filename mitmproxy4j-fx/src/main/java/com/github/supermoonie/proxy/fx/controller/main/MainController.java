@@ -175,44 +175,20 @@ public class MainController extends MainView {
                 TreeItem<PropertyPair> typeTreeItem = new TreeItem<>(new PropertyPair("Type", certificateInfo.getType() + " [v" + certificateInfo.getVersion() + "] (" + certificateInfo.getSigAlgName() + ")"));
                 TreeItem<PropertyPair> issuedToTreeItem = new TreeItem<>(new PropertyPair("Issued To", ""));
                 issuedToTreeItem.getChildren().clear();
-                if (!StringUtils.isEmpty(certificateInfo.getSubjectCommonName())) {
-                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Common Name", certificateInfo.getSubjectCommonName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getSubjectOrganizationDepartment())) {
-                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Unit", certificateInfo.getSubjectOrganizationDepartment())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getSubjectOrganizationName())) {
-                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Name", certificateInfo.getSubjectOrganizationName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getSubjectLocalityName())) {
-                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Locality Name", certificateInfo.getSubjectLocalityName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getSubjectStateName())) {
-                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("State Name", certificateInfo.getSubjectStateName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getSubjectCountry())) {
-                    issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Country", certificateInfo.getSubjectCountry())));
-                }
+                issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Common Name", certificateInfo.getSubjectCommonName())));
+                issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Unit", certificateInfo.getSubjectOrganizationDepartment())));
+                issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Name", certificateInfo.getSubjectOrganizationName())));
+                issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Locality Name", certificateInfo.getSubjectLocalityName())));
+                issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("State Name", certificateInfo.getSubjectStateName())));
+                issuedToTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Country", certificateInfo.getSubjectCountry())));
                 TreeItem<PropertyPair> issuedByTreeItem = new TreeItem<>(new PropertyPair("Issued By", ""));
                 issuedByTreeItem.getChildren().clear();
-                if (!StringUtils.isEmpty(certificateInfo.getIssuerCommonName())) {
-                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Common Name", certificateInfo.getIssuerCommonName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getIssuerOrganizationDepartment())) {
-                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Unit", certificateInfo.getIssuerOrganizationDepartment())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getIssuerOrganizationName())) {
-                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Name", certificateInfo.getIssuerOrganizationName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getIssuerLocalityName())) {
-                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Locality Name", certificateInfo.getIssuerLocalityName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getIssuerStateName())) {
-                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("State Name", certificateInfo.getIssuerStateName())));
-                }
-                if (!StringUtils.isEmpty(certificateInfo.getIssuerCountry())) {
-                    issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Country", certificateInfo.getIssuerCountry())));
-                }
+                issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Common Name", certificateInfo.getIssuerCommonName())));
+                issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Unit", certificateInfo.getIssuerOrganizationDepartment())));
+                issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Organization Name", certificateInfo.getIssuerOrganizationName())));
+                issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Locality Name", certificateInfo.getIssuerLocalityName())));
+                issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("State Name", certificateInfo.getIssuerStateName())));
+                issuedByTreeItem.getChildren().add(new TreeItem<>(new PropertyPair("Country", certificateInfo.getIssuerCountry())));
                 TreeItem<PropertyPair> notValidBeforeTreeItem = new TreeItem<>(new PropertyPair("Not Valid Before", dateFormat.format(certificateInfo.getNotValidBefore())));
                 TreeItem<PropertyPair> notValidAfterTreeItem = new TreeItem<>(new PropertyPair("Not Valid After", dateFormat.format(certificateInfo.getNotValidAfter())));
                 TreeItem<PropertyPair> fingerprintsTreeItem = new TreeItem<>(new PropertyPair("Fingerprints", ""));
@@ -349,6 +325,12 @@ public class MainController extends MainView {
             responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
         }
         responseRawTextArea.appendText(responseRawBuilder.toString());
+        System.out.println("--------------------------");
+        System.out.println(currentResponseTabIndex);
+        System.out.println(responseTabPane.getTabs().size());
+//        currentResponseTabIndex = Math.min(responseTabPane.getTabs().size(), currentResponseTabIndex);
+//        System.out.println(currentResponseTabIndex);
+        responseTabPane.getSelectionModel().select(currentResponseTabIndex);
     }
 
     private void appendTab(TabPane tabPane, Tab tab) {
