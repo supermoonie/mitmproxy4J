@@ -51,6 +51,7 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
             try {
                 MainController mainController = App.getMainController();
                 mainController.updateTreeItem(flowNode);
+                mainController.updateListItem(flowNode);
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }

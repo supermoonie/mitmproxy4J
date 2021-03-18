@@ -9,6 +9,7 @@ import com.github.supermoonie.proxy.fx.constant.KeyEvents;
 import com.github.supermoonie.proxy.fx.controller.ColumnMap;
 import com.github.supermoonie.proxy.fx.controller.FlowNode;
 import com.github.supermoonie.proxy.fx.controller.PropertyPair;
+import com.github.supermoonie.proxy.fx.controller.main.factory.ListViewCellFactory;
 import com.github.supermoonie.proxy.fx.controller.main.handler.*;
 import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
@@ -27,7 +28,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.glyphfont.FontAwesome;
 
 import java.net.URI;
@@ -180,6 +180,7 @@ public abstract class MainView implements Initializable {
         allowListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_ALLOW_LIST_ENABLE, AppPreferences.DEFAULT_ALLOW_LIST_ENABLE));
         initToolBar();
         initTreeView();
+        initListView();
         initWebview(responseJsonWebView);
         initOverviewTreeTableView();
         initContextMenu();
@@ -229,6 +230,16 @@ public abstract class MainView implements Initializable {
         treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, this::onTreeItemClicked);
         treeView.setOnKeyPressed(new TreeItemCopyHandler(tabPane, structureTab, treeView, listView));
         treeView.getSelectionModel().selectedItemProperty().addListener(this::onTreeItemSelected);
+    }
+
+    /**
+     * 初始化列表
+     */
+    private void initListView() {
+        listView.setCellFactory(new ListViewCellFactory());
+        listView.setContextMenu(listContextMenu);
+        listView.addEventHandler(MouseEvent.MOUSE_CLICKED, this::onListItemClicked);
+//        listView.setOnKeyPressed(new FlowNodeKeyEventHandler(tabPane, structureTab, treeView, listView));
     }
 
     /**
@@ -303,6 +314,13 @@ public abstract class MainView implements Initializable {
      */
     protected abstract void onTreeItemSelected(ObservableValue<? extends TreeItem<FlowNode>> observable, TreeItem<FlowNode> oldValue, TreeItem<FlowNode> newValue);
 
+    /**
+     * list item clicked
+     *
+     * @param event e
+     */
+    protected abstract void onListItemClicked(MouseEvent event);
+
     public void addFlow(ConnectionInfo connectionInfo, Request request, Response response) throws URISyntaxException {
         FlowNode flowNode = new FlowNode();
         flowNode.setId(request.getId());
@@ -313,10 +331,12 @@ public abstract class MainView implements Initializable {
             // 请求未响应的情况
             flowNode.setStatus(-1);
             addTreeNode(flowNode);
+            listView.getItems().add(flowNode);
         } else {
             flowNode.setStatus(response.getStatus());
             flowNode.setContentType(response.getContentType());
             updateTreeItem(flowNode);
+            updateListItem(flowNode);
         }
         if (null != treeViewSelectedItem) {
             treeView.getSelectionModel().select(treeViewSelectedItem);
@@ -413,5 +433,18 @@ public abstract class MainView implements Initializable {
             Node node = Icons.loadIcon(flowNode.getStatus(), flowNode.getContentType());
             item.setGraphic(node);
         }
+    }
+
+    public void updateListItem(FlowNode flowNode) {
+        ObservableList<FlowNode> items = listView.getItems();
+        items.stream()
+                .filter(item -> item.getId().equals(flowNode.getId()))
+                .findFirst()
+                .ifPresent(item -> {
+                    item.setStatus(flowNode.getStatus());
+                    item.setContentType(flowNode.getContentType());
+                    listView.refresh();
+                });
+
     }
 }

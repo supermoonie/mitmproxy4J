@@ -126,6 +126,15 @@ public class MainController extends MainView {
         doTreeItemSelected(treeViewSelectedItem);
     }
 
+    @Override
+    protected void onListItemClicked(MouseEvent event) {
+        FlowNode selectedNode = listView.getSelectionModel().getSelectedItem();
+        if (null == selectedNode) {
+            return;
+        }
+        fillFlow(selectedNode);
+    }
+
     private void doTreeItemSelected(TreeItem<FlowNode> treeItem) {
         if (null == treeItem) {
             return;
@@ -137,7 +146,12 @@ public class MainController extends MainView {
         if (!selectedNode.getType().equals(EnumFlowType.TARGET)) {
             return;
         }
+        fillFlow(selectedNode);
+    }
+
+    private void fillFlow(FlowNode selectedNode) {
         try {
+//            clear();
             fillOverviewTab(selectedNode);
             fillContentsTab(selectedNode);
             Platform.runLater(() -> {
@@ -247,11 +261,10 @@ public class MainController extends MainView {
     }
 
     private void fillContentsTab(FlowNode selectedNode) throws SQLException {
-        if (EnumFlowType.TARGET.equals(selectedNode.getType())) {
+        if (EnumFlowType.TARGET.equals(selectedNode.getType()) && selectedNode.getStatus() > 0) {
             if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
                 return;
             }
-            clear();
             currentRequestId = selectedNode.getId();
             Flow flow = FlowDao.getFlow(currentRequestId);
             Request request = flow.getRequest();
@@ -259,7 +272,7 @@ public class MainController extends MainView {
             List<Header> requestHeaders = flow.getRequestHeaders();
             List<Header> responseHeaders = flow.getResponseHeaders();
             infoLabel.setText(request.getMethod().toUpperCase() + " " + request.getUri());
-            requestHeaderTableView.getItems().addAll(requestHeaders);
+            requestHeaderTableView.getItems().setAll(requestHeaders);
             if (!responseHeaders.isEmpty()) {
                 responseHeaderTableView.getItems().addAll(responseHeaders);
             }
@@ -365,11 +378,10 @@ public class MainController extends MainView {
             String query = uri.getQuery();
             if (!StringUtils.isEmpty(query)) {
                 List<ColumnMap> columnMaps = ColumnMap.listOf(query);
-                queryTableView.getItems().addAll(columnMaps);
+                queryTableView.getItems().setAll(columnMaps);
                 requestTabPane.getTabs().add(1, requestQueryTab);
             }
         } catch (URISyntaxException e) {
-            log.error(e.getMessage(), e);
             AlertUtil.error(e);
         }
     }
@@ -391,7 +403,7 @@ public class MainController extends MainView {
             requestHeaders.stream().filter(header -> HttpHeaderNames.CONTENT_TYPE.toString().equalsIgnoreCase(header.getName())).findFirst().ifPresent(header -> {
                 if (header.getValue().startsWith(ContentType.APPLICATION_FORM)) {
                     List<ColumnMap> columnMaps = ColumnMap.listOf(raw);
-                    formTableView.getItems().addAll(columnMaps);
+                    formTableView.getItems().setAll(columnMaps);
                     requestTabPane.getTabs().add(1, requestFormTab);
                 }
             });
