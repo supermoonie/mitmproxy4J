@@ -84,7 +84,7 @@ public class App extends Application {
     }
 
     public static void setCommonIcon(Stage stage) {
-        setCommonIcon(stage, "Lightning | Listening on ");
+        setCommonIcon(stage, "Mitmproxy4J | Listening on " + ProxyManager.getInternalProxy().getPort());
     }
 
     public static void setCommonIcon(Stage stage, String title) {

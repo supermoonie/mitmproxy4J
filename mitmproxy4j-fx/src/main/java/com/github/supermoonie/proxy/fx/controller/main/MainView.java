@@ -9,12 +9,15 @@ import com.github.supermoonie.proxy.fx.constant.KeyEvents;
 import com.github.supermoonie.proxy.fx.controller.ColumnMap;
 import com.github.supermoonie.proxy.fx.controller.FlowNode;
 import com.github.supermoonie.proxy.fx.controller.PropertyPair;
+import com.github.supermoonie.proxy.fx.controller.main.handler.*;
 import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -153,6 +156,24 @@ public abstract class MainView implements Initializable {
     protected Integer currentRequestId;
     protected TreeItem<FlowNode> treeViewSelectedItem = null;
 
+    protected final ContextMenu treeContextMenu = new ContextMenu();
+    protected final MenuItem copyMenuItem = new MenuItem("Copy URL");
+    protected final MenuItem copyResponseMenuItem = new MenuItem("Copy Response");
+    protected final MenuItem saveResponseMenuItem = new MenuItem("Save Response");
+    protected final MenuItem repeatMenuItem = new MenuItem("Repeat");
+    protected final MenuItem editMenuItem = new MenuItem("Edit");
+    protected final MenuItem blockMenuItem = new MenuItem("Block List");
+    protected final MenuItem allowMenuItem = new MenuItem("Allow List");
+
+    protected final ContextMenu listContextMenu = new ContextMenu();
+    protected final MenuItem copyLiMenuItem = new MenuItem("Copy URL");
+    protected final MenuItem copyLiResponseMenuItem = new MenuItem("Copy Response");
+    protected final MenuItem saveLiResponseMenuItem = new MenuItem("Save Response");
+    protected final MenuItem repeatLiMenuItem = new MenuItem("Repeat");
+    protected final MenuItem editLiMenuItem = new MenuItem("Edit");
+    protected final MenuItem blockLiMenuItem = new MenuItem("Block List");
+    protected final MenuItem allowLiMenuItem = new MenuItem("Allow List");
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         blockListMenuItem.setSelected(AppPreferences.getState().getBoolean(AppPreferences.KEY_BLOCK_LIST_ENABLE, AppPreferences.DEFAULT_BLOCK_LIST_ENABLE));
@@ -161,6 +182,7 @@ public abstract class MainView implements Initializable {
         initTreeView();
         initWebview(responseJsonWebView);
         initOverviewTreeTableView();
+        initContextMenu();
         mainTabPane.getTabs().remove(contentsTab);
         responseTabPane.getTabs().remove(responseImageTab);
         responseTabPane.getTabs().remove(responseContentTab);
@@ -196,18 +218,22 @@ public abstract class MainView implements Initializable {
         });
     }
 
+    /**
+     * 初始化树
+     */
     private void initTreeView() {
-//        ContextMenu treeContextMenu = new ContextMenu();
         treeView.setRoot(root);
         treeView.setShowRoot(false);
-//        treeView.setContextMenu(treeContextMenu);
-//        treeView.contextMenuProperty().bind(Bindings.when(treeView.getSelectionModel().selectedItemProperty().isNull()).then((ContextMenu) null).otherwise(treeContextMenu));
-        treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, this::onTreeViewClicked);
-//        treeView.setOnKeyPressed(new FlowNodeKeyEventHandler(tabPane, structureTab, treeView, listView));
-//        treeView.focusedProperty().addListener(new TreeViewFocusListener(treeView));
-//        treeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectListener());
+        treeView.setContextMenu(treeContextMenu);
+        treeView.contextMenuProperty().bind(Bindings.when(treeView.getSelectionModel().selectedItemProperty().isNull()).then((ContextMenu) null).otherwise(treeContextMenu));
+        treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, this::onTreeItemClicked);
+        treeView.setOnKeyPressed(new TreeItemCopyHandler(tabPane, structureTab, treeView, listView));
+        treeView.getSelectionModel().selectedItemProperty().addListener(this::onTreeItemSelected);
     }
 
+    /**
+     * 初始化工具栏
+     */
     private void initToolBar() {
         ImageView clearIconView = new ImageView(Icons.CLEAR_ICON);
         clearIconView.setFitHeight(12);
@@ -225,12 +251,57 @@ public abstract class MainView implements Initializable {
         recordingSwitchButton.setGraphic(recordingImageView);
     }
 
+    private void initContextMenu() {
+        setMenuItemOnAction(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, repeatMenuItem, editMenuItem, blockMenuItem, allowMenuItem);
+        setMenuItemOnAction(copyLiMenuItem, copyLiResponseMenuItem, saveLiResponseMenuItem, repeatLiMenuItem, editLiMenuItem, blockLiMenuItem, allowLiMenuItem);
+        listContextMenu.getItems().addAll(copyLiMenuItem, copyLiResponseMenuItem, saveLiResponseMenuItem, new SeparatorMenuItem(), repeatLiMenuItem, editLiMenuItem, new SeparatorMenuItem(), blockLiMenuItem, allowLiMenuItem);
+        treeContextMenu.getItems().addAll(copyMenuItem, copyResponseMenuItem, saveResponseMenuItem, new SeparatorMenuItem(), repeatMenuItem, editMenuItem, new SeparatorMenuItem(), blockMenuItem, allowMenuItem);
+        treeContextMenu.setOnShowing(event -> {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return;
+            }
+            FlowNode node = selectedItem.getValue();
+            boolean disable = node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET);
+            copyResponseMenuItem.setDisable(disable);
+            saveResponseMenuItem.setDisable(disable);
+        });
+        listContextMenu.setOnShowing(event -> {
+            FlowNode node = listView.getSelectionModel().getSelectedItem();
+            if (null == node) {
+                return;
+            }
+            boolean disable = node.getStatus() == -1 || null == node.getContentType() || !node.getType().equals(EnumFlowType.TARGET);
+            copyLiResponseMenuItem.setDisable(disable);
+            saveLiResponseMenuItem.setDisable(disable);
+        });
+    }
+
+    private void setMenuItemOnAction(MenuItem copyLiMenuItem, MenuItem copyLiResponseMenuItem, MenuItem saveLiResponseMenuItem, MenuItem repeatLiMenuItem, MenuItem editLiMenuItem, MenuItem blockLiMenuItem, MenuItem allowLiMenuItem) {
+        copyLiMenuItem.setOnAction(new CopyMenuItemHandler(tabPane, structureTab, treeView, listView));
+        copyLiResponseMenuItem.setOnAction(new CopyResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
+        saveLiResponseMenuItem.setOnAction(new SaveResponseMenuItemHandler(tabPane, structureTab, treeView, listView));
+//        repeatLiMenuItem.setOnAction(event -> onRepeatButtonClicked());
+//        editLiMenuItem.setOnAction(new EditMenuItemHandler(tabPane, structureTab, treeView, listView, node -> onSendRequestMenuItemClicked().setRequestId(node.getId())));
+        blockLiMenuItem.setOnAction(new AddBlockListMenuItemHandler(tabPane, structureTab, treeView, listView));
+        allowLiMenuItem.setOnAction(new AddAllowListMenuItemHandler(tabPane, structureTab, treeView, listView));
+    }
+
     /**
-     * tree clicked
+     * tree item clicked
      *
      * @param event event
      */
-    protected abstract void onTreeViewClicked(MouseEvent event);
+    protected abstract void onTreeItemClicked(MouseEvent event);
+
+    /**
+     * tree item selected
+     *
+     * @param observable observable
+     * @param oldValue   old
+     * @param newValue   new
+     */
+    protected abstract void onTreeItemSelected(ObservableValue<? extends TreeItem<FlowNode>> observable, TreeItem<FlowNode> oldValue, TreeItem<FlowNode> newValue);
 
     public void addFlow(ConnectionInfo connectionInfo, Request request, Response response) throws URISyntaxException {
         FlowNode flowNode = new FlowNode();
@@ -316,22 +387,6 @@ public abstract class MainView implements Initializable {
                 }
             }
         }
-    }
-
-    private void treeViewFilter() {
-        String text = filterTextField.getText().trim();
-        if (StringUtils.isEmpty(text)) {
-            treeView.setRoot(root);
-            return;
-        }
-        TreeItem<FlowNode> filterRoot = new TreeItem<>(new FlowNode());
-        ObservableList<TreeItem<FlowNode>> children = root.getChildren();
-        for (TreeItem<FlowNode> item : children) {
-            if (item.getValue().getUrl().contains(text)) {
-                filterRoot.getChildren().add(item);
-            }
-        }
-        treeView.setRoot(filterRoot);
     }
 
     public void updateTreeItem(FlowNode flowNode) throws URISyntaxException {

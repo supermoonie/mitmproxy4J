@@ -15,6 +15,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -114,12 +115,22 @@ public class MainController extends MainView {
     }
 
     @Override
-    protected void onTreeViewClicked(MouseEvent event) {
+    protected void onTreeItemClicked(MouseEvent event) {
         treeViewSelectedItem = treeView.getSelectionModel().getSelectedItem();
-        if (null == treeViewSelectedItem) {
+        doTreeItemSelected(treeViewSelectedItem);
+    }
+
+    @Override
+    protected void onTreeItemSelected(ObservableValue<? extends TreeItem<FlowNode>> observable, TreeItem<FlowNode> oldValue, TreeItem<FlowNode> newValue) {
+        treeViewSelectedItem = newValue;
+        doTreeItemSelected(treeViewSelectedItem);
+    }
+
+    private void doTreeItemSelected(TreeItem<FlowNode> treeItem) {
+        if (null == treeItem) {
             return;
         }
-        FlowNode selectedNode = treeViewSelectedItem.getValue();
+        FlowNode selectedNode = treeItem.getValue();
         if (null == selectedNode) {
             return;
         }
@@ -284,13 +295,14 @@ public class MainController extends MainView {
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseTextTab.getText()));
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
                     appendTab(responseTabPane, responseImageTab);
-                    final KeyFrame kf1 = new KeyFrame(Duration.millis(150), e -> {
+//                    final KeyFrame kf1 = new KeyFrame(Duration.millis(150), e -> );
+                    final KeyFrame kf2 = new KeyFrame(Duration.millis(150), e -> {
                         Image image = new Image(new ByteArrayInputStream(bytes));
                         responseImageView.setImage(image);
                         responseImageView.setFitHeight(image.getHeight());
                         responseImageView.setFitWidth(image.getWidth());
                     });
-                    final Timeline timeline = new Timeline(kf1);
+                    final Timeline timeline = new Timeline(kf2);
                     Platform.runLater(timeline::play);
                 } else {
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseImageTab.getText()));
