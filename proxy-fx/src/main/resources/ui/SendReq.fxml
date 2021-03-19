@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.*?>
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.web.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
@@ -20,7 +28,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/SendReq.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.SendReqController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/SendReq.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.SendReqController">
     <top>
         <HBox alignment="CENTER_LEFT" prefWidth="200.0" spacing="10.0" BorderPane.alignment="CENTER">
             <children>
@@ -50,9 +58,9 @@
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                             <children>
-                                <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <TableView fx:id="paramsTableView" editable="true" prefWidth="800.0" VBox.vgrow="ALWAYS">
+                        <HBox alignment="TOP_CENTER" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                                        <TableView fx:id="paramsTableView" editable="true" prefWidth="800.0" HBox.hgrow="ALWAYS">
                                             <placeholder>
                                                 <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Nothing in the table !" />
                                             </placeholder>
@@ -72,25 +80,21 @@
                                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                             </columnResizePolicy>
                                         </TableView>
-                                        <HBox alignment="CENTER" maxHeight="30.0" prefHeight="30.0" prefWidth="200.0" spacing="10.0">
-                                            <children>
-                                                <Label text="Name:" />
-                                                <TextField fx:id="paramsNameTextField" HBox.hgrow="ALWAYS" />
-                                                <Label text="Value:" />
-                                                <TextField fx:id="paramsValueTextField" onKeyPressed="#onParamsValueTextFieldPressed" HBox.hgrow="ALWAYS" />
-                                                <Button fx:id="paramsAddButton" mnemonicParsing="false" onAction="#onParamsAddButtonClicked" text="Add +" HBox.hgrow="ALWAYS">
+                              <VBox maxWidth="50.0" minWidth="50.0" prefWidth="50.0" spacing="5.0">
+                                 <children>
+                                                <Button fx:id="paramsAddButton" mnemonicParsing="false" onAction="#onParamsAddButtonClicked" prefWidth="45.0" text="+">
                                                     <cursor>
                                                         <Cursor fx:constant="HAND" />
                                                     </cursor>
                                                 </Button>
-                                                <Button fx:id="paramsDelButton" mnemonicParsing="false" onAction="#onParamsDelButtonClicked" text="Del -" HBox.hgrow="ALWAYS" />
-                                            </children>
-                                            <padding>
-                                                <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
-                                            </padding>
-                                        </HBox>
-                                    </children>
-                                </VBox>
+                                                <Button fx:id="paramsDelButton" mnemonicParsing="false" onAction="#onParamsDelButtonClicked" prefWidth="45.0" text="-" />
+                                 </children>
+                                 <padding>
+                                    <Insets top="5.0" />
+                                 </padding>
+                              </VBox>
+                           </children>
+                        </HBox>
                             </children>
                         </AnchorPane>
                     </content>
