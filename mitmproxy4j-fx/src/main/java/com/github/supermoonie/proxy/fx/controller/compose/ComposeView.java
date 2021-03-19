@@ -37,10 +37,10 @@ public class ComposeView implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         reqMethodChoiceBox.getItems().addAll(HttpMethod.ALL_METHOD);
         reqMethodChoiceBox.setValue(HttpMethod.GET);
-//        paramNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
-//        paramValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
-        paramNameTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        paramValueTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        paramNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
+        paramValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
+//        paramNameTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+//        paramValueTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         Platform.runLater(() -> urlTextField.requestFocus());
     }
 }

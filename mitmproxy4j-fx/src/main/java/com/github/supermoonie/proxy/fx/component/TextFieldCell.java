@@ -1,4 +1,5 @@
 package com.github.supermoonie.proxy.fx.component;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
@@ -98,7 +99,7 @@ public class TextFieldCell<S, T> extends TableCell<S, T> {
         super.startEdit();
         textField.setText(converter.toString(getItem()));
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        textField.requestFocus();
+        Platform.runLater(textField::requestFocus);
     }
 
     // revert to text display

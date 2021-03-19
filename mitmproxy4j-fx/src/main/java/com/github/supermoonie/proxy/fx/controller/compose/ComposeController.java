@@ -14,7 +14,7 @@ public class ComposeController extends ComposeView {
         int rowIndex = paramTableView.getItems().size() - 1;
         paramTableView.getSelectionModel().select(rowIndex);
         paramTableView.edit(rowIndex, paramNameTableColumn);
-        paramTableView.requestFocus();
-        paramTableView.getFocusModel().focus(rowIndex);
+//        paramTableView.requestFocus();
+//        paramTableView.getFocusModel().focus(rowIndex);
     }
 }
