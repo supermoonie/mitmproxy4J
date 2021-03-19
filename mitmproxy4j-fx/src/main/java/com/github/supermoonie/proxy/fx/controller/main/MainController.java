@@ -1,11 +1,13 @@
 package com.github.supermoonie.proxy.fx.controller.main;
 
+import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.controller.ColumnMap;
 import com.github.supermoonie.proxy.fx.controller.Flow;
 import com.github.supermoonie.proxy.fx.controller.FlowNode;
 import com.github.supermoonie.proxy.fx.controller.PropertyPair;
+import com.github.supermoonie.proxy.fx.controller.compose.ComposeView;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dao.FlowDao;
 import com.github.supermoonie.proxy.fx.entity.*;
@@ -17,6 +19,9 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.FilteredList;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TreeItem;
@@ -24,6 +29,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebEngine;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
@@ -31,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -103,7 +111,19 @@ public class MainController extends MainView {
     }
 
     public void onEditButtonClicked() {
-
+        Stage sendReqStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/Compose.fxml"));
+        try {
+            Parent parent = fxmlLoader.load();
+            ComposeView sendReqController = fxmlLoader.getController();
+//            sendReqController.setStage(sendReqStage);
+            sendReqStage.setScene(new Scene(parent));
+            App.setCommonIcon(sendReqStage, "Compose");
+            sendReqStage.initModality(Modality.APPLICATION_MODAL);
+            sendReqStage.show();
+        } catch (IOException e) {
+            AlertUtil.error(e);
+        }
     }
 
     public void onClearButtonClicked() {

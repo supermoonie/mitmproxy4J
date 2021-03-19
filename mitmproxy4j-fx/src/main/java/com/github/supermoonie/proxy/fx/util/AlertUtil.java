@@ -10,12 +10,16 @@ import javafx.scene.control.DialogPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author supermoonie
  * @since 2020/8/23
  */
 public class AlertUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(AlertUtil.class);
 
     private AlertUtil() {
 
@@ -34,6 +38,7 @@ public class AlertUtil {
     }
 
     public static void error(Throwable cause) {
+        log.error(cause.getMessage(), cause);
         Alert alert = new Alert(Alert.AlertType.ERROR, "Error: " + cause.getMessage(), ButtonType.OK);
         alert.setHeaderText("");
         toFront(alert);

@@ -1,81 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.compose.ComposeView">
-   <children>
-      <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <top>
-            <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
-               <children>
-                  <ChoiceBox prefWidth="80.0" />
-                  <TextField HBox.hgrow="ALWAYS" />
-               </children>
-               <padding>
-                  <Insets left="10.0" right="10.0" />
-               </padding>
-            </HBox>
-         </top>
-         <center>
-            <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-              <tabs>
-                <Tab text="Param">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                 <children>
-                                    <TableView editable="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" HBox.hgrow="ALWAYS">
-                                      <columns>
-                                        <TableColumn prefWidth="282.0" text="Name" />
-                                        <TableColumn minWidth="0.0" prefWidth="256.0" resizable="false" sortable="false" text="Value" />
-                                      </columns>
-                                    </TableView>
-                                    <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="60.0" spacing="5.0" style="-fx-border-color: #ccc;">
-                                       <children>
-                                          <Button mnemonicParsing="false" prefWidth="55.0" text="+" />
-                                          <Button mnemonicParsing="false" prefWidth="55.0" text="-" />
-                                       </children>
-                                       <padding>
-                                          <Insets top="5.0" />
-                                       </padding>
-                                    </VBox>
-                                 </children>
-                              </HBox>
-                           </children>
-                        </AnchorPane>
-                  </content>
-                </Tab>
-                <Tab text="Header">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                  </content>
-                </Tab>
-                  <Tab text="Body">
-                    <content>
-                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                    </content>
-                  </Tab>
-              </tabs>
-            </TabPane>
-         </center>
-         <bottom>
-            <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
-               <children>
-                  <CheckBox mnemonicParsing="false" text="Close window after send" />
-                  <Button defaultButton="true" mnemonicParsing="false" text="Send" />
-                  <Button cancelButton="true" mnemonicParsing="false" text="Cancel" />
-               </children>
-               <padding>
-                  <Insets left="5.0" right="5.0" />
-               </padding>
-            </HBox>
-         </bottom>
-      </BorderPane>
-   </children>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.compose.ComposeController">
+    <children>
+        <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <top>
+                <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <ChoiceBox fx:id="reqMethodChoiceBox" prefWidth="80.0" />
+                        <TextField fx:id="urlTextField" text="https://" HBox.hgrow="ALWAYS" />
+                    </children>
+                    <padding>
+                        <Insets left="10.0" right="10.0" />
+                    </padding>
+                </HBox>
+            </top>
+            <center>
+                <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+                    <tabs>
+                        <Tab text="Param">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                    <children>
+                                        <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                            <children>
+                                                <TableView fx:id="paramTableView" editable="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" HBox.hgrow="ALWAYS">
+                                                    <columns>
+                                                        <TableColumn fx:id="paramNameTableColumn" minWidth="60.0" prefWidth="280.0" text="Name">
+                                                            <cellValueFactory>
+                                                                <PropertyValueFactory property="key" />
+                                                            </cellValueFactory>
+                                                        </TableColumn>
+                                                        <TableColumn fx:id="paramValueTableColumn" minWidth="60.0" prefWidth="280.0" resizable="false" sortable="false" text="Value">
+                                                            <cellValueFactory>
+                                                                <PropertyValueFactory property="value" />
+                                                            </cellValueFactory>
+                                                        </TableColumn>
+                                                    </columns>
+                                                    <placeholder>
+                                                        <Label />
+                                                    </placeholder>
+                                                    <columnResizePolicy>
+                                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                    </columnResizePolicy>
+                                                </TableView>
+                                                <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="35.0" spacing="5.0" style="-fx-border-color: #ccc;">
+                                                    <children>
+                                                        <Button fx:id="paramAddButton" mnemonicParsing="false" onAction="#onParamAddButtonClicked" prefWidth="30.0" text="+" />
+                                                        <Button fx:id="paramDelButton" mnemonicParsing="false" prefWidth="30.0" text="-" />
+                                                    </children>
+                                                    <padding>
+                                                        <Insets top="5.0" />
+                                                    </padding>
+                                                </VBox>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </AnchorPane>
+                            </content>
+                        </Tab>
+                        <Tab text="Header">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                            </content>
+                        </Tab>
+                        <Tab text="Body">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </center>
+            <bottom>
+                <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <CheckBox mnemonicParsing="false" text="Close window after send" />
+                        <Button defaultButton="true" mnemonicParsing="false" text="Send" />
+                        <Button cancelButton="true" mnemonicParsing="false" text="Cancel" />
+                    </children>
+                    <padding>
+                        <Insets left="5.0" right="5.0" />
+                    </padding>
+                </HBox>
+            </bottom>
+        </BorderPane>
+    </children>
 </AnchorPane>
