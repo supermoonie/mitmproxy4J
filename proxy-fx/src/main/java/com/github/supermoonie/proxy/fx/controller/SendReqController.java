@@ -96,10 +96,6 @@ public class SendReqController implements Initializable {
     @FXML
     protected TableColumn<ColumnMap, String> requestHeaderValueColumn;
     @FXML
-    protected TextField paramsNameTextField;
-    @FXML
-    protected TextField paramsValueTextField;
-    @FXML
     protected Button paramsAddButton;
     @FXML
     protected Button paramsDelButton;
@@ -432,6 +428,9 @@ public class SendReqController implements Initializable {
         requestUrlTextField.setText(urlBuilder.substring(0, urlBuilder.length() - 1));
     }
 
+    /**
+     * https://stackoverflow.com/questions/29576577/tableview-doesnt-commit-values-on-focus-lost-event
+     */
     private void initRequestQueryParamsTab() {
         paramsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         requestParamNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -641,15 +640,9 @@ public class SendReqController implements Initializable {
     }
 
     public void onParamsAddButtonClicked() {
-        String name = paramsNameTextField.getText();
-        if (StringUtils.isEmpty(name)) {
-            AlertUtil.warning("Name is empty !");
-            return;
-        }
-        String value = paramsValueTextField.getText();
         PropertyPair pair = new PropertyPair();
-        pair.setKey(name);
-        pair.setValue(value);
+        pair.setKey("");
+        pair.setValue("");
         pair.keyProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
         pair.valueProperty().addListener((observable, oldValue, newValue) -> updateRequestUrl());
         paramsTableView.getItems().add(pair);
