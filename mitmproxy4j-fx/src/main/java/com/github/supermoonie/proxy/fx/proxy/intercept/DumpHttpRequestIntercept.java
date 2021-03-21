@@ -2,8 +2,7 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.App;
-import com.github.supermoonie.proxy.fx.AppPreferences;
-import com.github.supermoonie.proxy.fx.controller.main.MainView;
+import com.github.supermoonie.proxy.fx.ui.main.MainView;
 import com.github.supermoonie.proxy.fx.dao.RequestDao;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;

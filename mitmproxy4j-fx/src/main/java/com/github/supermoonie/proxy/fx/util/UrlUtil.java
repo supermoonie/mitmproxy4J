@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.fx.util;
 
-import com.github.supermoonie.proxy.fx.controller.KeyValue;
+import com.github.supermoonie.proxy.fx.ui.KeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

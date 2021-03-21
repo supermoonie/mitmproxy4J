@@ -1,7 +1,6 @@
 package com.github.supermoonie.proxy.fx;
 
-import com.github.supermoonie.proxy.fx.controller.main.MainController;
-import com.github.supermoonie.proxy.fx.controller.main.MainView;
+import com.github.supermoonie.proxy.fx.ui.main.MainController;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;
@@ -96,5 +95,9 @@ public class App extends Application {
                 stage.close();
             }
         });
+    }
+
+    public static Stage getPrimaryStage() {
+        return primaryStage;
     }
 }

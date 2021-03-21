@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.fx;
 
-import com.github.supermoonie.proxy.fx.controller.main.MainController;
+import com.github.supermoonie.proxy.fx.ui.main.MainController;
 import com.github.supermoonie.proxy.fx.proxy.ProxyManager;
 import com.github.supermoonie.proxy.fx.proxy.intercept.DefaultConfigIntercept;
 import com.github.supermoonie.proxy.fx.proxy.intercept.InternalProxyInterceptInitializer;

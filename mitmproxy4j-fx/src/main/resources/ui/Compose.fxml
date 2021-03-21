@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 
-<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/compose.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.compose.ComposeController">
+<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/compose.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.ComposeController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -158,7 +158,7 @@
                                                    <children>
                                                       <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                          <children>
-                                                            <TableView prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+                                                            <TableView fx:id="formDataTableView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
                                                               <columns>
                                                                 <TableColumn prefWidth="75.0" text="Name" />
                                                                 <TableColumn prefWidth="75.0" text="Value" />
@@ -173,13 +173,8 @@
                                                             </TableView>
                                                             <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0">
                                                                <children>
-                                                                  <MenuButton fx:id="formDataAddMenuButton" mnemonicParsing="false" prefWidth="80.0" text="+">
-                                                                    <items>
-                                                                      <MenuItem mnemonicParsing="false" onAction="#onTextMenuItemClicked" text="Text" />
-                                                                      <MenuItem mnemonicParsing="false" onAction="#onFileMenuItemClicked" text="File" />
-                                                                    </items>
-                                                                  </MenuButton>
-                                                                  <Button disable="true" mnemonicParsing="false" text="-" />
+                                                                  <Button fx:id="formDataAddButton" mnemonicParsing="false" onAction="#onFormDataAddButtonClicked" prefWidth="30.0" text="+" />
+                                                                  <Button disable="true" mnemonicParsing="false" prefWidth="30.0" text="-" />
                                                                   <Button disable="true" mnemonicParsing="false" text="Edit" />
                                                                </children>
                                                                <padding>

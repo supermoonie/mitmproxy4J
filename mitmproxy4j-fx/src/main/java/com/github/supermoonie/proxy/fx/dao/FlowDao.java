@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.fx.dao;
 
-import com.github.supermoonie.proxy.fx.controller.Flow;
+import com.github.supermoonie.proxy.fx.ui.Flow;
 import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;

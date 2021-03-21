@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="210.0" maxWidth="315.0" minHeight="210.0" minWidth="315.0" prefHeight="210.0" prefWidth="315.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.dialog.ThrottlingSettingDialog">
+<AnchorPane maxHeight="210.0" maxWidth="315.0" minHeight="210.0" minWidth="315.0" prefHeight="210.0" prefWidth="315.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.dialog.ThrottlingSettingDialog">
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>

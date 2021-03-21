@@ -2,7 +2,7 @@ package com.github.supermoonie.proxy.fx.proxy.intercept;
 
 import com.github.supermoonie.proxy.InterceptContext;
 import com.github.supermoonie.proxy.fx.App;
-import com.github.supermoonie.proxy.fx.controller.main.MainController;
+import com.github.supermoonie.proxy.fx.ui.main.MainController;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.service.ResponseService;
