@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.cell.*?>
 <?import java.lang.*?>
@@ -15,7 +16,7 @@
             <top>
                 <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
                     <children>
-                  <ComboBox fx:id="reqMethodComboBox" prefWidth="80.0" promptText="GET" />
+                  <ComboBox fx:id="reqMethodComboBox" prefWidth="100.0" promptText="GET" />
                         <TextField fx:id="urlTextField" text="https://" HBox.hgrow="ALWAYS" />
                     </children>
                     <padding>
@@ -113,14 +114,14 @@
                            <children>
                               <VBox prefHeight="200.0" prefWidth="100.0" style="-fx-border-color: #ccc;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                                    <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0">
+                                    <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" style="-fx-border-color: #ccc;">
                                        <children>
-                                          <RadioButton mnemonicParsing="false" selected="true" text="none" />
-                                          <RadioButton mnemonicParsing="false" text="form-data" />
-                                          <RadioButton mnemonicParsing="false" text="x-www-form-urlencoded" />
-                                          <RadioButton mnemonicParsing="false" text="binary" />
-                                          <RadioButton mnemonicParsing="false" text="raw" />
-                                          <ChoiceBox prefWidth="150.0" />
+                                          <RadioButton fx:id="noneRadioButton" mnemonicParsing="false" selected="true" text="none" />
+                                          <RadioButton fx:id="formDataRadioButton" mnemonicParsing="false" text="form-data" />
+                                          <RadioButton fx:id="formUrlencodedRadioButton" mnemonicParsing="false" text="x-www-form-urlencoded" />
+                                          <RadioButton fx:id="binaryRadioButton" mnemonicParsing="false" text="binary" />
+                                          <RadioButton fx:id="rawRadioButton" mnemonicParsing="false" text="raw" />
+                                          <ComboBox fx:id="contentTypeComboBox" prefWidth="85.0" promptText="JSON" />
                                        </children>
                                        <opaqueInsets>
                                           <Insets />
@@ -128,10 +129,13 @@
                                        <padding>
                                           <Insets left="5.0" right="5.0" />
                                        </padding>
+                                       <VBox.margin>
+                                          <Insets bottom="-9.0" />
+                                       </VBox.margin>
                                     </HBox>
-                                    <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                                    <TabPane fx:id="bodyContentTabPane" prefHeight="200.0" prefWidth="200.0" styleClass="wizard" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
                                       <tabs>
-                                        <Tab text="none">
+                                        <Tab fx:id="noneTab" text="none">
                                           <content>
                                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                                    <children>
@@ -148,7 +152,7 @@
                                                 </AnchorPane>
                                           </content>
                                         </Tab>
-                                        <Tab text="form-data">
+                                        <Tab fx:id="formDataTab" text="form-data">
                                           <content>
                                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                                    <children>
@@ -160,12 +164,23 @@
                                                                 <TableColumn prefWidth="75.0" text="Value" />
                                                                   <TableColumn prefWidth="111.0" text="ContentType" />
                                                               </columns>
+                                                                <placeholder>
+                                                                    <Label />
+                                                                </placeholder>
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
                                                             </TableView>
                                                             <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0">
                                                                <children>
-                                                                  <ComboBox prefWidth="80.0" promptText="Text" />
-                                                                  <Button mnemonicParsing="false" text="-" />
-                                                                  <Button mnemonicParsing="false" text="Edit" />
+                                                                  <MenuButton fx:id="formDataAddMenuButton" mnemonicParsing="false" prefWidth="80.0" text="+">
+                                                                    <items>
+                                                                      <MenuItem mnemonicParsing="false" onAction="#onTextMenuItemClicked" text="Text" />
+                                                                      <MenuItem mnemonicParsing="false" onAction="#onFileMenuItemClicked" text="File" />
+                                                                    </items>
+                                                                  </MenuButton>
+                                                                  <Button disable="true" mnemonicParsing="false" text="-" />
+                                                                  <Button disable="true" mnemonicParsing="false" text="Edit" />
                                                                </children>
                                                                <padding>
                                                                   <Insets left="5.0" right="5.0" />
@@ -177,17 +192,17 @@
                                                 </AnchorPane>
                                           </content>
                                         </Tab>
-                                          <Tab text="x-ww-form-urlencoded">
+                                          <Tab fx:id="formUrlencodedTab" text="x-ww-form-urlencoded">
                                             <content>
                                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
                                             </content>
                                           </Tab>
-                                          <Tab text="binary">
+                                          <Tab fx:id="binaryTab" text="binary">
                                             <content>
                                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
                                             </content>
                                           </Tab>
-                                          <Tab text="raw">
+                                          <Tab fx:id="rawTab" text="raw">
                                             <content>
                                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
                                             </content>
@@ -203,14 +218,14 @@
                 </TabPane>
             </center>
             <bottom>
-                <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
+                <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="200.0" spacing="10.0" BorderPane.alignment="CENTER">
                     <children>
-                        <CheckBox mnemonicParsing="false" text="Close window after send" />
+                        <CheckBox mnemonicParsing="false" selected="true" text="Close window after send" />
                         <Button defaultButton="true" mnemonicParsing="false" text="Send" />
                         <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#onCancelButtonClicked" text="Cancel" />
                     </children>
                     <padding>
-                        <Insets left="5.0" right="5.0" />
+                        <Insets left="10.0" right="10.0" />
                     </padding>
                 </HBox>
             </bottom>

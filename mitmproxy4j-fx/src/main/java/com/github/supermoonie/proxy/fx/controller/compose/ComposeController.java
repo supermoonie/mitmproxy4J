@@ -41,6 +41,16 @@ public class ComposeController extends ComposeView {
     }
 
     @FXML
+    public void onTextMenuItemClicked() {
+        System.out.println("onTextMenuItemClicked");
+    }
+
+    @FXML
+    public void onFileMenuItemClicked() {
+        System.out.println("onFileMenuItemClicked");
+    }
+
+    @FXML
     public void onCancelButtonClicked() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();

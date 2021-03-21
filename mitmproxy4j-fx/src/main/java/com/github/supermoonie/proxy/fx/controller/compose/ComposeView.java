@@ -4,12 +4,9 @@ import com.github.supermoonie.proxy.fx.component.TextFieldCell;
 import com.github.supermoonie.proxy.fx.constant.HttpMethod;
 import com.github.supermoonie.proxy.fx.controller.KeyValue;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -50,6 +47,39 @@ public class ComposeView implements Initializable {
     protected Button headerAddButton;
     @FXML
     protected Button headerDelButton;
+    /**
+     * body
+     */
+    protected final ToggleGroup toggleGroup = new ToggleGroup();
+    @FXML
+    protected RadioButton noneRadioButton;
+    @FXML
+    protected RadioButton formDataRadioButton;
+    @FXML
+    protected RadioButton formUrlencodedRadioButton;
+    @FXML
+    protected RadioButton binaryRadioButton;
+    @FXML
+    protected RadioButton rawRadioButton;
+    @FXML
+    protected ComboBox<String> contentTypeComboBox;
+    @FXML
+    protected TabPane bodyContentTabPane;
+    @FXML
+    protected Tab noneTab;
+    @FXML
+    protected Tab formDataTab;
+    @FXML
+    protected Tab formUrlencodedTab;
+    @FXML
+    protected Tab binaryTab;
+    @FXML
+    protected Tab rawTab;
+    /**
+     * body form-data tab
+     */
+    @FXML
+    protected MenuButton formDataAddMenuButton;
 
     @FXML
     protected Button cancelButton;
@@ -67,6 +97,29 @@ public class ComposeView implements Initializable {
         headerNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
         headerValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
         headerDelButton.disableProperty().bind(headerTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
+        // body
+        toggleGroup.getToggles().add(noneRadioButton);
+        toggleGroup.getToggles().add(formDataRadioButton);
+        toggleGroup.getToggles().add(formUrlencodedRadioButton);
+        toggleGroup.getToggles().add(binaryRadioButton);
+        toggleGroup.getToggles().add(rawRadioButton);
+        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> switchBodyContentTab());
+        contentTypeComboBox.getItems().addAll("JSON", "XML", "Text", "JavaScript", "HTML");
+        // body form-data
         Platform.runLater(() -> urlTextField.requestFocus());
+    }
+
+    private void switchBodyContentTab() {
+        if (formDataRadioButton.isSelected()) {
+            bodyContentTabPane.getSelectionModel().select(formDataTab);
+        } else if (formUrlencodedRadioButton.isSelected()) {
+            bodyContentTabPane.getSelectionModel().select(formUrlencodedTab);
+        } else if (binaryRadioButton.isSelected()) {
+            bodyContentTabPane.getSelectionModel().select(binaryTab);
+        } else if (rawRadioButton.isSelected()) {
+            bodyContentTabPane.getSelectionModel().select(rawTab);
+        } else {
+            bodyContentTabPane.getSelectionModel().select(noneTab);
+        }
     }
 }
