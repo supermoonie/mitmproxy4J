@@ -8,7 +8,7 @@ import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.constant.KeyEvents;
 import com.github.supermoonie.proxy.fx.controller.ColumnMap;
 import com.github.supermoonie.proxy.fx.controller.FlowNode;
-import com.github.supermoonie.proxy.fx.controller.PropertyPair;
+import com.github.supermoonie.proxy.fx.controller.KeyValue;
 import com.github.supermoonie.proxy.fx.controller.main.factory.ListViewCellFactory;
 import com.github.supermoonie.proxy.fx.controller.main.handler.*;
 import com.github.supermoonie.proxy.fx.entity.Header;
@@ -77,11 +77,11 @@ public abstract class MainView implements Initializable {
     @FXML
     protected Tab contentsTab;
     @FXML
-    protected TreeTableView<PropertyPair> overviewTreeTableView;
+    protected TreeTableView<KeyValue> overviewTreeTableView;
     @FXML
-    protected TreeTableColumn<PropertyPair, String> overviewNameColumn;
+    protected TreeTableColumn<KeyValue, String> overviewNameColumn;
     @FXML
-    protected TreeTableColumn<PropertyPair, String> overviewValueColumn;
+    protected TreeTableColumn<KeyValue, String> overviewValueColumn;
     @FXML
     protected TabPane requestTabPane;
     @FXML
@@ -151,7 +151,7 @@ public abstract class MainView implements Initializable {
     @FXML
     protected Button recordingSwitchButton;
 
-    protected final TreeItem<PropertyPair> overviewRoot = new TreeItem<>(new PropertyPair());
+    protected final TreeItem<KeyValue> overviewRoot = new TreeItem<>(new KeyValue());
     private final TreeItem<FlowNode> root = new TreeItem<>(new FlowNode());
     protected Integer currentRequestId;
     protected TreeItem<FlowNode> treeViewSelectedItem = null;

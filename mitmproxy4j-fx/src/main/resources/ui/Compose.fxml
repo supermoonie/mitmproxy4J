@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.compose.ComposeController">
+<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/compose.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.controller.compose.ComposeController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -29,16 +29,16 @@
                             <content>
                                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                     <children>
-                                        <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                            <children>
-                                                <TableView fx:id="paramTableView" editable="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" HBox.hgrow="ALWAYS">
+                              <VBox style="-fx-border-color: #ccc;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                                <TableView fx:id="paramTableView" editable="true" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                                                     <columns>
-                                                        <TableColumn fx:id="paramNameTableColumn" minWidth="60.0" prefWidth="280.0" text="Name">
+                                                        <TableColumn fx:id="paramNameTableColumn" minWidth="60.0" prefWidth="400.0" text="Name">
                                                             <cellValueFactory>
                                                                 <PropertyValueFactory property="key" />
                                                             </cellValueFactory>
                                                         </TableColumn>
-                                                        <TableColumn fx:id="paramValueTableColumn" minWidth="60.0" prefWidth="280.0" resizable="false" sortable="false" text="Value">
+                                                        <TableColumn fx:id="paramValueTableColumn" minWidth="60.0" prefWidth="400.0" resizable="false" sortable="false" text="Value">
                                                             <cellValueFactory>
                                                                 <PropertyValueFactory property="value" />
                                                             </cellValueFactory>
@@ -51,17 +51,17 @@
                                                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                                     </columnResizePolicy>
                                                 </TableView>
-                                                <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="35.0" spacing="5.0" style="-fx-border-color: #ccc;">
-                                                    <children>
-                                                        <Button fx:id="paramAddButton" mnemonicParsing="false" onAction="#onParamAddButtonClicked" prefWidth="30.0" text="+" />
-                                                        <Button fx:id="paramDelButton" mnemonicParsing="false" prefWidth="30.0" text="-" />
-                                                    </children>
-                                                    <padding>
-                                                        <Insets top="5.0" />
-                                                    </padding>
-                                                </VBox>
-                                            </children>
-                                        </HBox>
+                                    <HBox alignment="CENTER_LEFT" prefHeight="35.0" spacing="5.0">
+                                       <children>
+                                                        <Button fx:id="paramAddButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#onParamAddButtonClicked" prefWidth="30.0" text="+" />
+                                                        <Button fx:id="paramDelButton" disable="true" mnemonicParsing="false" onAction="#onParamDelButtonClicked" prefWidth="30.0" text="-" />
+                                       </children>
+                                       <padding>
+                                          <Insets left="5.0" right="5.0" />
+                                       </padding>
+                                    </HBox>
+                                 </children>
+                              </VBox>
                                     </children>
                                 </AnchorPane>
                             </content>
@@ -84,7 +84,7 @@
                     <children>
                         <CheckBox mnemonicParsing="false" text="Close window after send" />
                         <Button defaultButton="true" mnemonicParsing="false" text="Send" />
-                        <Button cancelButton="true" mnemonicParsing="false" text="Cancel" />
+                        <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#onCancelButtonClicked" text="Cancel" />
                     </children>
                     <padding>
                         <Insets left="5.0" right="5.0" />

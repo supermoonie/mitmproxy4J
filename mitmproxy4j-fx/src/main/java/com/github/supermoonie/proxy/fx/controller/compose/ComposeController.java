@@ -1,6 +1,8 @@
 package com.github.supermoonie.proxy.fx.controller.compose;
 
-import com.github.supermoonie.proxy.fx.controller.PropertyPair;
+import com.github.supermoonie.proxy.fx.controller.KeyValue;
+import javafx.fxml.FXML;
+import javafx.stage.Stage;
 
 /**
  * @author supermoonie
@@ -8,13 +10,22 @@ import com.github.supermoonie.proxy.fx.controller.PropertyPair;
  */
 public class ComposeController extends ComposeView {
 
+    @FXML
     public void onParamAddButtonClicked() {
-        PropertyPair pair = new PropertyPair("", "");
-        paramTableView.getItems().add(pair);
+        paramTableView.getItems().add(new KeyValue("", ""));
         int rowIndex = paramTableView.getItems().size() - 1;
         paramTableView.getSelectionModel().select(rowIndex);
         paramTableView.edit(rowIndex, paramNameTableColumn);
-//        paramTableView.requestFocus();
-//        paramTableView.getFocusModel().focus(rowIndex);
+    }
+
+    @FXML
+    public void onParamDelButtonClicked() {
+        paramTableView.getItems().removeAll(paramTableView.getSelectionModel().getSelectedItems());
+    }
+
+    @FXML
+    public void onCancelButtonClicked() {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 }

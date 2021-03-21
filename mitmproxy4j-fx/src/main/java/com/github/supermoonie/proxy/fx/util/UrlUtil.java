@@ -1,6 +1,6 @@
 package com.github.supermoonie.proxy.fx.util;
 
-import com.github.supermoonie.proxy.fx.controller.PropertyPair;
+import com.github.supermoonie.proxy.fx.controller.KeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,11 +42,11 @@ public final class UrlUtil {
         }
     }
 
-    public static List<PropertyPair> queryToList(String query) {
-        List<PropertyPair> list = new LinkedList<>();
+    public static List<KeyValue> queryToList(String query) {
+        List<KeyValue> list = new LinkedList<>();
         String[] params = query.split("&");
         for (String param : params) {
-            PropertyPair pair = queryFragmentToPair(param);
+            KeyValue pair = queryFragmentToPair(param);
             if (null != pair) {
                 list.add(pair);
             }
@@ -54,9 +54,9 @@ public final class UrlUtil {
         return list;
     }
 
-    public static PropertyPair queryFragmentToPair(String fragment) {
+    public static KeyValue queryFragmentToPair(String fragment) {
         String[] form = fragment.split("=");
-        PropertyPair pair = new PropertyPair();
+        KeyValue pair = new KeyValue();
         if (form.length == 1) {
             pair.setKey(form[0]);
             return pair;

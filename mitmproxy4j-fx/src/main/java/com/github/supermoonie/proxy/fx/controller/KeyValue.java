@@ -7,16 +7,16 @@ import javafx.beans.property.SimpleStringProperty;
  * @author supermoonie
  * @since 2020/11/2
  */
-public class PropertyPair {
+public class KeyValue {
 
     private final Property<String> key = new SimpleStringProperty();
 
     private final Property<String> value = new SimpleStringProperty();
 
-    public PropertyPair() {
+    public KeyValue() {
     }
 
-    public PropertyPair(String key, String value) {
+    public KeyValue(String key, String value) {
         this.key.setValue(key);
         this.value.setValue(value);
     }
