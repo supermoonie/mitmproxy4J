@@ -80,6 +80,20 @@ public class ComposeView implements Initializable {
      */
     @FXML
     protected Button formDataAddButton;
+    @FXML
+    protected Button formDataDelButton;
+    @FXML
+    protected Button formDataEditButton;
+    @FXML
+    protected TableView<FormData> formDataTableView;
+    @FXML
+    protected TableColumn<FormData, String> formDataNameTableColumn;
+    @FXML
+    protected TableColumn<FormData, String> formDataValueTableColumn;
+    @FXML
+    protected TableColumn<FormData, String> formDataContentTypeTableColumn;
+    @FXML
+    protected TableColumn<FormData, String> formDataValueTypeTableColumn;
 
     @FXML
     protected Button cancelButton;
@@ -106,6 +120,8 @@ public class ComposeView implements Initializable {
         toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> switchBodyContentTab());
         contentTypeComboBox.getItems().addAll("JSON", "XML", "Text", "JavaScript", "HTML");
         // body form-data
+        formDataDelButton.disableProperty().bind(formDataTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
+        formDataEditButton.disableProperty().bind(formDataTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
         Platform.runLater(() -> urlTextField.requestFocus());
     }
 

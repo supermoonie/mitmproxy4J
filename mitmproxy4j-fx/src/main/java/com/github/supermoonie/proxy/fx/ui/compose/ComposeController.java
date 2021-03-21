@@ -59,10 +59,17 @@ public class ComposeController extends ComposeView {
             App.setCommonIcon(formDataAddStage, "FormData");
             formDataAddStage.initModality(Modality.APPLICATION_MODAL);
             formDataAddStage.showAndWait();
-
+            if (null != dialog.getFormData()) {
+                formDataTableView.getItems().add(dialog.getFormData());
+            }
         } catch (IOException e) {
             AlertUtil.error(e);
         }
+    }
+
+    @FXML
+    public void onFormDataDelButtonClicked() {
+        removeSelectedRow(formDataTableView);
     }
 
     @FXML
@@ -71,10 +78,11 @@ public class ComposeController extends ComposeView {
         stage.close();
     }
 
+    @SuppressWarnings("SuspiciousMethodCalls")
     private void removeSelectedRow(TableView<?> tableView) {
         ObservableList<?> selectedItems = tableView.getSelectionModel().getSelectedItems();
         if (null != selectedItems && selectedItems.size() > 0) {
-            tableView.getItems().removeAll();
+            tableView.getItems().removeAll(selectedItems);
         }
     }
 }
