@@ -1,16 +1,15 @@
 package com.github.supermoonie.proxy.fx.component;
+
 import javafx.application.Platform;
 import javafx.event.Event;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.CellEditEvent;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -23,10 +22,10 @@ public class TextFieldCell<S, T> extends TableCell<S, T> {
     private final TextField textField = new TextField();
 
     // Converter for converting the text in the text field to the user type, and vice-versa:
-    private final StringConverter<T> converter ;
+    private final StringConverter<T> converter;
 
     public TextFieldCell(StringConverter<T> converter) {
-        this.converter = converter ;
+        this.converter = converter;
 
         itemProperty().addListener((obx, oldItem, newItem) -> {
             if (newItem == null) {
@@ -42,7 +41,7 @@ public class TextFieldCell<S, T> extends TableCell<S, T> {
             commitEdit(this.converter.fromString(textField.getText()));
         });
         textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (! isNowFocused) {
+            if (!isNowFocused) {
                 commitEdit(this.converter.fromString(textField.getText()));
             }
         });
@@ -63,8 +62,56 @@ public class TextFieldCell<S, T> extends TableCell<S, T> {
             } else if (event.getCode() == KeyCode.DOWN) {
                 getTableView().getSelectionModel().selectBelowCell();
                 event.consume();
+            } else if (event.getCode() == KeyCode.TAB) {
+                if (isEditing()) {
+                    int row = getTableView().getEditingCell().getRow();
+                    commitEdit(this.converter.fromString(textField.getText()));
+                    getTableView().edit(row, getNextColumn(!event.isShiftDown()));
+                    event.consume();
+                }
             }
         });
+    }
+
+    private TableColumn<S, ?> getNextColumn(boolean forward) {
+        List<TableColumn<S, ?>> columns = new ArrayList<>();
+        for (TableColumn<S, ?> column : getTableView().getColumns()) {
+            columns.addAll(getLeaves(column));
+        }
+        // There is no other column that supports editing.
+        if (columns.size() < 2) {
+            return null;
+        }
+        int nextIndex = columns.indexOf(getTableColumn());
+        if (forward) {
+            nextIndex++;
+            if (nextIndex > columns.size() - 1) {
+                nextIndex = 0;
+            }
+        } else {
+            nextIndex--;
+            if (nextIndex < 0) {
+                nextIndex = columns.size() - 1;
+            }
+        }
+        return columns.get(nextIndex);
+    }
+
+    private List<TableColumn<S, ?>> getLeaves(
+            TableColumn<S, ?> root) {
+        List<TableColumn<S, ?>> columns = new ArrayList<>();
+        if (root.getColumns().isEmpty()) {
+            // We only want the leaves that are editable.
+            if (root.isEditable()) {
+                columns.add(root);
+            }
+            return columns;
+        } else {
+            for (TableColumn<S, ?> column : root.getColumns()) {
+                columns.addAll(getLeaves(column));
+            }
+            return columns;
+        }
     }
 
     /**
@@ -86,6 +133,7 @@ public class TextFieldCell<S, T> extends TableCell<S, T> {
 
     /**
      * Convenience method for creating an EditCell for a String value.
+     *
      * @return
      */
     public static <S> TextFieldCell<S, String> createStringEditCell() {
@@ -116,12 +164,12 @@ public class TextFieldCell<S, T> extends TableCell<S, T> {
         // This block is necessary to support commit on losing focus, because the baked-in mechanism
         // sets our editing state to false before we can intercept the loss of focus.
         // The default commitEdit(...) method simply bails if we are not editing...
-        if (! isEditing() && ! item.equals(getItem())) {
+        if (!isEditing() && !item.equals(getItem())) {
             TableView<S> table = getTableView();
             if (table != null) {
                 TableColumn<S, T> column = getTableColumn();
                 CellEditEvent<S, T> event = new CellEditEvent<>(table,
-                        new TablePosition<S,T>(table, getIndex(), column),
+                        new TablePosition<S, T>(table, getIndex(), column),
                         TableColumn.editCommitEvent(), item);
                 Event.fireEvent(column, event);
             }

@@ -4,9 +4,12 @@ import com.github.supermoonie.proxy.fx.component.TextFieldCell;
 import com.github.supermoonie.proxy.fx.constant.HttpMethod;
 import com.github.supermoonie.proxy.fx.controller.KeyValue;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -43,6 +46,16 @@ public class ComposeView implements Initializable {
         reqMethodChoiceBox.getItems().addAll(HttpMethod.ALL_METHOD);
         reqMethodChoiceBox.setValue(HttpMethod.GET);
         paramTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+//        paramTableView.setOnKeyPressed(new EventHandler<KeyEvent>() {
+//            @Override
+//            public void handle(KeyEvent event) {
+//                if (event.getCode() == KeyCode.TAB) {
+//                    int rowIndex = paramTableView.getItems().size() - 1;
+//                    paramTableView.edit(rowIndex, paramValueTableColumn);
+//                    event.consume();
+//                }
+//            }
+//        });
         paramNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
         paramValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
         paramDelButton.disableProperty().bind(paramTableView.getSelectionModel().selectedIndexProperty().lessThan(0));

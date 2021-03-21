@@ -12,6 +12,7 @@ public class ComposeController extends ComposeView {
 
     @FXML
     public void onParamAddButtonClicked() {
+        paramTableView.getSelectionModel().clearSelection();
         paramTableView.getItems().add(new KeyValue("", ""));
         int rowIndex = paramTableView.getItems().size() - 1;
         paramTableView.getSelectionModel().select(rowIndex);
