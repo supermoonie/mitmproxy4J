@@ -1,7 +1,9 @@
 package com.github.supermoonie.proxy.fx.controller.compose;
 
 import com.github.supermoonie.proxy.fx.controller.KeyValue;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
 /**
@@ -21,12 +23,33 @@ public class ComposeController extends ComposeView {
 
     @FXML
     public void onParamDelButtonClicked() {
-        paramTableView.getItems().removeAll(paramTableView.getSelectionModel().getSelectedItems());
+        removeSelectedRow(paramTableView);
+    }
+
+    @FXML
+    public void onHeaderAddButtonClicked() {
+        headerTableView.getSelectionModel().clearSelection();
+        headerTableView.getItems().add(new KeyValue("", ""));
+        int rowIndex = headerTableView.getItems().size() - 1;
+        headerTableView.getSelectionModel().select(rowIndex);
+        headerTableView.edit(rowIndex, headerNameTableColumn);
+    }
+
+    @FXML
+    public void onHeaderDelButtonClicked() {
+        removeSelectedRow(headerTableView);
     }
 
     @FXML
     public void onCancelButtonClicked() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
+    }
+
+    private void removeSelectedRow(TableView<?> tableView) {
+        ObservableList<?> selectedItems = tableView.getSelectionModel().getSelectedItems();
+        if (null != selectedItems && selectedItems.size() > 0) {
+            tableView.getItems().removeAll();
+        }
     }
 }

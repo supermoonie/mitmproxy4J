@@ -21,7 +21,7 @@ import java.util.ResourceBundle;
 public class ComposeView implements Initializable {
 
     @FXML
-    protected ChoiceBox<String> reqMethodChoiceBox;
+    protected ComboBox<String> reqMethodComboBox;
     @FXML
     protected TextField urlTextField;
     /**
@@ -37,28 +37,36 @@ public class ComposeView implements Initializable {
     protected TableColumn<KeyValue, String> paramNameTableColumn;
     @FXML
     protected TableColumn<KeyValue, String> paramValueTableColumn;
+    /**
+     * header
+     */
+    @FXML
+    protected TableView<KeyValue> headerTableView;
+    @FXML
+    protected TableColumn<KeyValue, String> headerNameTableColumn;
+    @FXML
+    protected TableColumn<KeyValue, String> headerValueTableColumn;
+    @FXML
+    protected Button headerAddButton;
+    @FXML
+    protected Button headerDelButton;
 
     @FXML
     protected Button cancelButton;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        reqMethodChoiceBox.getItems().addAll(HttpMethod.ALL_METHOD);
-        reqMethodChoiceBox.setValue(HttpMethod.GET);
+        reqMethodComboBox.getItems().addAll(HttpMethod.ALL_METHOD);
+        // param
         paramTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-//        paramTableView.setOnKeyPressed(new EventHandler<KeyEvent>() {
-//            @Override
-//            public void handle(KeyEvent event) {
-//                if (event.getCode() == KeyCode.TAB) {
-//                    int rowIndex = paramTableView.getItems().size() - 1;
-//                    paramTableView.edit(rowIndex, paramValueTableColumn);
-//                    event.consume();
-//                }
-//            }
-//        });
         paramNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
         paramValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
         paramDelButton.disableProperty().bind(paramTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
+        // header
+        headerTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        headerNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
+        headerValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
+        headerDelButton.disableProperty().bind(headerTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
         Platform.runLater(() -> urlTextField.requestFocus());
     }
 }
