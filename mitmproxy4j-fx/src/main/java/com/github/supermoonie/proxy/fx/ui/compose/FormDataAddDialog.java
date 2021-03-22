@@ -69,7 +69,7 @@ public class FormDataAddDialog implements Initializable {
         File file = fileChooser.showOpenDialog(okButton.getScene().getWindow());
         if (null != file) {
             fileLabel.setText(file.getName());
-            fileLabel.setUserData(file.getAbsoluteFile());
+            fileLabel.setUserData(file.getAbsolutePath());
         }
     };
 

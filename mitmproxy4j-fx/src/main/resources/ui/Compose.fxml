@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.control.cell.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
@@ -23,8 +17,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.web.WebView?>
 
-<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/compose.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.ComposeController">
+<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" stylesheets="@css/compose.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.ComposeController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -224,16 +219,30 @@
                                                    <children>
                                                       <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                          <children>
-                                                            <TableView fx:id="formUrlencodedTableView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+                                                            <TableView fx:id="formUrlencodedTableView" editable="true" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                                                               <columns>
-                                                                <TableColumn fx:id="formUrlencodedNameTableColumn" prefWidth="75.0" text="Name" />
-                                                                <TableColumn fx:id="formUrlencodedValueTableColumn" prefWidth="75.0" text="Value" />
+                                                                <TableColumn fx:id="formUrlencodedNameTableColumn" prefWidth="75.0" text="Name">
+                                                                    <cellValueFactory>
+                                                                        <PropertyValueFactory property="key" />
+                                                                    </cellValueFactory>
+                                                                </TableColumn>
+                                                                <TableColumn fx:id="formUrlencodedValueTableColumn" prefWidth="75.0" text="Value">
+                                                                    <cellValueFactory>
+                                                                        <PropertyValueFactory property="value" />
+                                                                    </cellValueFactory>
+                                                                </TableColumn>
                                                               </columns>
+                                                                <placeholder>
+                                                                    <Label />
+                                                                </placeholder>
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
                                                             </TableView>
                                                             <HBox alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="200.0" spacing="5.0">
                                                                <children>
-                                                                  <Button fx:id="formUrlencodedAddButton" mnemonicParsing="false" prefWidth="30.0" text="+" />
-                                                                  <Button fx:id="formUrlencodedDelButton" disable="true" mnemonicParsing="false" prefWidth="30.0" text="-" />
+                                                                  <Button fx:id="formUrlencodedAddButton" mnemonicParsing="false" onAction="#onFormUrlencodedAddButtonClicked" prefWidth="30.0" text="+" />
+                                                                  <Button fx:id="formUrlencodedDelButton" disable="true" mnemonicParsing="false" onAction="#onFormUrlencodedDelButtonClicked" prefWidth="30.0" text="-" />
                                                                </children>
                                                                <padding>
                                                                   <Insets left="5.0" right="5.0" />
@@ -246,12 +255,26 @@
                                           </Tab>
                                           <Tab fx:id="binaryTab" text="binary">
                                             <content>
-                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                                   <children>
+                                                      <HBox alignment="CENTER_LEFT" layoutX="14.0" layoutY="14.0" spacing="5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                         <children>
+                                                            <Button mnemonicParsing="false" onAction="#onBinarySelectButtonClicked" text="Select" />
+                                                            <Label fx:id="binaryFileLabel" />
+                                                         </children>
+                                                         <padding>
+                                                            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                                         </padding>
+                                                      </HBox>
+                                                   </children></AnchorPane>
                                             </content>
                                           </Tab>
                                           <Tab fx:id="rawTab" text="raw">
                                             <content>
-                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                                   <children>
+                                                      <WebView fx:id="rawWebView" layoutX="-87.0" layoutY="9.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                   </children></AnchorPane>
                                             </content>
                                           </Tab>
                                       </tabs>
@@ -268,7 +291,7 @@
                 <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="200.0" spacing="10.0" BorderPane.alignment="CENTER">
                     <children>
                         <CheckBox mnemonicParsing="false" selected="true" text="Close window after send" />
-                        <Button defaultButton="true" mnemonicParsing="false" text="Send" />
+                        <Button fx:id="sendButton" defaultButton="true" mnemonicParsing="false" text="Send" />
                         <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#onCancelButtonClicked" text="Cancel" />
                     </children>
                     <padding>

@@ -139,7 +139,7 @@
             codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexXml)), opts), 1);
             hideLoading();
         }, 100);
-    }
+    };
     window.setHexCss = function (hexCss) {
         showLoading();
         setTimeout(function () {
@@ -148,10 +148,10 @@
             codeEditor.setValue(html_beautify(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hexCss)), opts), 1);
             hideLoading();
         }, 100);
-    }
+    };
     window.hideLoading = function () {
         document.getElementById("loading").style.display = 'none';
-    }
+    };
     window.showLoading = function () {
         document.getElementById("loading").style.display = 'block';
     }

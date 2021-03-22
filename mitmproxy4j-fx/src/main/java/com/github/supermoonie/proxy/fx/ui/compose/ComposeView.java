@@ -1,14 +1,20 @@
 package com.github.supermoonie.proxy.fx.ui.compose;
 
+import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.component.TextFieldCell;
 import com.github.supermoonie.proxy.fx.constant.HttpMethod;
+import com.github.supermoonie.proxy.fx.constant.RequestRawType;
 import com.github.supermoonie.proxy.fx.ui.KeyValue;
 import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.web.WebView;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ResourceBundle;
 
 /**
@@ -107,7 +113,19 @@ public class ComposeView implements Initializable {
     protected Button formUrlencodedAddButton;
     @FXML
     protected Button formUrlencodedDelButton;
+    /**
+     * body binary
+     */
+    @FXML
+    protected Label binaryFileLabel;
+    /**
+     * body raw
+     */
+    @FXML
+    protected WebView rawWebView;
 
+    @FXML
+    protected Button sendButton;
     @FXML
     protected Button cancelButton;
 
@@ -131,10 +149,34 @@ public class ComposeView implements Initializable {
         toggleGroup.getToggles().add(binaryRadioButton);
         toggleGroup.getToggles().add(rawRadioButton);
         toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> switchBodyContentTab());
-        contentTypeComboBox.getItems().addAll("JSON", "XML", "Text", "JavaScript", "HTML");
+        contentTypeComboBox.getItems().addAll(RequestRawType.RAW_TYPE_LIST);
+        contentTypeComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (RequestRawType.JSON.equals(newValue)) {
+                rawWebView.getEngine().executeScript("codeEditor.getSession().setMode('ace/mode/json');");
+            } else if (RequestRawType.XML.equals(newValue) || RequestRawType.HTML.equals(newValue)) {
+                rawWebView.getEngine().executeScript("codeEditor.getSession().setMode('ace/mode/html');");
+            } else if (RequestRawType.JAVASCRIPT.equals(newValue)) {
+                rawWebView.getEngine().executeScript("codeEditor.getSession().setMode('ace/mode/javascript');");
+            } else {
+                rawWebView.getEngine().executeScript("codeEditor.getSession().setMode('ace/mode/text');");
+            }
+        });
         // body form-data
         formDataDelButton.disableProperty().bind(formDataTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
         formDataEditButton.disableProperty().bind(formDataTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
+        // body form-urlencoded
+        formUrlencodedNameTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
+        formUrlencodedValueTableColumn.setCellFactory(cell -> TextFieldCell.createStringEditCell());
+        formUrlencodedDelButton.disableProperty().bind(formUrlencodedTableView.getSelectionModel().selectedIndexProperty().lessThan(0));
+        // body raw
+        rawWebView.setContextMenuEnabled(false);
+        rawWebView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
+        rawWebView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.equals(Worker.State.SUCCEEDED)) {
+                System.out.println("codeEditor.setReadOnly(false);");
+                rawWebView.getEngine().executeScript("hideLoading();codeEditor.setReadOnly(false);");
+            }
+        });
         Platform.runLater(() -> urlTextField.requestFocus());
     }
 

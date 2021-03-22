@@ -9,9 +9,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TableView;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -90,6 +92,29 @@ public class ComposeController extends ComposeView {
             }
         } catch (IOException e) {
             AlertUtil.error(e);
+        }
+    }
+
+    @FXML
+    public void onFormUrlencodedAddButtonClicked() {
+        formUrlencodedTableView.getSelectionModel().clearSelection();
+        formUrlencodedTableView.getItems().add(new KeyValue("", ""));
+        int rowIndex = formUrlencodedTableView.getItems().size() - 1;
+        formUrlencodedTableView.getSelectionModel().select(rowIndex);
+        formUrlencodedTableView.edit(rowIndex, formUrlencodedNameTableColumn);
+    }
+
+    @FXML
+    public void onFormUrlencodedDelButtonClicked() {
+        removeSelectedRow(formUrlencodedTableView);
+    }
+
+    @FXML
+    public void onBinarySelectButtonClicked() {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(sendButton.getScene().getWindow());
+        if (null != file) {
+            binaryFileLabel.setText(file.getAbsolutePath());
         }
     }
 
