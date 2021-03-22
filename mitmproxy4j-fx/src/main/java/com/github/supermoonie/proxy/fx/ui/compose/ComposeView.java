@@ -76,7 +76,7 @@ public class ComposeView implements Initializable {
     @FXML
     protected Tab rawTab;
     /**
-     * body form-data tab
+     * body form-data
      */
     @FXML
     protected Button formDataAddButton;
@@ -94,6 +94,19 @@ public class ComposeView implements Initializable {
     protected TableColumn<FormData, String> formDataContentTypeTableColumn;
     @FXML
     protected TableColumn<FormData, String> formDataValueTypeTableColumn;
+    /**
+     * body form-urlencoded
+     */
+    @FXML
+    protected TableView<KeyValue> formUrlencodedTableView;
+    @FXML
+    protected TableColumn<KeyValue, String> formUrlencodedNameTableColumn;
+    @FXML
+    protected TableColumn<KeyValue, String> formUrlencodedValueTableColumn;
+    @FXML
+    protected Button formUrlencodedAddButton;
+    @FXML
+    protected Button formUrlencodedDelButton;
 
     @FXML
     protected Button cancelButton;

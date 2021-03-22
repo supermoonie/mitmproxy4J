@@ -50,26 +50,47 @@ public class ComposeController extends ComposeView {
 
     @FXML
     public void onFormDataAddButtonClicked() {
-        Stage formDataAddStage = new Stage();
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/FormDataAddDialog.fxml"));
-            Parent parent = fxmlLoader.load();
-            FormDataAddDialog dialog = fxmlLoader.getController();
-            formDataAddStage.setScene(new Scene(parent));
-            App.setCommonIcon(formDataAddStage, "FormData");
-            formDataAddStage.initModality(Modality.APPLICATION_MODAL);
-            formDataAddStage.showAndWait();
-            if (null != dialog.getFormData()) {
-                formDataTableView.getItems().add(dialog.getFormData());
-            }
-        } catch (IOException e) {
-            AlertUtil.error(e);
-        }
+        showFormDataDialog(null);
     }
 
     @FXML
     public void onFormDataDelButtonClicked() {
         removeSelectedRow(formDataTableView);
+    }
+
+    @FXML
+    public void onFormDataEditButtonClicked() {
+        FormData formData = formDataTableView.getSelectionModel().getSelectedItem();
+        if (null == formData) {
+            return;
+        }
+        showFormDataDialog(formData);
+    }
+
+    private void showFormDataDialog(FormData formData) {
+        Stage formDataAddStage = new Stage();
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/FormDataAddDialog.fxml"));
+            Parent parent = fxmlLoader.load();
+            FormDataAddDialog dialog = fxmlLoader.getController();
+            if (null != formData) {
+                dialog.setFormData(formData);
+            }
+            formDataAddStage.setScene(new Scene(parent));
+            App.setCommonIcon(formDataAddStage, "FormData");
+            formDataAddStage.initModality(Modality.APPLICATION_MODAL);
+            formDataAddStage.showAndWait();
+            if (null != dialog.getFormData()) {
+                if (null != formData) {
+                    int index = formDataTableView.getSelectionModel().getFocusedIndex();
+                    formDataTableView.getItems().set(index, dialog.getFormData());
+                } else {
+                    formDataTableView.getItems().add(dialog.getFormData());
+                }
+            }
+        } catch (IOException e) {
+            AlertUtil.error(e);
+        }
     }
 
     @FXML
