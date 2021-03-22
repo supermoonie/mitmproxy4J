@@ -1,6 +1,7 @@
 package com.github.supermoonie.proxy.fx.ui.compose;
 
 import com.github.supermoonie.proxy.mime.MimeMappings;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -32,6 +33,17 @@ public class FormDataAddDialog implements Initializable {
     public static final String TEXT = "Text";
     public static final String FILE = "File";
     public static final String DEFAULT_CONTENT_TYPE = "Auto";
+
+    private static List<String> mimeTypeList;
+
+    static {
+        mimeTypeList = MimeMappings.DEFAULT.getAll().stream()
+                .map(MimeMappings.Mapping::getMimeType)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        mimeTypeList.add(0, DEFAULT_CONTENT_TYPE);
+    }
 
     @FXML
     protected TextField nameTextField;
@@ -78,14 +90,8 @@ public class FormDataAddDialog implements Initializable {
             }
         });
         selectButton.setOnAction(selectButtonClickedHandler);
-        List<String> mimeTypeList = MimeMappings.DEFAULT.getAll().stream()
-                .map(MimeMappings.Mapping::getMimeType)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-        mimeTypeList.add(0, DEFAULT_CONTENT_TYPE);
-        contentTypeComboBox.getItems().addAll(mimeTypeList);
         contentTypeComboBox.setValue(DEFAULT_CONTENT_TYPE);
+        Platform.runLater(() -> contentTypeComboBox.getItems().addAll(mimeTypeList));
     }
 
     @FXML

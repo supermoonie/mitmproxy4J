@@ -38,7 +38,7 @@
                         <TextField fx:id="valueTextField" prefHeight="27.0" prefWidth="178.0" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
-                  <SearchableComboBox fx:id="contentTypeComboBox" editable="true" maxHeight="23.0" prefHeight="23.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <SearchableComboBox fx:id="contentTypeComboBox" maxHeight="23.0" prefHeight="23.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                </children>
                <padding>
                   <Insets right="10.0" />
