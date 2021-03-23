@@ -125,6 +125,8 @@ public class ComposeView implements Initializable {
     protected WebView rawWebView;
 
     @FXML
+    protected CheckBox closeWindowCheckBox;
+    @FXML
     protected Button sendButton;
     @FXML
     protected Button cancelButton;

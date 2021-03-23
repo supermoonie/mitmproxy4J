@@ -119,6 +119,13 @@ public class ComposeController extends ComposeView {
     }
 
     @FXML
+    public void onSendButtonClicked() {
+        if (closeWindowCheckBox.isSelected()) {
+            onCancelButtonClicked();
+        }
+    }
+
+    @FXML
     public void onCancelButtonClicked() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();

@@ -1,0 +1,17 @@
+.default-button {
+    -fx-background-color: #9bc2d5;
+    -fx-border-color: #83a6b6;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
+    -fx-border-radius: 2;
+    -fx-min-width: 61;
+    -fx-min-height: 27;
+    -fx-max-width: 61;
+    -fx-max-height: 27;
+    -fx-pref-width: 61;
+    -fx-pref-height: 27;
+}
+.default-button:hover {
+    -fx-background-color: #c5dee9;
+}

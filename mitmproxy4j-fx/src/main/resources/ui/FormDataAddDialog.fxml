@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.controlsfx.control.SearchableComboBox?>
 
-<AnchorPane prefHeight="200.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.FormDataAddDialog">
+<AnchorPane prefHeight="200.0" prefWidth="400.0" stylesheets="@css/common.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.FormDataAddDialog">
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -46,7 +46,7 @@
             </GridPane>
             <HBox alignment="CENTER_RIGHT" prefHeight="36.0" prefWidth="200.0" spacing="10.0">
                <children>
-                  <Button fx:id="okButton" defaultButton="true" mnemonicParsing="false" onAction="#onOkButtonClicked" prefWidth="55.0" text="Ok" />
+                  <Button fx:id="okButton" defaultButton="true" mnemonicParsing="false" onAction="#onOkButtonClicked" prefWidth="55.0" styleClass="default-button" text="Ok" />
                   <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#onCancelButtonClicked" text="Cancel" />
                </children>
                <padding>
