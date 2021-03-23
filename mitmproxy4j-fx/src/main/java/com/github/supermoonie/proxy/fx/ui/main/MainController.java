@@ -10,6 +10,7 @@ import com.github.supermoonie.proxy.fx.ui.KeyValue;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dao.FlowDao;
 import com.github.supermoonie.proxy.fx.entity.*;
+import com.github.supermoonie.proxy.fx.ui.compose.ComposeView;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.j256.ormlite.dao.Dao;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -19,6 +20,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Tab;
@@ -110,11 +112,16 @@ public class MainController extends MainView {
     }
 
     public void onEditButtonClicked() {
+        FlowNode selectedFlowNode = getSelectedFlowNode();
         Stage composeStage = new Stage();
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/ui/Compose.fxml"));
             Parent parent = fxmlLoader.load();
-            fxmlLoader.getController();
+            ComposeView composeView = fxmlLoader.getController();
+            if (null != selectedFlowNode) {
+                Dao<Request, Integer> dao = DaoCollections.getDao(Request.class);
+            }
+            composeView.setRequest(null);
             composeStage.setScene(new Scene(parent));
             composeStage.setMinWidth(400);
             composeStage.setMinHeight(300);
@@ -443,5 +450,20 @@ public class MainController extends MainView {
 
     private void removeTabByTitle(TabPane tabPane, Tab tabToRemove) {
         tabPane.getTabs().removeIf(tab -> tab.getText().equals(tabToRemove.getText()));
+    }
+
+    private FlowNode getSelectedFlowNode() {
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        FlowNode node;
+        if (selectedTab.equals(structureTab)) {
+            TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            if (null == selectedItem) {
+                return null;
+            }
+            node = selectedItem.getValue();
+        } else {
+            node = listView.getSelectionModel().getSelectedItem();
+        }
+        return node;
     }
 }

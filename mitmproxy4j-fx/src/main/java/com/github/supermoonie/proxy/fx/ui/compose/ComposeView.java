@@ -2,6 +2,7 @@ package com.github.supermoonie.proxy.fx.ui.compose;
 
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.component.TextFieldCell;
+import com.github.supermoonie.proxy.fx.constant.EnumMimeType;
 import com.github.supermoonie.proxy.fx.constant.HttpMethod;
 import com.github.supermoonie.proxy.fx.constant.RequestRawType;
 import com.github.supermoonie.proxy.fx.ui.KeyValue;
@@ -11,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.web.WebView;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.net.URL;
@@ -175,11 +177,49 @@ public class ComposeView implements Initializable {
         rawWebView.getEngine().load(App.class.getResource("/static/RichText.html").toExternalForm());
         rawWebView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.equals(Worker.State.SUCCEEDED)) {
-                System.out.println("codeEditor.setReadOnly(false);");
                 rawWebView.getEngine().executeScript("hideLoading();codeEditor.setReadOnly(false);");
             }
         });
         Platform.runLater(() -> urlTextField.requestFocus());
+    }
+
+    public void setRequest(ComposeRequest request) {
+        reqMethodComboBox.setValue(request.getMethod());
+        urlTextField.setText(request.getMethod());
+        headerTableView.getItems().addAll(request.getHeaderList());
+        if (EnumMimeType.FORM_DATA.getValue().equals(request.getMimeType())) {
+            formDataRadioButton.setSelected(true);
+            formDataTableView.getItems().addAll(request.getFormDataList());
+        } else if (EnumMimeType.FORM_URL_ENCODED.getValue().equals(request.getMimeType())) {
+            formUrlencodedRadioButton.setSelected(true);
+            formUrlencodedTableView.getItems().addAll(request.getFormUrlencodedList());
+        } else if (EnumMimeType.BINARY.getValue().equals(request.getMimeType())) {
+            binaryRadioButton.setSelected(true);
+            binaryFileLabel.setText(request.getBinary());
+        } else if (EnumMimeType.RAW.getValue().equals(request.getMimeType())) {
+            rawRadioButton.setSelected(true);
+            if (StringUtils.isNotEmpty(request.getRaw())) {
+                String hex = Hex.toHexString(request.getRaw().getBytes(StandardCharsets.UTF_8));
+                if (RequestRawType.JSON.equals(request.getRawType())) {
+                    rawWebView.getEngine().executeScript(String.format("setHexJson('%s');codeEditor.setReadOnly(false);", hex));
+                    contentTypeComboBox.setValue(RequestRawType.JSON);
+                } else if (RequestRawType.JAVASCRIPT.equals(request.getRawType())) {
+                    rawWebView.getEngine().executeScript(String.format("setHexJavaScript('%s');codeEditor.setReadOnly(false);", hex));
+                    contentTypeComboBox.setValue(RequestRawType.JAVASCRIPT);
+                } else if (RequestRawType.HTML.equals(request.getRawType())) {
+                    rawWebView.getEngine().executeScript(String.format("setHexHtml('%s');codeEditor.setReadOnly(false);", hex));
+                    contentTypeComboBox.setValue(RequestRawType.HTML);
+                } else if (RequestRawType.XML.equals(request.getRawType())) {
+                    rawWebView.getEngine().executeScript(String.format("setHexXml('%s');codeEditor.setReadOnly(false);", hex));
+                    contentTypeComboBox.setValue(RequestRawType.XML);
+                } else {
+                    rawWebView.getEngine().executeScript(String.format("setHexText('%s');codeEditor.setReadOnly(false);", hex));
+                    contentTypeComboBox.setValue(RequestRawType.TEXT);
+                }
+            }
+        } else {
+            noneRadioButton.setSelected(true);
+        }
     }
 
     private void switchBodyContentTab() {
@@ -194,5 +234,6 @@ public class ComposeView implements Initializable {
         } else {
             bodyContentTabPane.getSelectionModel().select(noneTab);
         }
+        contentTypeComboBox.setDisable(!rawRadioButton.isSelected());
     }
 }
