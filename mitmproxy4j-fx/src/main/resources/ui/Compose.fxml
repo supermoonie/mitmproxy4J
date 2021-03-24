@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.net.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.control.cell.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.web.*?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
@@ -28,7 +20,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
 
-<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.ComposeController">
+<AnchorPane minHeight="300.0" minWidth="400.0" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.supermoonie.proxy.fx.ui.compose.ComposeController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -196,6 +188,11 @@
                                                                   <TableColumn fx:id="formDataValueTypeTableColumn" prefWidth="75.0" text="ValueType" visible="false">
                                                                       <cellValueFactory>
                                                                           <PropertyValueFactory property="type" />
+                                                                      </cellValueFactory>
+                                                                  </TableColumn>
+                                                                  <TableColumn fx:id="fileContentTableColumn" prefWidth="75.0" text="FileContent" visible="false">
+                                                                      <cellValueFactory>
+                                                                          <PropertyValueFactory property="fileContent" />
                                                                       </cellValueFactory>
                                                                   </TableColumn>
                                                               </columns>

@@ -12,15 +12,18 @@ public class FormData {
 
     private String value;
 
+    private byte[] fileContent;
+
     private String contentType;
 
     public FormData() {
     }
 
-    public FormData(String name, String type, String value, String contentType) {
+    public FormData(String name, String type, String value, byte[] fileContent, String contentType) {
         this.name = name;
         this.type = type;
         this.value = value;
+        this.fileContent = fileContent;
         this.contentType = contentType;
     }
 
@@ -54,5 +57,13 @@ public class FormData {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public byte[] getFileContent() {
+        return fileContent;
+    }
+
+    public void setFileContent(byte[] fileContent) {
+        this.fileContent = fileContent;
     }
 }

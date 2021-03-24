@@ -1,5 +1,6 @@
 package com.github.supermoonie.proxy.fx.ui.compose;
 
+import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.github.supermoonie.proxy.mime.MimeMappings;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -14,10 +15,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.SearchableComboBox;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.List;
@@ -69,8 +72,12 @@ public class FormDataAddDialog implements Initializable {
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showOpenDialog(okButton.getScene().getWindow());
         if (null != file) {
-            fileLabel.setText(file.getName());
-            fileLabel.setUserData(file.getAbsolutePath());
+            try {
+                fileLabel.setUserData(FileUtils.readFileToByteArray(file));
+                fileLabel.setText(file.getName());
+            } catch (IOException e) {
+                AlertUtil.error(e);
+            }
         }
     };
 
@@ -99,17 +106,21 @@ public class FormDataAddDialog implements Initializable {
     public void onOkButtonClicked() {
         String name = Objects.requireNonNullElse(nameTextField.getText(), "");
         String valueType = valueTypeComboBox.getSelectionModel().getSelectedItem();
-        String value;
+        String value = null;
+        byte[] fileContent = null;
         if (TEXT.equals(valueType)) {
             value = Objects.requireNonNullElse(valueTextField.getText(), "");
         } else {
-            value = Objects.requireNonNullElse(fileLabel.getUserData(), "").toString();
+            if (null != fileLabel.getUserData()) {
+                fileContent = (byte[]) fileLabel.getUserData();
+                value = fileLabel.getText();
+            }
         }
         String contentType = contentTypeComboBox.getSelectionModel().getSelectedItem();
         if (FILE.equals(valueType) && DEFAULT_CONTENT_TYPE.equals(contentType) && StringUtils.isNotEmpty(value)) {
             contentType = Objects.requireNonNullElse(MimeMappings.DEFAULT.get(value.substring(value.lastIndexOf(".") + 1)), "plain/text");
         }
-        formData = new FormData(name, valueType, value, contentType);
+        formData = new FormData(name, valueType, value, fileContent, contentType);
         onCancelButtonClicked();
     }
 

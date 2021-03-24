@@ -4,6 +4,9 @@ import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.constant.EnumMimeType;
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
+import com.github.supermoonie.proxy.fx.dao.FlowDao;
+import com.github.supermoonie.proxy.fx.entity.*;
 import com.github.supermoonie.proxy.fx.http.FileItem;
 import com.github.supermoonie.proxy.fx.http.Multipart;
 import com.github.supermoonie.proxy.fx.http.PartHandler;
@@ -11,9 +14,6 @@ import com.github.supermoonie.proxy.fx.ui.ColumnMap;
 import com.github.supermoonie.proxy.fx.ui.Flow;
 import com.github.supermoonie.proxy.fx.ui.FlowNode;
 import com.github.supermoonie.proxy.fx.ui.KeyValue;
-import com.github.supermoonie.proxy.fx.dao.DaoCollections;
-import com.github.supermoonie.proxy.fx.dao.FlowDao;
-import com.github.supermoonie.proxy.fx.entity.*;
 import com.github.supermoonie.proxy.fx.ui.compose.ComposeRequest;
 import com.github.supermoonie.proxy.fx.ui.compose.ComposeView;
 import com.github.supermoonie.proxy.fx.ui.compose.FormData;
@@ -27,7 +27,6 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Tab;
@@ -40,6 +39,7 @@ import javafx.scene.web.WebEngine;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
@@ -155,12 +155,17 @@ public class MainController extends MainView {
 
                             @Override
                             public void handleFileItem(String name, FileItem fileItem) {
-                                FormData formData = new FormData();
-                                formData.setName(name);
-                                formData.setValue(fileItem.getFileName());
-                                formData.setContentType(fileItem.getContentType());
-                                formData.setType(FormDataAddDialog.FILE);
-                                formDataList.add(formData);
+                                try {
+                                    FormData formData = new FormData();
+                                    formData.setName(name);
+                                    formData.setValue(fileItem.getFileName());
+                                    formData.setContentType(fileItem.getContentType());
+                                    formData.setType(FormDataAddDialog.FILE);
+                                    formData.setFileContent(FileUtils.readFileToByteArray(fileItem.getFile()));
+                                    formDataList.add(formData);
+                                } catch (IOException e) {
+                                    AlertUtil.error(e);
+                                }
                             }
                         });
                         req.setFormDataList(formDataList);
@@ -243,12 +248,13 @@ public class MainController extends MainView {
         }
     }
 
-    private void fillOverviewTab(FlowNode selectedNode) throws SQLException {
-        overviewRoot.getChildren().clear();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
-        Request request = requestDao.queryForId(selectedNode.getId());
-        overviewTreeTableView.setUserData(selectedNode.getId());
+    /**
+     * 填充公共信息
+     *
+     * @param selectedNode 选中的 flow 节点
+     * @param request      the request
+     */
+    private void fillOverviewRequestInfo(FlowNode selectedNode, Request request) {
         overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Url", request.getUri())));
         overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Status", selectedNode.getStatus() == -1 ? "Loading" : "Complete")));
         overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Response Code", selectedNode.getStatus() == -1 ? "" : String.valueOf(selectedNode.getStatus()))));
@@ -256,6 +262,90 @@ public class MainController extends MainView {
         overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Method", request.getMethod())));
         overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Host", request.getHost())));
         overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Port", String.valueOf(request.getPort()))));
+    }
+
+    /**
+     * 填充证书信息
+     *
+     * @param certificateInfo 证书信息
+     * @return 证书信息节点
+     */
+    private TreeItem<KeyValue> fillCertificateInfo(CertificateInfo certificateInfo) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        TreeItem<KeyValue> certTreeItem = new TreeItem<>(new KeyValue(certificateInfo.getSubjectCommonName(), ""));
+        TreeItem<KeyValue> serialNumberTreeItem = new TreeItem<>(new KeyValue("Serial Number", certificateInfo.getSerialNumber()));
+        TreeItem<KeyValue> typeTreeItem = new TreeItem<>(new KeyValue("Type", certificateInfo.getType() + " [v" + certificateInfo.getVersion() + "] (" + certificateInfo.getSigAlgName() + ")"));
+        TreeItem<KeyValue> issuedToTreeItem = new TreeItem<>(new KeyValue("Issued To", ""));
+        issuedToTreeItem.getChildren().clear();
+        issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Common Name", certificateInfo.getSubjectCommonName())));
+        issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Unit", certificateInfo.getSubjectOrganizationDepartment())));
+        issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Name", certificateInfo.getSubjectOrganizationName())));
+        issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Locality Name", certificateInfo.getSubjectLocalityName())));
+        issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("State Name", certificateInfo.getSubjectStateName())));
+        issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Country", certificateInfo.getSubjectCountry())));
+        TreeItem<KeyValue> issuedByTreeItem = new TreeItem<>(new KeyValue("Issued By", ""));
+        issuedByTreeItem.getChildren().clear();
+        issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Common Name", certificateInfo.getIssuerCommonName())));
+        issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Unit", certificateInfo.getIssuerOrganizationDepartment())));
+        issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Name", certificateInfo.getIssuerOrganizationName())));
+        issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Locality Name", certificateInfo.getIssuerLocalityName())));
+        issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("State Name", certificateInfo.getIssuerStateName())));
+        issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Country", certificateInfo.getIssuerCountry())));
+        TreeItem<KeyValue> notValidBeforeTreeItem = new TreeItem<>(new KeyValue("Not Valid Before", dateFormat.format(certificateInfo.getNotValidBefore())));
+        TreeItem<KeyValue> notValidAfterTreeItem = new TreeItem<>(new KeyValue("Not Valid After", dateFormat.format(certificateInfo.getNotValidAfter())));
+        TreeItem<KeyValue> fingerprintsTreeItem = new TreeItem<>(new KeyValue("Fingerprints", ""));
+        fingerprintsTreeItem.getChildren().clear();
+        fingerprintsTreeItem.getChildren().add(new TreeItem<>(new KeyValue("SHA-1", certificateInfo.getShaOne())));
+        fingerprintsTreeItem.getChildren().add(new TreeItem<>(new KeyValue("SHA-256", certificateInfo.getShaTwoFiveSix())));
+        TreeItem<KeyValue> fullDetailTreeItem = new TreeItem<>(new KeyValue("Full Detail", certificateInfo.getFullDetail()));
+        certTreeItem.getChildren().clear();
+        certTreeItem.getChildren().add(serialNumberTreeItem);
+        certTreeItem.getChildren().add(typeTreeItem);
+        certTreeItem.getChildren().add(issuedToTreeItem);
+        certTreeItem.getChildren().add(issuedByTreeItem);
+        certTreeItem.getChildren().add(notValidBeforeTreeItem);
+        certTreeItem.getChildren().add(notValidAfterTreeItem);
+        certTreeItem.getChildren().add(fingerprintsTreeItem);
+        certTreeItem.getChildren().add(fullDetailTreeItem);
+        return certTreeItem;
+    }
+
+    /**
+     * 填充耗时信息
+     *
+     * @param request            请求
+     * @param response           响应
+     * @param connectionOverview 连接信息
+     * @return the timing tree item
+     */
+    private TreeItem<KeyValue> fillDurationInfo(Request request, Response response, ConnectionOverview connectionOverview) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        TreeItem<KeyValue> timingTreeItem = new TreeItem<>(new KeyValue("Timing", ""));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request Start Time", dateFormat.format(request.getStartTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request End Time", dateFormat.format(request.getEndTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect Start Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect End Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response Start Time", dateFormat.format(response.getStartTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response End Time", dateFormat.format(response.getEndTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request", (request.getEndTime() - request.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response", (response.getEndTime() - response.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Duration", (response.getEndTime() - request.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("DNS", (connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime()) + " ms")));
+        return timingTreeItem;
+    }
+
+    /**
+     * 填充 overview
+     *
+     * @param selectedNode 选中的节点
+     * @throws SQLException e
+     */
+    private void fillOverviewTab(FlowNode selectedNode) throws SQLException {
+        overviewRoot.getChildren().clear();
+        Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
+        Request request = requestDao.queryForId(selectedNode.getId());
+        overviewTreeTableView.setUserData(selectedNode.getId());
+        fillOverviewRequestInfo(selectedNode, request);
         Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
         Response response = responseDao.queryBuilder().where().eq(Response.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
         if (null != response) {
@@ -263,78 +353,30 @@ public class MainController extends MainView {
             Dao<ConnectionOverview, Integer> overviewDao = DaoCollections.getDao(ConnectionOverview.class);
             ConnectionOverview connectionOverview = overviewDao.queryBuilder().where().eq(ConnectionOverview.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
             overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Client Address", connectionOverview.getClientHost() + ":" + connectionOverview.getClientPort())));
-//            overviewRoot.getChildren().add(new TreeItem<>(new PropertyPair("DNS", connectionOverview.getDnsServer())));
             overviewRoot.getChildren().add(new TreeItem<>(new KeyValue("Remote Address", connectionOverview.getRemoteIpList())));
             TreeItem<KeyValue> tlsTreeItem = new TreeItem<>(new KeyValue("TLS", connectionOverview.getServerProtocol() + " (" + connectionOverview.getServerCipherSuite() + ")"));
             TreeItem<KeyValue> clientSessionIdTreeItem = new TreeItem<>(new KeyValue("Client Session ID", connectionOverview.getClientSessionId()));
             TreeItem<KeyValue> serverSessionIdTreeItem = new TreeItem<>(new KeyValue("Server Session ID", connectionOverview.getServerSessionId()));
             TreeItem<KeyValue> clientTreeItem = new TreeItem<>(new KeyValue("Client Certificate", ""));
-            clientTreeItem.getChildren().clear();
             TreeItem<KeyValue> serverTreeItem = new TreeItem<>(new KeyValue("Server Certificate", ""));
             Dao<CertificateMap, Integer> certificateMapDao = DaoCollections.getDao(CertificateMap.class);
             List<CertificateMap> certificateMaps = certificateMapDao.queryBuilder().where().eq(CertificateMap.REQUEST_ID_FIELD_NAME, request.getId()).query();
             for (CertificateMap certificateMap : certificateMaps) {
                 Dao<CertificateInfo, Integer> certificateInfoDao = DaoCollections.getDao(CertificateInfo.class);
                 CertificateInfo certificateInfo = certificateInfoDao.queryBuilder().orderBy(CertificateInfo.TIME_CREATED_FIELD_NAME, false).where().eq(CertificateInfo.SERIAL_NUMBER_FIELD_NAME, certificateMap.getCertificateSerialNumber()).queryForFirst();
-                TreeItem<KeyValue> certTreeItem = new TreeItem<>(new KeyValue(certificateInfo.getSubjectCommonName(), ""));
-                TreeItem<KeyValue> serialNumberTreeItem = new TreeItem<>(new KeyValue("Serial Number", certificateInfo.getSerialNumber()));
-                TreeItem<KeyValue> typeTreeItem = new TreeItem<>(new KeyValue("Type", certificateInfo.getType() + " [v" + certificateInfo.getVersion() + "] (" + certificateInfo.getSigAlgName() + ")"));
-                TreeItem<KeyValue> issuedToTreeItem = new TreeItem<>(new KeyValue("Issued To", ""));
-                issuedToTreeItem.getChildren().clear();
-                issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Common Name", certificateInfo.getSubjectCommonName())));
-                issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Unit", certificateInfo.getSubjectOrganizationDepartment())));
-                issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Name", certificateInfo.getSubjectOrganizationName())));
-                issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Locality Name", certificateInfo.getSubjectLocalityName())));
-                issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("State Name", certificateInfo.getSubjectStateName())));
-                issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Country", certificateInfo.getSubjectCountry())));
-                TreeItem<KeyValue> issuedByTreeItem = new TreeItem<>(new KeyValue("Issued By", ""));
-                issuedByTreeItem.getChildren().clear();
-                issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Common Name", certificateInfo.getIssuerCommonName())));
-                issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Unit", certificateInfo.getIssuerOrganizationDepartment())));
-                issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Name", certificateInfo.getIssuerOrganizationName())));
-                issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Locality Name", certificateInfo.getIssuerLocalityName())));
-                issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("State Name", certificateInfo.getIssuerStateName())));
-                issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Country", certificateInfo.getIssuerCountry())));
-                TreeItem<KeyValue> notValidBeforeTreeItem = new TreeItem<>(new KeyValue("Not Valid Before", dateFormat.format(certificateInfo.getNotValidBefore())));
-                TreeItem<KeyValue> notValidAfterTreeItem = new TreeItem<>(new KeyValue("Not Valid After", dateFormat.format(certificateInfo.getNotValidAfter())));
-                TreeItem<KeyValue> fingerprintsTreeItem = new TreeItem<>(new KeyValue("Fingerprints", ""));
-                fingerprintsTreeItem.getChildren().clear();
-                fingerprintsTreeItem.getChildren().add(new TreeItem<>(new KeyValue("SHA-1", certificateInfo.getShaOne())));
-                fingerprintsTreeItem.getChildren().add(new TreeItem<>(new KeyValue("SHA-256", certificateInfo.getShaTwoFiveSix())));
-//                TreeItem<PropertyPair> fullDetailTreeItem = new TreeItem<>(new PropertyPair("Full Detail", certificateInfo.getFullDetail()));
-                certTreeItem.getChildren().clear();
-                certTreeItem.getChildren().add(serialNumberTreeItem);
-                certTreeItem.getChildren().add(typeTreeItem);
-                certTreeItem.getChildren().add(issuedToTreeItem);
-                certTreeItem.getChildren().add(issuedByTreeItem);
-                certTreeItem.getChildren().add(notValidBeforeTreeItem);
-                certTreeItem.getChildren().add(notValidAfterTreeItem);
-                certTreeItem.getChildren().add(fingerprintsTreeItem);
-//                certTreeItem.getChildren().add(fullDetailTreeItem);
+                TreeItem<KeyValue> certTreeItem = fillCertificateInfo(certificateInfo);
                 if (null == certificateMap.getResponseId()) {
                     clientTreeItem.getChildren().add(certTreeItem);
                 } else {
                     serverTreeItem.getChildren().add(certTreeItem);
                 }
             }
-            tlsTreeItem.getChildren().clear();
             tlsTreeItem.getChildren().add(clientSessionIdTreeItem);
             tlsTreeItem.getChildren().add(serverSessionIdTreeItem);
             tlsTreeItem.getChildren().add(clientTreeItem);
             tlsTreeItem.getChildren().add(serverTreeItem);
             overviewRoot.getChildren().add(tlsTreeItem);
-            TreeItem<KeyValue> timingTreeItem = new TreeItem<>(new KeyValue("Timing", ""));
-            timingTreeItem.getChildren().clear();
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request Start Time", dateFormat.format(request.getStartTime()))));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request End Time", dateFormat.format(request.getEndTime()))));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect Start Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect End Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response Start Time", dateFormat.format(response.getStartTime()))));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response End Time", dateFormat.format(response.getEndTime()))));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request", (request.getEndTime() - request.getStartTime()) + " ms")));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response", (response.getEndTime() - response.getStartTime()) + " ms")));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Duration", (response.getEndTime() - request.getStartTime()) + " ms")));
-            timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("DNS", (connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime()) + " ms")));
+            TreeItem<KeyValue> timingTreeItem = fillDurationInfo(request, response, connectionOverview);
             overviewRoot.getChildren().add(timingTreeItem);
         }
     }
@@ -383,7 +425,6 @@ public class MainController extends MainView {
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseTextTab.getText()));
                     responseTabPane.getTabs().removeIf(tab -> tab.getText().equals(responseContentTab.getText()));
                     appendTab(responseTabPane, responseImageTab);
-//                    final KeyFrame kf1 = new KeyFrame(Duration.millis(150), e -> );
                     final KeyFrame kf2 = new KeyFrame(Duration.millis(150), e -> {
                         Image image = new Image(new ByteArrayInputStream(bytes));
                         responseImageView.setImage(image);

@@ -102,6 +102,8 @@ public class ComposeView implements Initializable {
     protected TableColumn<FormData, String> formDataContentTypeTableColumn;
     @FXML
     protected TableColumn<FormData, String> formDataValueTypeTableColumn;
+    @FXML
+    protected TableColumn<FormData, byte[]> fileContentTableColumn;
     /**
      * body form-urlencoded
      */

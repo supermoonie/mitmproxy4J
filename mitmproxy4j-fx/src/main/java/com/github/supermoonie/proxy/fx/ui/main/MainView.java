@@ -6,14 +6,14 @@ import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.Icons;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.constant.KeyEvents;
+import com.github.supermoonie.proxy.fx.entity.Header;
+import com.github.supermoonie.proxy.fx.entity.Request;
+import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.ui.ColumnMap;
 import com.github.supermoonie.proxy.fx.ui.FlowNode;
 import com.github.supermoonie.proxy.fx.ui.KeyValue;
 import com.github.supermoonie.proxy.fx.ui.main.factory.ListViewCellFactory;
 import com.github.supermoonie.proxy.fx.ui.main.handler.*;
-import com.github.supermoonie.proxy.fx.entity.Header;
-import com.github.supermoonie.proxy.fx.entity.Request;
-import com.github.supermoonie.proxy.fx.entity.Response;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -409,6 +409,12 @@ public abstract class MainView implements Initializable {
         }
     }
 
+    /**
+     * 更新树
+     *
+     * @param flowNode node
+     * @throws URISyntaxException e
+     */
     public void updateTreeItem(FlowNode flowNode) throws URISyntaxException {
         URI uri = new URI(flowNode.getUrl());
         String baseUri = uri.getScheme() + "://" + uri.getAuthority();
@@ -435,6 +441,11 @@ public abstract class MainView implements Initializable {
         }
     }
 
+    /**
+     * 更新列表
+     *
+     * @param flowNode node
+     */
     public void updateListItem(FlowNode flowNode) {
         ObservableList<FlowNode> items = listView.getItems();
         items.stream()
