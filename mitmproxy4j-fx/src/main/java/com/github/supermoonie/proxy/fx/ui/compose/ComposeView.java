@@ -185,7 +185,7 @@ public class ComposeView implements Initializable {
 
     public void setRequest(ComposeRequest request) {
         reqMethodComboBox.setValue(request.getMethod());
-        urlTextField.setText(request.getMethod());
+        urlTextField.setText(request.getUrl());
         headerTableView.getItems().addAll(request.getHeaderList());
         if (EnumMimeType.FORM_DATA.getValue().equals(request.getMimeType())) {
             formDataRadioButton.setSelected(true);

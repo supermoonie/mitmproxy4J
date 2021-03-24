@@ -157,6 +157,7 @@ public class Multipart {
 
     private File createTempFile(MultipartReader multipartReader) throws IOException {
         File tempFile = File.createTempFile("com.github.supermoonie.fx.proxy.http.file_", null);
+        tempFile.deleteOnExit();
         try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
             copy(multipartReader.newInputStream(), outputStream);
         }

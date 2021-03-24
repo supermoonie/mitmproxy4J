@@ -19,6 +19,7 @@ import org.controlsfx.control.SearchableComboBox;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -125,7 +126,7 @@ public class FormDataAddDialog implements Initializable {
             valueTextField.setText(formData.getValue());
         } else {
             fileLabel.setUserData(formData.getValue());
-            fileLabel.setText(formData.getValue().substring(formData.getValue().lastIndexOf(".") + 1));
+            fileLabel.setText(Paths.get(formData.getValue()).getFileName().toString());
         }
         contentTypeComboBox.setValue(formData.getContentType());
     }
