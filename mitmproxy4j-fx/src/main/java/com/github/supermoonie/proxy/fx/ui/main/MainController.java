@@ -3,6 +3,10 @@ package com.github.supermoonie.proxy.fx.ui.main;
 import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
+import com.github.supermoonie.proxy.fx.constant.EnumMimeType;
+import com.github.supermoonie.proxy.fx.http.FileItem;
+import com.github.supermoonie.proxy.fx.http.Multipart;
+import com.github.supermoonie.proxy.fx.http.PartHandler;
 import com.github.supermoonie.proxy.fx.ui.ColumnMap;
 import com.github.supermoonie.proxy.fx.ui.Flow;
 import com.github.supermoonie.proxy.fx.ui.FlowNode;
@@ -10,7 +14,10 @@ import com.github.supermoonie.proxy.fx.ui.KeyValue;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dao.FlowDao;
 import com.github.supermoonie.proxy.fx.entity.*;
+import com.github.supermoonie.proxy.fx.ui.compose.ComposeRequest;
 import com.github.supermoonie.proxy.fx.ui.compose.ComposeView;
+import com.github.supermoonie.proxy.fx.ui.compose.FormData;
+import com.github.supermoonie.proxy.fx.ui.compose.FormDataAddDialog;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
 import com.j256.ormlite.dao.Dao;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -45,7 +52,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author supermoonie
@@ -119,16 +128,55 @@ public class MainController extends MainView {
             Parent parent = fxmlLoader.load();
             ComposeView composeView = fxmlLoader.getController();
             if (null != selectedFlowNode) {
-                Dao<Request, Integer> dao = DaoCollections.getDao(Request.class);
+                Flow flow = FlowDao.getFlow(selectedFlowNode.getId());
+                ComposeRequest req = new ComposeRequest();
+                req.setMethod(flow.getRequest().getMethod().toUpperCase());
+                req.setUrl(flow.getRequest().getUri());
+                List<KeyValue> headerList = flow.getRequestHeaders().stream()
+                        .map(header -> new KeyValue(header.getName(), header.getValue()))
+                        .collect(Collectors.toList());
+                req.setHeaderList(headerList);
+                if (null != flow.getRequest().getContentId()) {
+                    Content content = DaoCollections.getDao(Content.class).queryForId(flow.getRequest().getContentId());
+                    String contentType = flow.getRequest().getContentType();
+                    if (contentType.contains(EnumMimeType.FORM_DATA.getValue())) {
+                        req.setMimeType(EnumMimeType.FORM_DATA.getValue());
+                        List<FormData> formDataList = new ArrayList<>();
+                        Multipart multipart = new Multipart();
+                        multipart.parse(flow.getRequest(), content.getRawContent(), StandardCharsets.UTF_8.toString(), new PartHandler() {
+                            @Override
+                            public void handleFormItem(String name, String value) {
+                                FormData formData = new FormData();
+                                formData.setName(name);
+                                formData.setValue(value);
+                                formData.setType(FormDataAddDialog.TEXT);
+                                formDataList.add(formData);
+                            }
+
+                            @Override
+                            public void handleFileItem(String name, FileItem fileItem) {
+                                FormData formData = new FormData();
+                                formData.setName(name);
+                                formData.setValue(fileItem.getFileName());
+                                formData.setContentType(fileItem.getContentType());
+                                formData.setType(FormDataAddDialog.FILE);
+                                formDataList.add(formData);
+                            }
+                        });
+                        req.setFormDataList(formDataList);
+                    } else if (contentType.contains(EnumMimeType.FORM_URL_ENCODED.getValue())) {
+                        req.setMimeType(EnumMimeType.FORM_DATA.getValue());
+                    }
+                }
+                composeView.setRequest(req);
             }
-            composeView.setRequest(null);
             composeStage.setScene(new Scene(parent));
             composeStage.setMinWidth(400);
             composeStage.setMinHeight(300);
             App.setCommonIcon(composeStage, "Compose");
             composeStage.initModality(Modality.APPLICATION_MODAL);
             composeStage.show();
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             AlertUtil.error(e);
         }
     }
@@ -178,7 +226,11 @@ public class MainController extends MainView {
 
     private void fillFlow(FlowNode selectedNode) {
         try {
-//            clear();
+            if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
+                return;
+            }
+            currentRequestId = selectedNode.getId();
+            clear();
             fillOverviewTab(selectedNode);
             fillContentsTab(selectedNode);
             Platform.runLater(() -> {
@@ -289,10 +341,6 @@ public class MainController extends MainView {
 
     private void fillContentsTab(FlowNode selectedNode) throws SQLException {
         if (EnumFlowType.TARGET.equals(selectedNode.getType()) && selectedNode.getStatus() > 0) {
-            if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
-                return;
-            }
-            currentRequestId = selectedNode.getId();
             Flow flow = FlowDao.getFlow(currentRequestId);
             Request request = flow.getRequest();
             Response response = flow.getResponse();
