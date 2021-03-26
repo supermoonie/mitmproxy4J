@@ -141,36 +141,11 @@ public class MainController extends MainView {
                     String contentType = flow.getRequest().getContentType();
                     if (contentType.contains(EnumMimeType.FORM_DATA.getValue())) {
                         req.setMimeType(EnumMimeType.FORM_DATA.getValue());
-                        List<FormData> formDataList = new ArrayList<>();
-                        Multipart multipart = new Multipart();
-                        multipart.parse(flow.getRequest(), content.getRawContent(), StandardCharsets.UTF_8.toString(), new PartHandler() {
-                            @Override
-                            public void handleFormItem(String name, String value) {
-                                FormData formData = new FormData();
-                                formData.setName(name);
-                                formData.setValue(value);
-                                formData.setType(FormDataAddDialog.TEXT);
-                                formDataList.add(formData);
-                            }
-
-                            @Override
-                            public void handleFileItem(String name, FileItem fileItem) {
-                                try {
-                                    FormData formData = new FormData();
-                                    formData.setName(name);
-                                    formData.setValue(fileItem.getFileName());
-                                    formData.setContentType(fileItem.getContentType());
-                                    formData.setType(FormDataAddDialog.FILE);
-                                    formData.setFileContent(FileUtils.readFileToByteArray(fileItem.getFile()));
-                                    formDataList.add(formData);
-                                } catch (IOException e) {
-                                    AlertUtil.error(e);
-                                }
-                            }
-                        });
+                        List<FormData> formDataList = parseFormData(flow, content);
                         req.setFormDataList(formDataList);
                     } else if (contentType.contains(EnumMimeType.FORM_URL_ENCODED.getValue())) {
                         req.setMimeType(EnumMimeType.FORM_DATA.getValue());
+
                     }
                 }
                 composeView.setRequest(req);
@@ -184,6 +159,45 @@ public class MainController extends MainView {
         } catch (IOException | SQLException e) {
             AlertUtil.error(e);
         }
+    }
+
+    /**
+     * 解析 form-data
+     *
+     * @param flow    flow
+     * @param content content
+     * @return list of form-data
+     * @throws IOException e
+     */
+    private List<FormData> parseFormData(Flow flow, Content content) throws IOException {
+        List<FormData> formDataList = new ArrayList<>();
+        Multipart multipart = new Multipart();
+        multipart.parse(flow.getRequest(), content.getRawContent(), StandardCharsets.UTF_8.toString(), new PartHandler() {
+            @Override
+            public void handleFormItem(String name, String value) {
+                FormData formData = new FormData();
+                formData.setName(name);
+                formData.setValue(value);
+                formData.setType(FormDataAddDialog.TEXT);
+                formDataList.add(formData);
+            }
+
+            @Override
+            public void handleFileItem(String name, FileItem fileItem) {
+                try {
+                    FormData formData = new FormData();
+                    formData.setName(name);
+                    formData.setValue(fileItem.getFileName());
+                    formData.setContentType(fileItem.getContentType());
+                    formData.setType(FormDataAddDialog.FILE);
+                    formData.setFileContent(FileUtils.readFileToByteArray(fileItem.getFile()));
+                    formDataList.add(formData);
+                } catch (IOException e) {
+                    AlertUtil.error(e);
+                }
+            }
+        });
+        return formDataList;
     }
 
     public void onClearButtonClicked() {
@@ -381,6 +395,12 @@ public class MainController extends MainView {
         }
     }
 
+    /**
+     * 填充contents tab
+     *
+     * @param selectedNode selected node
+     * @throws SQLException e
+     */
     private void fillContentsTab(FlowNode selectedNode) throws SQLException {
         if (EnumFlowType.TARGET.equals(selectedNode.getType()) && selectedNode.getStatus() > 0) {
             Flow flow = FlowDao.getFlow(currentRequestId);
