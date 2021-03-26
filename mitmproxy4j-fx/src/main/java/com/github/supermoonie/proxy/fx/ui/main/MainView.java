@@ -184,7 +184,6 @@ public abstract class MainView implements Initializable {
         initWebview(responseJsonWebView);
         initOverviewTreeTableView();
         initContextMenu();
-        mainTabPane.getTabs().remove(contentsTab);
         responseTabPane.getTabs().remove(responseImageTab);
         responseTabPane.getTabs().remove(responseContentTab);
         Platform.runLater(() -> filterTextField.requestFocus());

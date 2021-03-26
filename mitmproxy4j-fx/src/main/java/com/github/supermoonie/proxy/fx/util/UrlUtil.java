@@ -46,7 +46,7 @@ public final class UrlUtil {
         List<KeyValue> list = new LinkedList<>();
         String[] params = query.split("&");
         for (String param : params) {
-            KeyValue pair = queryFragmentToPair(param);
+            KeyValue pair = queryFragment(param);
             if (null != pair) {
                 list.add(pair);
             }
@@ -54,7 +54,7 @@ public final class UrlUtil {
         return list;
     }
 
-    public static KeyValue queryFragmentToPair(String fragment) {
+    public static KeyValue queryFragment(String fragment) {
         String[] form = fragment.split("=");
         KeyValue pair = new KeyValue();
         if (form.length == 1) {

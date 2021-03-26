@@ -4,6 +4,7 @@ import com.github.supermoonie.proxy.fx.App;
 import com.github.supermoonie.proxy.fx.constant.ContentType;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.constant.EnumMimeType;
+import com.github.supermoonie.proxy.fx.constant.RequestRawType;
 import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.dao.FlowDao;
 import com.github.supermoonie.proxy.fx.entity.*;
@@ -19,6 +20,7 @@ import com.github.supermoonie.proxy.fx.ui.compose.ComposeView;
 import com.github.supermoonie.proxy.fx.ui.compose.FormData;
 import com.github.supermoonie.proxy.fx.ui.compose.FormDataAddDialog;
 import com.github.supermoonie.proxy.fx.util.AlertUtil;
+import com.github.supermoonie.proxy.fx.util.UrlUtil;
 import com.j256.ormlite.dao.Dao;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import javafx.animation.KeyFrame;
@@ -138,14 +140,33 @@ public class MainController extends MainView {
                 req.setHeaderList(headerList);
                 if (null != flow.getRequest().getContentId()) {
                     Content content = DaoCollections.getDao(Content.class).queryForId(flow.getRequest().getContentId());
-                    String contentType = flow.getRequest().getContentType();
+                    String contentType = flow.getRequest().getContentType().toLowerCase();
                     if (contentType.contains(EnumMimeType.FORM_DATA.getValue())) {
                         req.setMimeType(EnumMimeType.FORM_DATA.getValue());
                         List<FormData> formDataList = parseFormData(flow, content);
                         req.setFormDataList(formDataList);
                     } else if (contentType.contains(EnumMimeType.FORM_URL_ENCODED.getValue())) {
                         req.setMimeType(EnumMimeType.FORM_DATA.getValue());
-
+                        List<KeyValue> urlEncodedList = UrlUtil.queryToList(new String(content.getRawContent(), StandardCharsets.UTF_8));
+                        req.setFormUrlencodedList(urlEncodedList);
+                    } else if (contentType.contains(RequestRawType.JSON.toLowerCase())
+                        || contentType.contains(RequestRawType.XML.toLowerCase())
+                        || contentType.contains(RequestRawType.HTML.toLowerCase())
+                        || contentType.contains(RequestRawType.JAVASCRIPT.toLowerCase())
+                        || contentType.contains(RequestRawType.TEXT.toLowerCase())) {
+                        req.setMimeType(EnumMimeType.RAW.getValue());
+                        req.setRaw(new String(content.getRawContent(), StandardCharsets.UTF_8));
+                        if (contentType.contains(RequestRawType.JSON.toLowerCase())) {
+                            req.setRawType(RequestRawType.JSON);
+                        } else if (contentType.contains(RequestRawType.XML.toLowerCase())) {
+                            req.setRawType(RequestRawType.XML);
+                        } else if (contentType.contains(RequestRawType.HTML.toLowerCase())) {
+                            req.setRawType(RequestRawType.HTML);
+                        } else if (contentType.contains(RequestRawType.JAVASCRIPT.toLowerCase())) {
+                            req.setRawType(RequestRawType.JAVASCRIPT);
+                        } else {
+                            req.setRawType(RequestRawType.TEXT);
+                        }
                     }
                 }
                 composeView.setRequest(req);

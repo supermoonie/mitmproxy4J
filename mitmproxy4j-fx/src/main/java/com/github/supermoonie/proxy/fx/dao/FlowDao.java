@@ -25,12 +25,22 @@ public class FlowDao {
         Dao<Response, Integer> responseDao = DaoCollections.getDao(Response.class);
         Flow flow = new Flow();
         Request request = requestDao.queryForId(requestId);
-        List<Header> requestHeaders = headerDao.queryBuilder().where().eq(Header.REQUEST_ID_FIELD_NAME, request.getId()).query();
+        List<Header> requestHeaders = headerDao.queryBuilder()
+                .where()
+                .eq(Header.REQUEST_ID_FIELD_NAME, request.getId())
+                .and()
+                .isNull(Header.RESPONSE_ID_FIELD_NAME)
+                .query();
         flow.setRequest(request);
         flow.setRequestHeaders(requestHeaders);
         Response response = responseDao.queryBuilder().where().eq(Response.REQUEST_ID_FIELD_NAME, request.getId()).queryForFirst();
         if (null != response) {
-            List<Header> responseHeaders = headerDao.queryBuilder().where().eq(Header.RESPONSE_ID_FIELD_NAME, response.getId()).query();
+            List<Header> responseHeaders = headerDao.queryBuilder()
+                    .where()
+                    .eq(Header.REQUEST_ID_FIELD_NAME, request.getId())
+                    .and()
+                    .eq(Header.RESPONSE_ID_FIELD_NAME, response.getId())
+                    .query();
             flow.setResponse(response);
             flow.setResponseHeaders(responseHeaders);
         }
