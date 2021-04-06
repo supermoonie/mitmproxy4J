@@ -29,6 +29,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.controlsfx.glyphfont.FontAwesome;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,6 +45,8 @@ import java.util.stream.Collectors;
  * @date 2021-02-21
  */
 public abstract class MainView implements Initializable {
+
+    private static final Logger log = LoggerFactory.getLogger(MainView.class);
 
     @FXML
     protected MenuBar menuBar;

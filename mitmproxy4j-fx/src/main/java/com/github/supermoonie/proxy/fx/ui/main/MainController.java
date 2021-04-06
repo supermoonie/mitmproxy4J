@@ -138,7 +138,7 @@ public class MainController extends MainView {
                         .map(header -> new KeyValue(header.getName(), header.getValue()))
                         .collect(Collectors.toList());
                 req.setHeaderList(headerList);
-                if (null != flow.getRequest().getContentId()) {
+                if (null != flow.getRequest().getContentId() && null != flow.getRequest().getContentType()) {
                     Content content = DaoCollections.getDao(Content.class).queryForId(flow.getRequest().getContentId());
                     String contentType = flow.getRequest().getContentType().toLowerCase();
                     if (contentType.contains(EnumMimeType.FORM_DATA.getValue())) {
@@ -232,13 +232,14 @@ public class MainController extends MainView {
     @Override
     protected void onTreeItemClicked(MouseEvent event) {
         treeViewSelectedItem = treeView.getSelectionModel().getSelectedItem();
+        log.info("selected: " + treeViewSelectedItem.getValue().getCurrentUrl());
         doTreeItemSelected(treeViewSelectedItem);
     }
 
     @Override
     protected void onTreeItemSelected(ObservableValue<? extends TreeItem<FlowNode>> observable, TreeItem<FlowNode> oldValue, TreeItem<FlowNode> newValue) {
-        treeViewSelectedItem = newValue;
-        doTreeItemSelected(treeViewSelectedItem);
+//        treeViewSelectedItem = newValue;
+//        doTreeItemSelected(treeViewSelectedItem);
     }
 
     @Override
@@ -357,15 +358,15 @@ public class MainController extends MainView {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         TreeItem<KeyValue> timingTreeItem = new TreeItem<>(new KeyValue("Timing", ""));
         timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request Start Time", dateFormat.format(request.getStartTime()))));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request End Time", dateFormat.format(request.getEndTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request End Time", null == request.getEndTime() ? "-" : dateFormat.format(request.getEndTime()))));
         timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect Start Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect End Time", dateFormat.format(connectionOverview.getConnectStartTime()))));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response Start Time", dateFormat.format(response.getStartTime()))));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response End Time", dateFormat.format(response.getEndTime()))));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request", (request.getEndTime() - request.getStartTime()) + " ms")));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response", (response.getEndTime() - response.getStartTime()) + " ms")));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Duration", (response.getEndTime() - request.getStartTime()) + " ms")));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("DNS", (connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Connect End Time", null == connectionOverview.getConnectEndTime() ? "-" : dateFormat.format(connectionOverview.getConnectEndTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response Start Time", null == response.getStartTime() ? "-" : dateFormat.format(response.getStartTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response End Time", null == response.getEndTime() ? "-" : dateFormat.format(response.getEndTime()))));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request", null == request.getEndTime() ? "-" : (request.getEndTime() - request.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response", null == response.getEndTime() ? "-" : (response.getEndTime() - response.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Duration", null == response.getEndTime() ? "-" :  (response.getEndTime() - request.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("DNS", null == connectionOverview.getDnsEndTime() ? "-" : (connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime()) + " ms")));
         return timingTreeItem;
     }
 

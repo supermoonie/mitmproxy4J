@@ -137,7 +137,12 @@ public class FormDataAddDialog implements Initializable {
             valueTextField.setText(formData.getValue());
         } else {
             fileLabel.setUserData(formData.getValue());
-            fileLabel.setText(Paths.get(formData.getValue()).getFileName().toString());
+            if (null != formData.getValue()) {
+                File file = new File(formData.getValue());
+                if (file.exists()) {
+                    fileLabel.setText(file.getName());
+                }
+            }
         }
         contentTypeComboBox.setValue(formData.getContentType());
     }

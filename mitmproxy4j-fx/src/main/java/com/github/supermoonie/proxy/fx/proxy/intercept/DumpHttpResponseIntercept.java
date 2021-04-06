@@ -79,9 +79,6 @@ public class DumpHttpResponseIntercept implements ResponseIntercept {
                 log.error(e.getMessage(), e);
             }
         });
-//        if (GlobalSetting.getInstance().isRecord()) {
-//
-//        }
         return null;
     }
 }
