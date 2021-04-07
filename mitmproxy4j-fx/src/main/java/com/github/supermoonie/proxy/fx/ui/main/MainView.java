@@ -6,6 +6,7 @@ import com.github.supermoonie.proxy.fx.AppPreferences;
 import com.github.supermoonie.proxy.fx.Icons;
 import com.github.supermoonie.proxy.fx.constant.EnumFlowType;
 import com.github.supermoonie.proxy.fx.constant.KeyEvents;
+import com.github.supermoonie.proxy.fx.dao.DaoCollections;
 import com.github.supermoonie.proxy.fx.entity.Header;
 import com.github.supermoonie.proxy.fx.entity.Request;
 import com.github.supermoonie.proxy.fx.entity.Response;
@@ -15,6 +16,7 @@ import com.github.supermoonie.proxy.fx.ui.KeyValue;
 import com.github.supermoonie.proxy.fx.ui.main.factory.ListViewCellFactory;
 import com.github.supermoonie.proxy.fx.ui.main.handler.*;
 import com.github.supermoonie.proxy.fx.util.ClipboardUtil;
+import com.j256.ormlite.dao.Dao;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -35,7 +37,9 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -340,11 +344,38 @@ public abstract class MainView implements Initializable {
             flowNode.setContentType(response.getContentType());
             updateTreeItem(flowNode);
             updateListItem(flowNode);
+            if (null != currentRequestId && currentRequestId.equals(request.getId())) {
+                try {
+                    Dao<Header, Integer> headerDao = DaoCollections.getDao(Header.class);
+                    List<Header> responseHeaders = headerDao.queryBuilder().where().eq(Header.RESPONSE_ID_FIELD_NAME, response.getId()).query();
+                    fillResponseRawTab(response, responseHeaders);
+                    fillOverviewTab(flowNode);
+                } catch (SQLException e) {
+                    log.error(e.getMessage(), e);
+                }
+            }
         }
         if (null != treeViewSelectedItem) {
             treeView.getSelectionModel().select(treeViewSelectedItem);
         }
     }
+
+    /**
+     * 填充response tab
+     *
+     * @param response        response
+     * @param responseHeaders response headers
+     * @throws SQLException e
+     */
+    protected abstract void fillResponseRawTab(Response response, List<Header> responseHeaders) throws SQLException;
+
+    /**
+     * 填充 overview
+     *
+     * @param selectedNode 选中的节点
+     * @throws SQLException e
+     */
+    protected abstract void fillOverviewTab(FlowNode selectedNode) throws SQLException;
 
     private void addTreeNode(FlowNode flowNode) throws URISyntaxException {
         URI uri = new URI(flowNode.getUrl());

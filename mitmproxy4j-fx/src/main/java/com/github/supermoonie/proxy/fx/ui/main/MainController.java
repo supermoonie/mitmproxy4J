@@ -150,10 +150,10 @@ public class MainController extends MainView {
                         List<KeyValue> urlEncodedList = UrlUtil.queryToList(new String(content.getRawContent(), StandardCharsets.UTF_8));
                         req.setFormUrlencodedList(urlEncodedList);
                     } else if (contentType.contains(RequestRawType.JSON.toLowerCase())
-                        || contentType.contains(RequestRawType.XML.toLowerCase())
-                        || contentType.contains(RequestRawType.HTML.toLowerCase())
-                        || contentType.contains(RequestRawType.JAVASCRIPT.toLowerCase())
-                        || contentType.contains(RequestRawType.TEXT.toLowerCase())) {
+                            || contentType.contains(RequestRawType.XML.toLowerCase())
+                            || contentType.contains(RequestRawType.HTML.toLowerCase())
+                            || contentType.contains(RequestRawType.JAVASCRIPT.toLowerCase())
+                            || contentType.contains(RequestRawType.TEXT.toLowerCase())) {
                         req.setMimeType(EnumMimeType.RAW.getValue());
                         req.setRaw(new String(content.getRawContent(), StandardCharsets.UTF_8));
                         if (contentType.contains(RequestRawType.JSON.toLowerCase())) {
@@ -231,9 +231,19 @@ public class MainController extends MainView {
 
     @Override
     protected void onTreeItemClicked(MouseEvent event) {
-        treeViewSelectedItem = treeView.getSelectionModel().getSelectedItem();
-        log.info("selected: " + treeViewSelectedItem.getValue().getCurrentUrl());
-        doTreeItemSelected(treeViewSelectedItem);
+        TreeItem<FlowNode> selectedItem = treeView.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) {
+            return;
+        }
+        treeViewSelectedItem = selectedItem;
+        FlowNode selectedNode = selectedItem.getValue();
+        if (null == selectedNode) {
+            return;
+        }
+        if (!selectedNode.getType().equals(EnumFlowType.TARGET)) {
+            return;
+        }
+        fillFlow(selectedNode);
     }
 
     @Override
@@ -251,34 +261,20 @@ public class MainController extends MainView {
         fillFlow(selectedNode);
     }
 
-    private void doTreeItemSelected(TreeItem<FlowNode> treeItem) {
-        if (null == treeItem) {
-            return;
-        }
-        FlowNode selectedNode = treeItem.getValue();
-        if (null == selectedNode) {
-            return;
-        }
-        if (!selectedNode.getType().equals(EnumFlowType.TARGET)) {
-            return;
-        }
-        fillFlow(selectedNode);
-    }
-
     private void fillFlow(FlowNode selectedNode) {
         try {
+            // 防止重复点击
             if (null != currentRequestId && currentRequestId.equals(selectedNode.getId())) {
                 return;
             }
             currentRequestId = selectedNode.getId();
-            clear();
             fillOverviewTab(selectedNode);
             fillContentsTab(selectedNode);
-            Platform.runLater(() -> {
-                if (!mainTabPane.getTabs().contains(contentsTab)) {
-                    mainTabPane.getTabs().add(contentsTab);
-                }
-            });
+//            Platform.runLater(() -> {
+//                if (!mainTabPane.getTabs().contains(contentsTab)) {
+//                    mainTabPane.getTabs().add(contentsTab);
+//                }
+//            });
         } catch (SQLException e) {
             AlertUtil.error(e);
         }
@@ -312,7 +308,6 @@ public class MainController extends MainView {
         TreeItem<KeyValue> serialNumberTreeItem = new TreeItem<>(new KeyValue("Serial Number", certificateInfo.getSerialNumber()));
         TreeItem<KeyValue> typeTreeItem = new TreeItem<>(new KeyValue("Type", certificateInfo.getType() + " [v" + certificateInfo.getVersion() + "] (" + certificateInfo.getSigAlgName() + ")"));
         TreeItem<KeyValue> issuedToTreeItem = new TreeItem<>(new KeyValue("Issued To", ""));
-        issuedToTreeItem.getChildren().clear();
         issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Common Name", certificateInfo.getSubjectCommonName())));
         issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Unit", certificateInfo.getSubjectOrganizationDepartment())));
         issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Name", certificateInfo.getSubjectOrganizationName())));
@@ -320,7 +315,6 @@ public class MainController extends MainView {
         issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("State Name", certificateInfo.getSubjectStateName())));
         issuedToTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Country", certificateInfo.getSubjectCountry())));
         TreeItem<KeyValue> issuedByTreeItem = new TreeItem<>(new KeyValue("Issued By", ""));
-        issuedByTreeItem.getChildren().clear();
         issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Common Name", certificateInfo.getIssuerCommonName())));
         issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Unit", certificateInfo.getIssuerOrganizationDepartment())));
         issuedByTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Organization Name", certificateInfo.getIssuerOrganizationName())));
@@ -330,11 +324,9 @@ public class MainController extends MainView {
         TreeItem<KeyValue> notValidBeforeTreeItem = new TreeItem<>(new KeyValue("Not Valid Before", dateFormat.format(certificateInfo.getNotValidBefore())));
         TreeItem<KeyValue> notValidAfterTreeItem = new TreeItem<>(new KeyValue("Not Valid After", dateFormat.format(certificateInfo.getNotValidAfter())));
         TreeItem<KeyValue> fingerprintsTreeItem = new TreeItem<>(new KeyValue("Fingerprints", ""));
-        fingerprintsTreeItem.getChildren().clear();
         fingerprintsTreeItem.getChildren().add(new TreeItem<>(new KeyValue("SHA-1", certificateInfo.getShaOne())));
         fingerprintsTreeItem.getChildren().add(new TreeItem<>(new KeyValue("SHA-256", certificateInfo.getShaTwoFiveSix())));
         TreeItem<KeyValue> fullDetailTreeItem = new TreeItem<>(new KeyValue("Full Detail", certificateInfo.getFullDetail()));
-        certTreeItem.getChildren().clear();
         certTreeItem.getChildren().add(serialNumberTreeItem);
         certTreeItem.getChildren().add(typeTreeItem);
         certTreeItem.getChildren().add(issuedToTreeItem);
@@ -365,7 +357,7 @@ public class MainController extends MainView {
         timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response End Time", null == response.getEndTime() ? "-" : dateFormat.format(response.getEndTime()))));
         timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Request", null == request.getEndTime() ? "-" : (request.getEndTime() - request.getStartTime()) + " ms")));
         timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Response", null == response.getEndTime() ? "-" : (response.getEndTime() - response.getStartTime()) + " ms")));
-        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Duration", null == response.getEndTime() ? "-" :  (response.getEndTime() - request.getStartTime()) + " ms")));
+        timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("Duration", null == response.getEndTime() ? "-" : (response.getEndTime() - request.getStartTime()) + " ms")));
         timingTreeItem.getChildren().add(new TreeItem<>(new KeyValue("DNS", null == connectionOverview.getDnsEndTime() ? "-" : (connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime()) + " ms")));
         return timingTreeItem;
     }
@@ -376,7 +368,8 @@ public class MainController extends MainView {
      * @param selectedNode 选中的节点
      * @throws SQLException e
      */
-    private void fillOverviewTab(FlowNode selectedNode) throws SQLException {
+    @Override
+    protected void fillOverviewTab(FlowNode selectedNode) throws SQLException {
         overviewRoot.getChildren().clear();
         Dao<Request, Integer> requestDao = DaoCollections.getDao(Request.class);
         Request request = requestDao.queryForId(selectedNode.getId());
@@ -424,28 +417,56 @@ public class MainController extends MainView {
      * @throws SQLException e
      */
     private void fillContentsTab(FlowNode selectedNode) throws SQLException {
-        if (EnumFlowType.TARGET.equals(selectedNode.getType()) && selectedNode.getStatus() > 0) {
+        if (EnumFlowType.TARGET.equals(selectedNode.getType())) {
             Flow flow = FlowDao.getFlow(currentRequestId);
             Request request = flow.getRequest();
-            Response response = flow.getResponse();
-            List<Header> requestHeaders = flow.getRequestHeaders();
-            List<Header> responseHeaders = flow.getResponseHeaders();
             infoLabel.setText(request.getMethod().toUpperCase() + " " + request.getUri());
-            requestHeaderTableView.getItems().setAll(requestHeaders);
-            if (!responseHeaders.isEmpty()) {
-                responseHeaderTableView.getItems().addAll(responseHeaders);
-            }
-            removeTabByTitle(requestTabPane, requestQueryTab);
-            removeTabByTitle(requestTabPane, requestFormTab);
-            fillRequestRawTab(request, requestHeaders);
-            fillRequestQueryTab(request);
-            if (null != response) {
-                fillResponseRawTab(response, responseHeaders);
+            fillRequestTab(flow);
+            if (selectedNode.getStatus() > 0) {
+                Response response = flow.getResponse();
+                if (null != response) {
+                    fillResponseRawTab(response, flow.getResponseHeaders());
+                }
             }
         }
     }
 
-    private void fillResponseRawTab(Response response, List<Header> responseHeaders) throws SQLException {
+    /**
+     * 填充 request tab
+     */
+    private void fillRequestTab(Flow flow) throws SQLException {
+        clearRequestTab();
+        requestHeaderTableView.getItems().setAll(flow.getRequestHeaders());
+        removeTabByTitle(requestTabPane, requestQueryTab);
+        removeTabByTitle(requestTabPane, requestFormTab);
+        fillRequestRawTab(flow.getRequest(), flow.getRequestHeaders());
+        fillRequestQueryTab(flow.getRequest());
+    }
+
+    /**
+     * 清除 request tab 中的数据
+     */
+    private void clearRequestTab() {
+        requestHeaderTableView.getItems().clear();
+        queryTableView.getItems().clear();
+        formTableView.getItems().clear();
+    }
+
+    /**
+     * 清除 response tab 中的数据
+     */
+    private void clearResponseTab() {
+        responseHeaderTableView.getItems().clear();
+        responseRawTextArea.clear();
+        responseTextArea.clear();
+    }
+
+    @Override
+    protected void fillResponseRawTab(Response response, List<Header> responseHeaders) throws SQLException {
+        clearResponseTab();
+        if (!responseHeaders.isEmpty()) {
+            responseHeaderTableView.getItems().addAll(responseHeaders);
+        }
         int selectedIndex = responseTabPane.getSelectionModel().getSelectedIndex();
         removeTabByTitle(responseTabPane, responseImageTab);
         removeTabByTitle(responseTabPane, responseContentTab);

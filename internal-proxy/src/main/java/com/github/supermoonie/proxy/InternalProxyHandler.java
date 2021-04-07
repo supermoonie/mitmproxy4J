@@ -176,7 +176,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getMessage(), cause);
+        logger.error("url: " + interceptContext.getRequest().uri() + " error: " + cause.getMessage(), cause);
         FullHttpResponse response = interceptContext.onRequestException(interceptContext.getRequest(), cause);
         if (null == response) {
             ResponseUtils.sendInternalServerError(ctx.channel(), cause.getMessage());
