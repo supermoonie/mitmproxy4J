@@ -24,7 +24,7 @@ public class BouncyCastleSelfSignedCertGeneratorTest {
     public void genKeyPair() throws Exception {
         KeyPair keyPair = BouncyCastleSelfSignedCertGenerator.genKeyPair();
         PrivateKey privateKey = keyPair.getPrivate();
-        FileUtils.writeByteArrayToFile(new File("/Users/supermoonie/Desktop/temp/private.pem"), privateKey.getEncoded());
+        FileUtils.writeByteArrayToFile(new File("C:\\Users\\super_w\\Desktop\\crt\\private.pem"), privateKey.getEncoded());
         byte[] cert = BouncyCastleSelfSignedCertGenerator.genCaCert(
                 "C=CN, ST=Shanghai, L=Shanghai, O=github, OU=supermoonie, CN=mitmproxy4J",
                 new Date(),
@@ -36,7 +36,7 @@ public class BouncyCastleSelfSignedCertGeneratorTest {
             String keyText = "-----BEGIN CERTIFICATE-----\n" +
                     encodedBuf.toString(CharsetUtil.US_ASCII) +
                     "\n-----END CERTIFICATE-----\n";
-            FileUtils.write(new File("/Users/supermoonie/Desktop/temp/private.crt"), keyText, StandardCharsets.UTF_8);
+            FileUtils.write(new File("C:\\Users\\super_w\\Desktop\\crt\\private.crt"), keyText, StandardCharsets.UTF_8);
         } finally {
             encodedBuf.release();
             wrappedBuf.release();

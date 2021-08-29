@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author supermoonie
@@ -39,9 +40,9 @@ public class InterceptContext {
 
     private Object userData;
 
-    private final Map<String, RequestIntercept> requestIntercepts = new LinkedHashMap<>();
+    private final Map<String, RequestIntercept> requestIntercepts = new ConcurrentHashMap<>();
 
-    private final Map<String, ResponseIntercept> responseIntercepts = new LinkedHashMap<>();
+    private final Map<String, ResponseIntercept> responseIntercepts = new ConcurrentHashMap<>();
 
     void beforeRequest(HttpRequest request) {
 

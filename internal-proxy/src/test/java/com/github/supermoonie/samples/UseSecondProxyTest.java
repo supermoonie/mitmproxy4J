@@ -19,7 +19,7 @@ public class UseSecondProxyTest {
     public static void main(String[] args) {
         SecondProxyConfig secondProxyConfig = new SecondProxyConfig();
         secondProxyConfig.setHost("127.0.0.1");
-        secondProxyConfig.setPort(7899);
+        secondProxyConfig.setPort(7890);
         secondProxyConfig.setProxyType(ProxyType.HTTP);
         InternalProxy proxy = new InternalProxy((requestIntercepts, responseIntercepts) -> {
             LoggingIntercept loggingIntercept = new LoggingIntercept();

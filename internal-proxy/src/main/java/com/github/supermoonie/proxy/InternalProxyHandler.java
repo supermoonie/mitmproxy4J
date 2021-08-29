@@ -260,7 +260,7 @@ public class InternalProxyHandler extends ChannelInboundHandlerAdapter {
 
                                 @Override
                                 public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                                    logger.error(cause.getMessage(), cause);
+                                    logger.error("url: " + connectionInfo.getUrl() + ", error: " + cause.getMessage(), cause);
                                     FullHttpResponse response = interceptContext.onResponseException(request, null, cause);
                                     if (null == response) {
                                         ResponseUtils.sendServiceUnavailableError(clientChannel, cause.getMessage());

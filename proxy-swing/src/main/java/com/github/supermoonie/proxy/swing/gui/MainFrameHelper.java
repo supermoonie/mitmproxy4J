@@ -419,7 +419,7 @@ public class MainFrameHelper {
             model.insertNodeInto(new ListTreeTableNode("Request", null == request.getEndTime() ? "-" : request.getEndTime() - request.getStartTime() + " ms"), timingNode, 6);
             model.insertNodeInto(new ListTreeTableNode("Response", null == response || null == response.getEndTime() ? "-" : response.getEndTime() - response.getStartTime() + " ms"), timingNode, 7);
             model.insertNodeInto(new ListTreeTableNode("Duration", null == response || null == request.getEndTime() ? "-" : response.getEndTime() - request.getStartTime() + " ms"), timingNode, 8);
-            model.insertNodeInto(new ListTreeTableNode("DNS", null == response || null == connectionOverview.getDnsStartTime() ? "-" : connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime() + " ms"), timingNode, 9);
+//            model.insertNodeInto(new ListTreeTableNode("DNS", null == response || null == connectionOverview.getDnsStartTime() ? "-" : connectionOverview.getDnsEndTime() - connectionOverview.getDnsStartTime() + " ms"), timingNode, 9);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }

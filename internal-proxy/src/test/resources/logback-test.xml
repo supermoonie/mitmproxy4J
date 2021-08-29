@@ -9,10 +9,10 @@
     </appender>
 
     <!-- 日志输出级别 -->
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="com.github.supermoonie.proxy" level="debug"/>
-    <logger name="jdk.internal.net.http" level="debug"/>
+    <logger name="com.github.supermoonie.proxy" level="info"/>
+    <logger name="jdk.internal.net.http" level="info"/>
 </configuration>

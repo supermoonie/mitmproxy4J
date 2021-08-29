@@ -104,16 +104,6 @@ public class CurdTable extends JTable {
             super(checkBox);
             button = new JButton();
             button.setOpaque(true);
-//            button.addActionListener(e -> {
-//                fireEditingStopped();
-//                int selectedRow = CurdTable.this.getSelectedRow();
-//                if (-1 == selectedRow) {
-//                    return;
-//                }
-//                ((DefaultTableModel) CurdTable.this.getModel()).removeRow(selectedRow);
-//                CurdTable.this.clearSelection();
-//                addRow();
-//            });
         }
 
         public void addActionListener(ActionListener listener) {
