@@ -105,7 +105,9 @@ public class SecondProxyTest {
 //                        autoChrome.clearBrowserCache();
 //                        autoChrome.clearBrowserCookies();
 //                        autoChrome.getStorage().clearDataForOrigin("www.hermes.com", StorageType.all.value);
+                        TimeUnit.SECONDS.sleep(10 + (int)(Math.random() * 10));
                         autoChrome.navigateUntilDomReady("https://www.hermes.com/fr/fr/", 20_000);
+                        TimeUnit.SECONDS.sleep(2 + (int)(Math.random() * 10));
                         autoChrome.navigate("https://bck.hermes.com/products?locale=nl_en&category=WOMENBAGSBAGSCLUTCHES&sort=relevance&offset=36&pagesize=36");
                     } catch (Exception e) {
                         e.printStackTrace();
