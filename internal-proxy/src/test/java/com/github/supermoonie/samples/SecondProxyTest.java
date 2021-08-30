@@ -6,6 +6,7 @@ import com.github.supermoonie.auto.AutoChrome;
 import com.github.supermoonie.proxy.*;
 import com.github.supermoonie.proxy.intercept.ConfigurableIntercept;
 import com.github.supermoonie.proxy.intercept.RequestIntercept;
+import com.github.supermoonie.type.storage.StorageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -59,49 +60,38 @@ public class SecondProxyTest {
         secondProxyConfig.setHost("127.0.0.1");
         secondProxyConfig.setPort(7890);
         secondProxyConfig.setProxyType(ProxyType.HTTP);
-//        SwingUtilities.invokeLater(() -> {
-//            JOptionPane.showMessageDialog(null, ".....");
-//            try {
-//                Queue<AutoChrome> chromeList = new LinkedBlockingDeque<>() {{
-//                    add(new AutoChrome(9111, "about:blank", 5_000));
-//                    add(new AutoChrome(9222, "about:blank", 5_000));
-//                    add(new AutoChrome(9333, "about:blank", 5_000));
-//                    add(new AutoChrome(9444, "about:blank", 5_000));
-//                    add(new AutoChrome(9555, "about:blank", 5_000));
-//                    add(new AutoChrome(9666, "about:blank", 5_000));
-//                    add(new AutoChrome(9777, "about:blank", 5_000));
-//                    add(new AutoChrome(9888, "about:blank", 5_000));
-//                    add(new AutoChrome(9999, "about:blank", 5_000));
-//                }};
-////                scheduledExecutor.scheduleAtFixedRate(() -> {
-////                    try {
-////                        HttpClient httpClient = HttpClient.newBuilder()
-////                                .version(HttpClient.Version.HTTP_1_1)
-////                                .followRedirects(HttpClient.Redirect.ALWAYS)
-////                                .build();
-////                        String proxyUrl = "http://list.sky-ip.net/user_get_ip_list?token=SbnzU8qJ7CLyoIVs1623746522101&qty=1&country=&time=1&format=txt&protocol=http";
-////                        HttpResponse<String> proxyRes = httpClient.send(java.net.http.HttpRequest.newBuilder().uri(URI.create(proxyUrl)).build(), HttpResponse.BodyHandlers.ofString());
-////                        String proxy = proxyRes.body();
-////                        synchronized (SecondProxyTest.class) {
-////                            String[] split = proxy.split(":");
-////                            secondProxyConfig.setHost(split[0]);
-////                            secondProxyConfig.setPort(Integer.parseInt(split[1]));
-////                            for (AutoChrome autoChrome : chromeList) {
-////                                autoChrome.clearBrowserCache();
-////                                autoChrome.clearBrowserCookies();
-////                                autoChrome.getStorage().clearDataForOrigin("www.hermes.com", StorageType.all.value);
-////                            }
-////                        }
-////                    } catch (Exception e) {
-////                        e.printStackTrace();
-////                    }
-////                }, 1, 45, TimeUnit.SECONDS);
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(null, ".....");
+            try {
+                final AutoChrome autoChrome = new AutoChrome(9222, "about:blank", 5_000);
+                autoChrome.clearBrowserCache();
+                autoChrome.clearBrowserCookies();
+                autoChrome.getStorage().clearDataForOrigin("www.hermes.com", StorageType.all.value);
 //                scheduledExecutor.scheduleAtFixedRate(() -> {
-//                    AutoChrome autoChrome = chromeList.poll();
-//                    if (null == autoChrome) {
-//                        return;
-//                    }
 //                    try {
+//                        HttpClient httpClient = HttpClient.newBuilder()
+//                                .version(HttpClient.Version.HTTP_1_1)
+//                                .followRedirects(HttpClient.Redirect.ALWAYS)
+//                                .build();
+//                        String proxyUrl = "http://list.sky-ip.net/user_get_ip_list?token=SbnzU8qJ7CLyoIVs1623746522101&qty=1&country=&time=1&format=txt&protocol=http";
+//                        HttpResponse<String> proxyRes = httpClient.send(java.net.http.HttpRequest.newBuilder().uri(URI.create(proxyUrl)).build(), HttpResponse.BodyHandlers.ofString());
+//                        String proxy = proxyRes.body();
+//                        synchronized (SecondProxyTest.class) {
+//                            String[] split = proxy.split(":");
+//                            secondProxyConfig.setHost(split[0]);
+//                            secondProxyConfig.setPort(Integer.parseInt(split[1]));
+//                            for (AutoChrome autoChrome : chromeList) {
+//                                autoChrome.clearBrowserCache();
+//                                autoChrome.clearBrowserCookies();
+//                                autoChrome.getStorage().clearDataForOrigin("www.hermes.com", StorageType.all.value);
+//                            }
+//                        }
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }, 1, 45, TimeUnit.SECONDS);
+                scheduledExecutor.scheduleAtFixedRate(() -> {
+                    try {
 //                        HttpClient httpClient = HttpClient.newBuilder()
 //                                .version(HttpClient.Version.HTTP_1_1)
 //                                .followRedirects(HttpClient.Redirect.ALWAYS)
@@ -112,22 +102,20 @@ public class SecondProxyTest {
 //                        String[] split = proxy.split(":");
 //                        secondProxyConfig.setHost(split[0]);
 //                        secondProxyConfig.setPort(Integer.parseInt(split[1]));
-////                        autoChrome.clearBrowserCache();
-////                        autoChrome.clearBrowserCookies();
-////                        autoChrome.getStorage().clearDataForOrigin("www.hermes.com", StorageType.all.value);
-//                        autoChrome.navigateUntilDomReady("https://www.hermes.com/fr/fr/", 20_000);
-//                        autoChrome.navigate("https://bck.hermes.com/products?locale=nl_en&category=WOMENBAGSBAGSCLUTCHES&sort=relevance&offset=36&pagesize=36");
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    } finally {
-//                        chromeList.offer(autoChrome);
-//                    }
-//                }, 10, 10, TimeUnit.SECONDS);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//
-//        });
+//                        autoChrome.clearBrowserCache();
+//                        autoChrome.clearBrowserCookies();
+//                        autoChrome.getStorage().clearDataForOrigin("www.hermes.com", StorageType.all.value);
+                        autoChrome.navigateUntilDomReady("https://www.hermes.com/fr/fr/", 20_000);
+                        autoChrome.navigate("https://bck.hermes.com/products?locale=nl_en&category=WOMENBAGSBAGSCLUTCHES&sort=relevance&offset=36&pagesize=36");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, 1, 50, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
 
         RequestIntercept requestIntercept = (ctx, request) -> {
             ConnectionInfo connectionInfo = ctx.getConnectionInfo();
